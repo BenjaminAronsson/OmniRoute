@@ -13,11 +13,12 @@ type BypassClass = "A" | "B" | "C";
 
 const EXPECTED: Record<InventoryKind, Record<string, number>> = {
   credential: {
-    // #12867 extracted chatCore.ts's streaming provider-execution loop into
-    // chatCore/providerExecutionPipeline.ts. Its two getProviderCredentials()
-    // sites (codex 429 rotation, antigravity BYOP rotation) moved with it and are
-    // now reached through the injected `connection.getProviderCredentials` handle,
-    // so countCalls() also inventories property-access calls.
+    // v3.8.51 #12867 (d6f315018): the two credential-resolution sites that used to
+    // live in chatCore.ts (codex 429 and antigravity 422 account rotation) were
+    // extracted into the provider execution pipeline. chatCore.ts now only hands
+    // `getProviderCredentials` across the seam as a dependency (a reference, not a
+    // call), so the two sites are inventoried at their new home — see the
+    // property-access branch in countCalls().
     "open-sse/handlers/chatCore/providerExecutionPipeline.ts": 2,
     "open-sse/services/imageCombo.ts": 1,
     "open-sse/services/speechCombo.ts": 1,
@@ -37,9 +38,7 @@ const EXPECTED: Record<InventoryKind, Record<string, number>> = {
     // v3.8.51 #11754: the second resolveImageRouteModel() call (a duplicate
     // of the retirement-check one hoisted before enforceApiKeyPolicy) was
     // removed as dead redundant code, 6->5.
-    // v3.8.51 #12653: combo edit targets now fall through to the next target, so
-    // the per-target attempt resolves credentials of its own, 5->6.
-    "src/app/api/v1/images/edits/route.ts": 6,
+    "src/app/api/v1/images/edits/route.ts": 5,
     "src/app/api/v1/images/generations/route.ts": 3,
     "src/app/api/v1/images/upscale/route.ts": 1,
     "src/app/api/v1/messages/count_tokens/route.ts": 1,
@@ -95,8 +94,10 @@ const EXPECTED: Record<InventoryKind, Record<string, number>> = {
     "open-sse/services/antigravityFamilyCooldown.ts": 1,
     // v3.8.50 back-merge additions (f95b03d7): combo routing infra and the
     // volcengine-plan binding/auto-sync services query connections the same
-    // way as their classified siblings. #12746 split executeTarget out of
-    // combo.ts, moving this lookup into combo/executeTargetGates.ts unchanged.
+    // way as their classified siblings.
+    // v3.8.51 #12746 (6b587d004) split executeTarget out of combo.ts; the
+    // persisted-cooldown gate's connection read moved here byte-identically
+    // (readConnectionForCooldownGate), so this is the same site, renamed.
     "open-sse/services/combo/executeTargetGates.ts": 1,
     "open-sse/services/combo/providerWildcard.ts": 1,
     "open-sse/services/tokenRefresh.ts": 1,
@@ -135,10 +136,11 @@ const EXPECTED: Record<InventoryKind, Record<string, number>> = {
     "src/app/api/translator/send/route.ts": 1,
     "src/app/api/translator/translate/route.ts": 1,
     "src/app/api/usage/call-logs/route.ts": 1,
-    // #12805: the reset-credit route resolves the connection's PROVIDER to pick
-    // the codex or grok-cli library; the exclusive-lease fence itself lives in
-    // those libraries (both listed in auxiliaryIsolationSources below). It never
-    // selects a connection to serve a request, so it stays class C.
+    // v3.8.51 #12805 (c042a5188): the reset-credit endpoint now serves codex and
+    // grok-cli, so it reads the connection once only to decide which handler runs
+    // (resolveResetCreditProvider). Read-only lookup behind requireManagementAuth;
+    // the handlers it delegates to carry the auxiliary-lease fence themselves. It
+    // never selects a connection to serve a request, so it stays class C.
     "src/app/api/usage/codex-reset-credit/route.ts": 1,
     "src/app/api/usage/quota/route.ts": 1,
     "src/app/api/usage/utilization/route.ts": 1,
@@ -187,8 +189,9 @@ const EXPECTED: Record<InventoryKind, Record<string, number>> = {
     "src/lib/usage/callLogs.ts": 1,
     "src/lib/usage/codexResetCredits.ts": 1,
     "src/lib/usage/comboScoringInspector.ts": 1,
-    // #12805: Grok Build sibling of codexResetCredits.ts — same auxiliary-activity
-    // fence in front of the same connection lookup, so same class B.
+    // v3.8.51 #12805 (c042a5188): grok-cli sibling of codexResetCredits.ts, same
+    // shape — isConnectionUnavailableToAuxiliaryActivity() gates the lookup, so an
+    // ACTIVE exclusive lease defers redemption (409 exclusive_lease_active).
     "src/lib/usage/grokResetCredits.ts": 1,
     "src/lib/usage/providerLimits.ts": 4,
     "src/lib/usage/resilienceExplain.ts": 1,
@@ -276,13 +279,14 @@ function countCalls(): Record<InventoryKind, Record<string, number>> {
       const key = file.split(path.sep).join("/");
       actual[kind][key] = (actual[kind][key] ?? 0) + 1;
     };
-    const isCredentialName = (name: string) =>
-      name === "getProviderCredentials" || name === "getProviderCredentialsWithQuotaPreflight";
     const visit = (node: ts.Node): void => {
       if (ts.isCallExpression(node)) {
         const expression = node.expression;
         if (ts.isIdentifier(expression)) {
-          if (isCredentialName(expression.text)) {
+          if (
+            expression.text === "getProviderCredentials" ||
+            expression.text === "getProviderCredentialsWithQuotaPreflight"
+          ) {
             increment("credential");
           }
           if (
@@ -291,22 +295,27 @@ function countCalls(): Record<InventoryKind, Record<string, number>> {
           ) {
             increment("connection");
           }
-        } else if (ts.isPropertyAccessExpression(expression)) {
-          // #12867: the extracted execution pipeline reaches the resolver through an
-          // injected handle (`connection.getProviderCredentials(...)`), so a
-          // bare-identifier scan alone would let those sites leave the inventory.
-          if (isCredentialName(expression.name.text)) {
-            increment("credential");
-          }
-          if (
-            expression.name.text === "execute" &&
-            ts.isIdentifier(expression.expression) &&
-            ["executor", "fallbackExecutor", "providerExecutor", "streamExecutor"].includes(
-              expression.expression.text
-            )
-          ) {
-            increment("executor");
-          }
+        } else if (
+          ts.isPropertyAccessExpression(expression) &&
+          (expression.name.text === "getProviderCredentials" ||
+            expression.name.text === "getProviderCredentialsWithQuotaPreflight")
+        ) {
+          // Injected-dependency shape. #12867 moved codex/antigravity account
+          // rotation behind a seam: chatCore passes `getProviderCredentials` in and
+          // the provider execution pipeline calls it off its injected `connection`
+          // context. Counting bare identifier calls only would let an
+          // extract-to-a-seam refactor silently drop a credential-resolution site
+          // out of this inventory, which is exactly what this guard exists to catch.
+          increment("credential");
+        } else if (
+          ts.isPropertyAccessExpression(expression) &&
+          expression.name.text === "execute" &&
+          ts.isIdentifier(expression.expression) &&
+          ["executor", "fallbackExecutor", "providerExecutor", "streamExecutor"].includes(
+            expression.expression.text
+          )
+        ) {
+          increment("executor");
         }
       }
       ts.forEachChild(node, visit);
@@ -334,10 +343,6 @@ test("managed request surfaces are fenced centrally or rejected before independe
     path.join(REPO_ROOT, "src/app/api/internal/codex-responses-ws/route.ts"),
     "utf8"
   );
-  const executionPipeline = fs.readFileSync(
-    path.join(REPO_ROOT, "open-sse/handlers/chatCore/providerExecutionPipeline.ts"),
-    "utf8"
-  );
   const internalKeys = fs.readFileSync(path.join(REPO_ROOT, "src/lib/db/apiKeys.ts"), "utf8");
   const auxiliaryIsolationSources = [
     "src/app/api/providers/[id]/models/route.ts",
@@ -363,14 +368,28 @@ test("managed request surfaces are fenced centrally or rejected before independe
     core,
     /assertManagedLeaseFence\(getExecutionConnectionId\(getExecutionCredentials\(\)\)\)/
   );
-  // #12867 moved the codex 429 account-rotation out of chatCore.ts into
-  // chatCore/providerExecutionPipeline.ts. The managed-lease fence moved with it:
-  // the inline `provider === "codex" && !managedLease` became the policy flag
-  // chatCore computes and the pipeline gates every rotation on. Assert both halves
-  // so the fence cannot be dropped on either side of that seam.
-  assert.match(core, /allowAccountRotation:\s*!managedLease\b/);
-  assert.match(executionPipeline, /canRotateAccount\s*=\s*policy\.allowAccountRotation\b/);
-  assert.match(executionPipeline, /canRotateAccount &&\s*target\.provider === "codex"/);
+  // #12867 (d6f315018) extracted codex 429 / antigravity 422 account rotation out
+  // of chatCore.ts into the provider execution pipeline. The managed-lease fence was
+  // NOT dropped — it now crosses the seam as `policy.allowAccountRotation`. Pin both
+  // ends so neither half can be weakened alone: chatCore must keep deriving the
+  // policy from `!managedLease` on both legs, and the pipeline must keep gating the
+  // codex rotation branch on it. (The antigravity 422 branch, which had no lease
+  // fence at all before the extract, is now gated by the same flag.)
+  const pipeline = fs.readFileSync(
+    path.join(REPO_ROOT, "open-sse/handlers/chatCore/providerExecutionPipeline.ts"),
+    "utf8"
+  );
+  const rotationPolicySites = core.match(
+    /allowAccountRotation: !managedLease && comboStrategy !== "context-relay"/g
+  );
+  assert.equal(
+    rotationPolicySites?.length,
+    2,
+    "both the streaming and the non-streaming leg must derive account rotation from !managedLease"
+  );
+  assert.match(pipeline, /const canRotateAccount = policy\.allowAccountRotation && !isolateProbe;/);
+  assert.match(pipeline, /canRotateAccount &&\s*target\.provider === "codex"/);
+  assert.match(pipeline, /canRotateAccount &&\s*target\.provider === "antigravity"/);
   assert.match(ws, /LEASE_UNSUPPORTED_TRANSPORT/);
   assert.match(internalKeys, /!k\.scopes\?\.includes\(EXCLUSIVE_LEASE_SCOPE\)/);
   for (const source of auxiliaryIsolationSources) {

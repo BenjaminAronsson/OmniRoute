@@ -7,7 +7,7 @@ import type {
   lockModel,
   recordCoreOwnedAntigravityQuotaState,
 } from "../../services/accountFallback.ts";
-import { createErrorResult, parseUpstreamError } from "../../utils/error.ts";
+import { createErrorResult } from "../../utils/error.ts";
 import { applyStatusRestatement } from "../../config/upstreamStatusRestatement.ts";
 import { recoverAnthropicThinkingSignature } from "./thinkingSignatureRecovery.ts";
 import {
@@ -49,8 +49,6 @@ export type ProviderExecutionOutcome =
       providerUsage: ProviderLegUsage | null;
       model: string;
       connectionId: string;
-      /** Parsed upstream error body, for callers that persist failure state. */
-      upstreamBody?: unknown;
     };
 
 export interface PipelineTargetContext {
@@ -144,6 +142,44 @@ function retryAfterMsFrom(attempt: ChatCoreExecutorResult): number | null {
   return parsed * 1000;
 }
 
+/**
+ * Feed the runtime rate limiter from a non-2xx upstream attempt.
+ *
+ * Order matters and mirrors the chatCore error path: headers FIRST (a 429 evicts
+ * the cached limiter so the body can materialize a fresh one), body SECOND (the
+ * body-embedded retry-after drains that fresh reservoir). Inverting them throws
+ * the drain away.
+ *
+ * The body is read through `response.clone()` — never the original stream. This
+ * is a shared streaming path, so consuming `attempt.response` here would silently
+ * break passthrough and SSE; `toOutcome` below drains the same way.
+ *
+ * Both hooks are best-effort: rate-limit learning must never fail the request.
+ */
+async function recordUpstreamRateLimit(
+  state: PipelineStateHooks,
+  provider: string,
+  connectionId: string,
+  model: string,
+  attempt: ChatCoreExecutorResult
+): Promise<void> {
+  if (!connectionId) return;
+  const status = attempt.response.status;
+  try {
+    state.recordRateLimitHeaders(provider, connectionId, attempt.response.headers, status, model);
+  } catch {
+    // best-effort
+  }
+  try {
+    const text = await attempt.response.clone().text();
+    // parseRetryAfterFromBody JSON.parses a string and falls back to "unknown"
+    // on non-JSON, so the raw text is the safest thing to hand over.
+    if (text) state.recordRateLimitBody(provider, connectionId, text, status, model);
+  } catch {
+    // Body already consumed/unreadable — the header signal above still applied.
+  }
+}
+
 function leaseMismatch(model: string, connectionId: string): ProviderExecutionOutcome {
   const result = createErrorResult(
     LEASE_MISMATCH_STATUS,
@@ -172,8 +208,7 @@ async function toOutcome(
   attempt: ChatCoreExecutorResult,
   model: string,
   connectionId: string,
-  provider: string,
-  state: PipelineStateHooks
+  provider: string
 ): Promise<ProviderExecutionOutcome> {
   const status = attempt.response.status;
   if (status >= 200 && status < 300) {
@@ -187,53 +222,35 @@ async function toOutcome(
       connectionId,
     };
   }
-  // Delegate to the canonical upstream-error parser instead of re-implementing it.
-  // #12867 lifted this branch out of chatCore.ts but replaced its parseUpstreamError()
-  // call with an inline JSON.parse, which silently dropped two behaviors the
-  // non-streaming failure path depends on (tests/unit/chat-rate-limit-body-lock.test.ts):
-  //   1. a non-JSON body fell into the catch and surfaced as the (empty) statusText —
-  //      "upstream error" — discarding the upstream text the client needs to see;
-  //   2. the body-derived retry-after ("Please retry after 20s") was never parsed, so
-  //      retryAfterMs stayed hard-coded null and the runtime limiter was never locked.
-  // clone() is still the drain: sendProviderAttempt must not cancel() a streaming
-  // non-2xx body before we get here (BYOP 422 / Codex 429 Retry-After), and cloning
-  // keeps attempt.response readable for the consumers we hand it back to below.
-  const details = await parseUpstreamError(attempt.response.clone(), provider);
-  const message = details.message || attempt.response.statusText || "upstream error";
-  // #12867 plumbed recordRateLimitBody through PipelineStateHooks but never called it, so the
-  // body-derived rate-limit lock chatCore used to apply (updateFromResponseBody on the upstream
-  // error body — "Please retry after 20s" → reservoir 0) silently stopped running for every
-  // request routed through this pipeline. Feed the parsed upstream body back the way chatCore
-  // did. recordRateLimitHeaders stays chatCore's job: it already learns from the real response
-  // on the success path, and calling it here would re-learn from the same headers twice.
-  if (connectionId && details.responseBody !== null && details.responseBody !== undefined) {
-    state.recordRateLimitBody(provider, connectionId, details.responseBody, status, model);
+  let message = attempt.response.statusText || "upstream error";
+  let body: unknown = attempt.transformedBody;
+  try {
+    // clone() is the drain. sendProviderAttempt must not cancel() a streaming
+    // non-2xx body before we get here (BYOP 422 / Codex 429 Retry-After).
+    const text = await attempt.response.clone().text();
+    try {
+      body = JSON.parse(text);
+      const err = (body as { error?: { message?: unknown } } | null)?.error;
+      if (err && typeof err.message === "string" && err.message) message = err.message;
+    } catch {
+      // Non-JSON upstream body (plain-text 429, HTML error page). parseUpstreamError
+      // — the pre-pipeline path this replaced — surfaces the raw text as the message;
+      // collapsing it to statusText ("upstream error") hides what the provider said.
+      // buildErrorBody()/sanitizeErrorMessage() still sanitize and truncate it before
+      // it reaches any response body (Hard Rule #12).
+      if (text.trim()) message = text;
+    }
+  } catch {
+    // Body unreadable (already consumed) — keep statusText.
   }
-  // responseBody is the parsed upstream payload (or { _rawText } for a non-JSON body),
-  // so restatement rules now match against the real upstream text rather than the
-  // request body that transformedBody carried whenever the parse failed.
-  const body: unknown = details.responseBody ?? attempt.transformedBody;
   const restatement = applyStatusRestatement({
     provider,
     status,
     message,
     body,
-    retryAfterMs: details.retryAfterMs,
+    retryAfterMs: null,
   });
-  // Carry the upstream classification through too. #12867 dropped it when it replaced
-  // parseUpstreamError() with an inline JSON.parse, and the sibling leg
-  // (nonStreamingProviderLeg.ts) still lifts both fields. Gates that key on the PAIR —
-  // isAntigravityMissingProjectError (src/sse/handlers/chatPredicates.ts) — could never
-  // fire without them, so a config-class 422 degraded into a generic account cooldown.
-  // These stay internal: the client-visible body is still projected onto the bounded
-  // identifier vocabulary by buildErrorBody() (Hard Rule #12).
-  const result = createErrorResult(
-    restatement.status,
-    message,
-    restatement.retryAfterMs,
-    typeof details.errorCode === "string" ? details.errorCode : undefined,
-    typeof details.errorType === "string" ? details.errorType : undefined
-  );
+  const result = createErrorResult(restatement.status, message, restatement.retryAfterMs);
   return {
     kind: "error",
     result: {
@@ -243,14 +260,13 @@ async function toOutcome(
       error: result.error,
       errorCode: result.errorCode,
       errorType: result.errorType,
-      // The un-sanitized upstream wording — provider-error classification
-      // (quota vs rate-limit vs ban) reads this, not the client-facing text.
       rawMessage: message,
+      upstreamErrorBody: body,
+      upstreamHeaders: attempt.response.headers,
     },
     providerUsage: null,
     model,
     connectionId,
-    upstreamBody: body,
   };
 }
 
@@ -314,10 +330,22 @@ export async function runProviderExecutionPipeline(
         attempt,
         wire.currentModel,
         currentConnectionId(connection),
-        target.provider,
-        state
+        target.provider
       );
     }
+
+    // Teach the runtime limiter BEFORE any recovery branch rotates or retries:
+    // the 429 belongs to the connection that just took it. chatCore's own
+    // updateFromHeaders/updateFromResponseBody pair only runs on the streaming
+    // leg — the non-streaming leg returns this pipeline's error outcome straight
+    // to the caller, so without this the reservoir was never drained (#12945).
+    await recordUpstreamRateLimit(
+      state,
+      target.provider,
+      currentConnectionId(connection),
+      wire.currentModel,
+      attempt
+    );
 
     const isolateProbe = await state.isolateProbeFailures();
     const canRotateAccount = policy.allowAccountRotation && !isolateProbe;
@@ -460,8 +488,7 @@ export async function runProviderExecutionPipeline(
           lastAttempt,
           wire.currentModel,
           currentConnectionId(connection),
-          target.provider,
-          state
+          target.provider
         );
       }
     }
@@ -492,13 +519,7 @@ export async function runProviderExecutionPipeline(
       }
     }
 
-    return toOutcome(
-      attempt,
-      wire.currentModel,
-      currentConnectionId(connection),
-      target.provider,
-      state
-    );
+    return toOutcome(attempt, wire.currentModel, currentConnectionId(connection), target.provider);
   }
 
   if (lastAttempt) {
@@ -506,8 +527,7 @@ export async function runProviderExecutionPipeline(
       lastAttempt,
       wire.currentModel,
       currentConnectionId(connection),
-      target.provider,
-      state
+      target.provider
     );
   }
   return leaseMismatch(wire.currentModel, currentConnectionId(connection));
