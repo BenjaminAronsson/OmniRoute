@@ -62,6 +62,14 @@
       "flag": "🇩🇪"
     },
     {
+      "code": "el",
+      "label": "EL",
+      "name": "Ελληνικά",
+      "native": "Ελληνικά",
+      "english": "Greek",
+      "flag": "🇬🇷"
+    },
+    {
       "code": "en",
       "label": "EN",
       "name": "English",
@@ -76,6 +84,14 @@
       "native": "Español",
       "english": "Spanish",
       "flag": "🇪🇸"
+    },
+    {
+      "code": "et",
+      "label": "ET",
+      "name": "Eesti",
+      "native": "Eesti",
+      "english": "Estonian",
+      "flag": "🇪🇪"
     },
     {
       "code": "fa",
@@ -102,6 +118,14 @@
       "flag": "🇫🇷"
     },
     {
+      "code": "ga",
+      "label": "GA",
+      "name": "Gaeilge",
+      "native": "Gaeilge",
+      "english": "Irish",
+      "flag": "🇮🇪"
+    },
+    {
       "code": "gu",
       "label": "GU",
       "name": "ગુજરાતી",
@@ -124,6 +148,14 @@
       "native": "हिन्दी",
       "english": "Hindi",
       "flag": "🇮🇳"
+    },
+    {
+      "code": "hr",
+      "label": "HR",
+      "name": "Hrvatski",
+      "native": "Hrvatski",
+      "english": "Croatian",
+      "flag": "🇭🇷"
     },
     {
       "code": "hu",
@@ -159,12 +191,52 @@
       "flag": "🇯🇵"
     },
     {
+      "code": "km",
+      "label": "KM",
+      "name": "ខ្មែរ",
+      "native": "ខ្មែរ",
+      "english": "Khmer",
+      "flag": "🇰🇭"
+    },
+    {
+      "code": "kn",
+      "label": "KN",
+      "name": "ಕನ್ನಡ",
+      "native": "ಕನ್ನಡ",
+      "english": "Kannada",
+      "flag": "🇮🇳"
+    },
+    {
       "code": "ko",
       "label": "KO",
       "name": "한국어",
       "native": "한국어",
       "english": "Korean",
       "flag": "🇰🇷"
+    },
+    {
+      "code": "lt",
+      "label": "LT",
+      "name": "Lietuvių",
+      "native": "Lietuvių",
+      "english": "Lithuanian",
+      "flag": "🇱🇹"
+    },
+    {
+      "code": "lv",
+      "label": "LV",
+      "name": "Latviešu",
+      "native": "Latviešu",
+      "english": "Latvian",
+      "flag": "🇱🇻"
+    },
+    {
+      "code": "ml",
+      "label": "ML",
+      "name": "മലയാളം",
+      "native": "മലയാളം",
+      "english": "Malayalam",
+      "flag": "🇮🇳"
     },
     {
       "code": "mr",
@@ -183,6 +255,30 @@
       "flag": "🇲🇾"
     },
     {
+      "code": "mt",
+      "label": "MT",
+      "name": "Malti",
+      "native": "Malti",
+      "english": "Maltese",
+      "flag": "🇲🇹"
+    },
+    {
+      "code": "my",
+      "label": "MY",
+      "name": "မြန်မာ",
+      "native": "မြန်မာ",
+      "english": "Burmese",
+      "flag": "🇲🇲"
+    },
+    {
+      "code": "ne",
+      "label": "NE",
+      "name": "नेपाली",
+      "native": "नेपाली",
+      "english": "Nepali",
+      "flag": "🇳🇵"
+    },
+    {
       "code": "nl",
       "label": "NL",
       "name": "Nederlands",
@@ -197,6 +293,22 @@
       "native": "Norsk",
       "english": "Norwegian",
       "flag": "🇳🇴"
+    },
+    {
+      "code": "or",
+      "label": "OR",
+      "name": "ଓଡ଼ିଆ",
+      "native": "ଓଡ଼ିଆ",
+      "english": "Odia",
+      "flag": "🇮🇳"
+    },
+    {
+      "code": "pa",
+      "label": "PA",
+      "name": "ਪੰਜਾਬੀ",
+      "native": "ਪੰਜਾਬੀ",
+      "english": "Punjabi",
+      "flag": "🇮🇳"
     },
     {
       "code": "phi",
@@ -248,12 +360,36 @@
       "flag": "🇷🇺"
     },
     {
+      "code": "si",
+      "label": "SI",
+      "name": "සිංහල",
+      "native": "සිංහල",
+      "english": "Sinhala",
+      "flag": "🇱🇰"
+    },
+    {
       "code": "sk",
       "label": "SK",
       "name": "Slovenčina",
       "native": "Slovenčina",
       "english": "Slovak",
       "flag": "🇸🇰"
+    },
+    {
+      "code": "sl",
+      "label": "SL",
+      "name": "Slovenščina",
+      "native": "Slovenščina",
+      "english": "Slovenian",
+      "flag": "🇸🇮"
+    },
+    {
+      "code": "sr",
+      "label": "SR",
+      "name": "Српски",
+      "native": "Српски",
+      "english": "Serbian",
+      "flag": "🇷🇸"
     },
     {
       "code": "sv",
