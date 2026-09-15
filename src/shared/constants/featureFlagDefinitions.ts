@@ -558,6 +558,18 @@ export const FEATURE_FLAG_DEFINITIONS: FeatureFlagDefinition[] = [
     requiresRestart: false,
     warningLevel: "info",
   },
+  {
+    key: "SERVER_OWNED_TOOL_LOOP_ENABLED",
+    label: "Server-Owned Tool Loop",
+    description:
+      "Continue non-streaming server-owned tool calls until the model returns a client-usable response.",
+    descriptionI18nKey: "featureFlagServerOwnedToolLoopDescription",
+    category: "runtime",
+    defaultValue: "false",
+    type: "boolean",
+    requiresRestart: false,
+    warningLevel: "caution",
+  },
 
   // ──────────────── CLI (5) ────────────────
   {
@@ -610,7 +622,7 @@ export const FEATURE_FLAG_DEFINITIONS: FeatureFlagDefinition[] = [
     key: "OMNIROUTE_AUTO_SYNC_CLAUDE_PROFILES",
     label: "Auto-Sync Claude Code Profiles",
     description:
-      "After a provider model sync, automatically (re)write ~/.claude/profiles/<name>/settings.json Claude Code profiles from the live catalog. Never changes the active/default Claude config. Off by default.",
+      "After a provider model sync, automatically (re)write ~/.claude/profiles/'<name>'/settings.json Claude Code profiles from the live catalog. Never changes the active/default Claude config. Off by default.",
     descriptionI18nKey: "featureFlagOmnirouteAutoSyncClaudeProfilesDescription",
     category: "cli",
     defaultValue: "false",
