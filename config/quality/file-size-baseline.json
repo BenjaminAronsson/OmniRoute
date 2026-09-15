@@ -1,4 +1,5 @@
 {
+  "_rebaseline_2026_09_15_12643_messages_entry_guard": "#12643 own growth: src/sse/handlers/chat.ts 2462->2472 (+10). A `messages` array containing a null/non-object entry (e.g. `[null]`) passed every existing entry guard (#5110/#6402/#6407/#6412) and crashed downstream translators/session helpers (openai-to-claude.ts, sessionManager.ts, contextManager.ts's fixToolPairs) reading `.role`/`.content` off the raw entry, surfacing as an HTTP 500 instead of a clean 400. Adds one more entry-shape guard clause to the same chokepoint, extending the existing guard family — same pattern, irreducible call-site wiring (the check itself is a one-line `.some()` predicate, not extractable into its own leaf without hiding the chokepoint). Covered by tests/unit/chat-messages-entry-objects-12643.test.ts (3/3) plus the sibling guard suites (chat-messages-validation-6402.test.ts, chat-non-string-model-6407.test.ts, 22/22, no regression).",
   "_rebaseline_2026_09_14_13547_noauth_model_lockout": "PR #13547 own growth: src/sse/services/auth.ts 3542->3556 (+14). The synthetic noauth connection short-circuited before the per-connection status pass, so a recorded model-only lockout was never enforced and the locked model was retried on every request. Irreducible at the early-return site. Covered by tests/unit/noauth-model-lockout.test.ts (carried from #13527).",
   "_rebaseline_2026_09_14_13404_healthcheck_backup_prune": "PR #13404 own growth: src/lib/db/core.ts 1745->1767 (+22). createManagedDbBackup (the health-check-repair snapshot path) never ran retention, so every restart of a healthy DB added a full-size copy to db_backups/; it now prunes with the same env-driven limits as backup.ts, importing backupRetention directly to avoid the backup.ts cycle. Covered by tests/unit/db-backup-healthcheck-prune-13308.test.ts.",
   "_rebaseline_2026_09_14_13349_virtualfactory_custom_models_guard": "PR #13349 own growth: open-sse/services/autoCombo/virtualFactory.ts 1219->1230 (+11). The customModels key_value blob is operator-writable raw JSON, so a null or non-object row null-derefed every read and no auto/* pool could materialize; the builder now filters rows the same way catalog.ts already does. Irreducible at the read site. Covered by tests/unit/combo-auto-pool-visible-only.test.ts.",
@@ -477,7 +478,7 @@
     "src/shared/components/RequestLoggerV2.tsx": 1718,
     "src/shared/constants/providers/apikey/gateways.ts": 1502,
     "src/shared/services/cliRuntime.ts": 1296,
-    "src/sse/handlers/chat.ts": 2462,
+    "src/sse/handlers/chat.ts": 2472,
     "src/sse/services/auth.ts": 3556,
     "tests/unit/account-fallback-service.test.ts": 2453,
     "tests/unit/provider-validation-specialty.test.ts": 4656,
