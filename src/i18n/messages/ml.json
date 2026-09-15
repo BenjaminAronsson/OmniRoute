@@ -992,6 +992,7 @@
   "featureFlagExposeCcDiscoveryAliasesDescription": "Claude Code ഗേറ്റ്വേ മോഡൽ കണ്ടെത്തലിൽ Claude ഇതര മോഡലുകൾ പട്ടികപ്പെടുത്തുന്നതിനായി /v1/models-ൽ claude/&lt;provider&gt;/&lt;model&gt; മിറർ ഐഡികൾ പ്രസിദ്ധപ്പെടുത്തുക. മുന്നറിയിപ്പ്: ആഗോളതലത്തിൽ പ്രവർത്തനക്ഷമമാക്കുമ്പോൾ എല്ലാ ക്ലയന്റുകൾക്കുമുള്ള കാറ്റലോഗ് എൻട്രികളുടെ എണ്ണം ഇരട്ടിയാകും.",
   "featureFlagNoThinkingAliasEnabledDescription": "no-think/&lt;provider&gt;/&lt;model&gt; ഗേറ്റ്വേ അപരനാമങ്ങൾക്കുള്ള മാസ്റ്റർ സ്വിച്ച്. ഓൺ (ഡിഫോൾട്ട്): യോഗ്യതയുള്ള, ചിന്താശേഷിയുള്ള ഓരോ Claude മോഡലിനും ചിന്തിക്കാത്ത ഒരു വകഭേദം /v1/models പ്രസിദ്ധപ്പെടുത്തും; കൂടാതെ അഭ്യർത്ഥനയിൽ അയയ്ക്കുന്ന no-think/ ഐഡി, റീസണിങ് അടിച്ചമർത്തിക്കൊണ്ട് യഥാർഥ മോഡലിലേക്ക് തിരികെ പരിഹരിക്കപ്പെടും. ഓഫ്: വകഭേദങ്ങളൊന്നും പ്രസിദ്ധപ്പെടുത്തില്ല; no-think/ ഐഡി മറ്റേതൊരു അജ്ഞാത മോഡൽ ഐഡിയെയും പോലെ പരിഗണിക്കും. ഇത് ഓണായിരിക്കുമ്പോഴും ഓരോ മോഡലിനുമുള്ള ModelSpec.noThinkingAlias ഓപ്റ്റ്-ഇൻ/ഓപ്റ്റ്-ഔട്ട് ബാധകമാണ്.",
   "featureFlagChatVirtualLanesEnabledDescription": "പ്രൊവൈഡർ ഡിസ്പാച്ചിനായി ഓരോ ടെനന്റിനും അനുയോജ്യമായി മാറുന്ന വെർച്വൽ അഡ്മിഷൻ ലെയിനുകൾ പ്രവർത്തനക്ഷമമാക്കുക (#9654): ഇനി ഒരു ടെനന്റിന്റെ പെട്ടെന്നുള്ള അഭ്യർത്ഥന വർധന മറ്റൊരാൾക്ക് 503 പിശക് സൃഷ്ടിക്കില്ല. ഈ ഡാഷ്ബോർഡ് ഓവർറൈഡിനേക്കാൾ OMNIROUTE_CHAT_VIRTUAL_LANES env var-ന് മുൻഗണനയുണ്ട്; സെർവർ പുനരാരംഭിക്കുമ്പോൾ മാറ്റങ്ങൾ പ്രാബല്യത്തിൽ വരും.",
+  "featureFlagFreeBadgeRequiresProviderFreeTierDescription": "Dashboard provider pages: show the Free badge only on signals the provider honors — drops the display-name heuristic, non-boolean free fields and :free suffixes on registered providers without a documented free tier. Off keeps the historical badge rule.",
   "sidebar": {
     "home": "ഹോം",
     "dashboard": "ഡാഷ്ബോർഡ്",
@@ -12984,6 +12985,9 @@
       "STREAM_RECOVERY_MIDSTREAM_ENABLED": {
         "description": "ബൈറ്റുകൾ ഇതിനകം ക്ലയന്റിൽ എത്തിയതിനുശേഷവും പ്രതികരണം വീണ്ടും അഭ്യർത്ഥിച്ച് കൂട്ടിച്ചേർക്കാൻ സ്ട്രീം വീണ്ടെടുക്കലിനെ അനുവദിക്കുക."
       },
+      "STREAM_RECOVERY_TOOLCALL_ORDER_FIX": {
+        "description": "__MISSING__:Make mid-stream continuation tool-call safe: never resume a cut stream after a tool call was sent (still in progress or already finished), and stop after one empty continuation instead of using the whole retry budget."
+      },
       "MODEL_CATALOG_INCLUDE_NAMES": {
         "description": "/v1/models പ്രതികരണങ്ങളിൽ പ്രദർശനത്തിന് അനുയോജ്യമായ നാമ ഫീൽഡുകൾ ഉൾപ്പെടുത്തുക. മോഡൽ ID-കൾ മാത്രം സ്വീകരിക്കുന്ന ക്ലയന്റുകൾക്കായി ഇത് പ്രവർത്തനരഹിതമാക്കുക."
       },
@@ -13020,6 +13024,14 @@
       "SERVER_OWNED_TOOL_LOOP_ENABLED": {
         "label": "സെർവർ ഉടമസ്ഥതയിലുള്ള ടൂൾ ലൂപ്പ്",
         "description": "മോഡൽ ക്ലയന്റിന് ഉപയോഗിക്കാവുന്ന പ്രതികരണം നൽകുന്നതുവരെ സ്ട്രീമിംഗ് അല്ലാത്ത, സെർവർ ഉടമസ്ഥതയിലുള്ള ടൂൾ കോളുകൾ തുടരുക."
+      },
+      "RETRY_AFTER_PROVENANCE_ENABLED": {
+        "label": "__MISSING__:Retry-After Provenance",
+        "description": "__MISSING__:On aggregated 429/503 unavailable responses, omit Retry-After when no concrete future retry time is known instead of sending a synthetic 1s, add error.retry_after_provenance, and read prose retry hints on combo drain paths."
+      },
+      "PROTECTED_PRIORITY_INFRA_502_ENABLED": {
+        "label": "__MISSING__:Protected-Priority Infra Stops as 502",
+        "description": "__MISSING__:Answer 502 instead of 503 when a quota-only-fallback priority target stops the combo for a cause that is provably not quota: an open provider circuit breaker or a predictive latency skip."
       }
     }
   },
@@ -13633,6 +13645,7 @@
   },
   "featureFlagCapabilityFilterEnabledDescription": "ലക്ഷ്യമാക്കിയ മോഡലിന് ആവശ്യമായ ശേഷികൾ (വിഷൻ, ടൂളുകൾ, ഘടനാബദ്ധമായ ഔട്ട്പുട്ട്, കോൺടെക്സ്റ്റ് വിൻഡോ) ഇല്ലെങ്കിൽ അഭ്യർത്ഥനകൾ അയയ്ക്കുന്നതിന് മുമ്പ് നിരസിക്കുക. കോംബോ-ലെയർ അനുയോജ്യതാ ഫിൽട്ടർ മറികടക്കുന്ന നേരിട്ടുള്ള ഒറ്റ-പ്രൊവൈഡർ അഭ്യർത്ഥനകളെ ഇത് പരിരക്ഷിക്കുന്നു.",
   "featureFlagDisableContextWindowChecksDescription": "നേരിട്ടുള്ള ഒറ്റ-മോഡൽ അഭ്യർത്ഥനകൾക്കായി OmniRoute-ന്റെ ലോക്കൽ കോൺടെക്സ്റ്റ്-വിൻഡോ, പരമാവധി ഇൻപുട്ട്-ടോക്കൺ പരിശോധനകൾ ഒഴിവാക്കുക. അപ്സ്ട്രീം പ്രൊവൈഡർമാർ അവരുടെ യഥാർഥ പരിധികൾ തുടർന്നും നടപ്പാക്കും. പ്രോംപ്റ്റ് കംപ്രഷനും ഔട്ട്പുട്ട്-ടോക്കൺ പരിധികളും സജീവമായി തുടരും.",
+  "featureFlagSearchStatsHideDeletedConnectionsDescription": "Search stats and recent searches only count providers that still have a live connection (keyless providers such as duckduckgo-free always count). Off keeps every retained search row with a provider id.",
   "publicSystem": {
     "notFound": {
       "title": "പേജ് കണ്ടെത്തിയില്ല",

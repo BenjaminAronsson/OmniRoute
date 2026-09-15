@@ -992,6 +992,7 @@
   "featureFlagExposeCcDiscoveryAliasesDescription": "/v1/models पर claude/&lt;provider&gt;/&lt;model&gt; मिरर आईडी का विज्ञापन करें ताकि Claude Code गेटवे मॉडल खोज सूची में गैर-Claude मॉडल शामिल हो सकें। चेतावनी: जब वैश्विक रूप से सक्षम किया जाता है तो सभी ग्राहकों के लिए कैटलॉग प्रविष्टियों को डबल करता है।",
   "featureFlagNoThinkingAliasEnabledDescription": "__MISSING__:Master switch for the no-think/&lt;provider&gt;/&lt;model&gt; gateway aliases. On (default): /v1/models advertises a no-thinking variant for every eligible thinking-capable Claude model, and a no-think/ id sent on a request resolves back to the real model with reasoning suppressed. Off: no variants are advertised and a no-think/ id is treated like any other unknown model id. The per-model ModelSpec.noThinkingAlias opt-in/opt-out still applies while this is on.",
   "featureFlagChatVirtualLanesEnabledDescription": "प्रदाता डिस्पैच के लिए प्रति-टेनेंट अनुकूली वर्चुअल एडमिशन लेन सक्षम करें (#9654): एक टेनेंट का बर्स्ट अब दूसरे टेनेंट को 503 नहीं देता। OMNIROUTE_CHAT_VIRTUAL_LANES पर्यावरण चर इस डैशबोर्ड सेटिंग पर प्राथमिकता रखता है; परिवर्तन सर्वर पुनः आरंभ पर प्रभावी होते हैं।",
+  "featureFlagFreeBadgeRequiresProviderFreeTierDescription": "Dashboard provider pages: show the Free badge only on signals the provider honors — drops the display-name heuristic, non-boolean free fields and :free suffixes on registered providers without a documented free tier. Off keeps the historical badge rule.",
   "sidebar": {
     "home": "घर",
     "dashboard": "डैशबोर्ड",
@@ -12977,6 +12978,9 @@
       "STREAM_RECOVERY_MIDSTREAM_ENABLED": {
         "description": "बाइट्स पहले से ही क्लाइंट तक पहुँचने के बाद प्रतिक्रिया का फिर से अनुरोध करने और उसे जोड़ने के लिए स्ट्रीम रिकवरी की अनुमति दें।"
       },
+      "STREAM_RECOVERY_TOOLCALL_ORDER_FIX": {
+        "description": "__MISSING__:Make mid-stream continuation tool-call safe: never resume a cut stream after a tool call was sent (still in progress or already finished), and stop after one empty continuation instead of using the whole retry budget."
+      },
       "MODEL_CATALOG_INCLUDE_NAMES": {
         "description": "/v1/models प्रतिक्रियाओं में प्रदर्शन-अनुकूल नाम फ़ील्ड शामिल करें। उन क्लाइंट्स के लिए इसे अक्षम करें जो केवल मॉडल ID स्वीकार करते हैं।"
       },
@@ -13009,6 +13013,14 @@
       },
       "SKILLS_SANDBOX_NETWORK_ENABLED": {
         "description": "स्किल्स सैंडबॉक्स में नेटवर्क एक्सेस सक्षम करें।"
+      },
+      "RETRY_AFTER_PROVENANCE_ENABLED": {
+        "label": "__MISSING__:Retry-After Provenance",
+        "description": "__MISSING__:On aggregated 429/503 unavailable responses, omit Retry-After when no concrete future retry time is known instead of sending a synthetic 1s, add error.retry_after_provenance, and read prose retry hints on combo drain paths."
+      },
+      "PROTECTED_PRIORITY_INFRA_502_ENABLED": {
+        "label": "__MISSING__:Protected-Priority Infra Stops as 502",
+        "description": "__MISSING__:Answer 502 instead of 503 when a quota-only-fallback priority target stops the combo for a cause that is provably not quota: an open provider circuit breaker or a predictive latency skip."
       }
     }
   },
@@ -13622,6 +13634,7 @@
   },
   "featureFlagCapabilityFilterEnabledDescription": "डिस्पैच से पहले अनुरोधों को अस्वीकार करें जब लक्षित मॉडल आवश्यक क्षमताओं (दृष्टि, उपकरण, संरचित आउटपुट, संदर्भ विंडो) से रहित हो। यह सीधे एकल-प्रदाता अनुरोधों की रक्षा करता है जो कॉम्बो-लेयर संगतता फ़िल्टर को बायपास करते हैं।",
   "featureFlagDisableContextWindowChecksDescription": "Skip OmniRoute's local context-window and max-input-token check for direct single-model requests. Upstream providers still enforce their actual limits. Prompt compression and output-token caps remain active.",
+  "featureFlagSearchStatsHideDeletedConnectionsDescription": "Search stats and recent searches only count providers that still have a live connection (keyless providers such as duckduckgo-free always count). Off keeps every retained search row with a provider id.",
   "publicSystem": {
     "notFound": {
       "title": "पृष्ठ नहीं मिला",

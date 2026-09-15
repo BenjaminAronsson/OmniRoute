@@ -992,6 +992,7 @@
   "featureFlagExposeCcDiscoveryAliasesDescription": "Uri l-IDs mera claude/&lt;provider&gt;/&lt;model&gt; fuq /v1/models sabiex l-iskoperta tal-mudelli mill-gateway ta' Claude Code telenka mudelli mhux ta' Claude. Twissija: meta din l-għażla tkun attivata globalment, tirdoppja l-entrati fil-katalgu għall-klijenti kollha.",
   "featureFlagNoThinkingAliasEnabledDescription": "Swiċċ ewlieni għall-aliases tal-gateway no-think/&lt;provider&gt;/&lt;model&gt;. Mixgħul (predefinit): /v1/models juri varjant mingħajr ħsieb għal kull mudell Claude eliġibbli li kapaċi jaħseb, u ID no-think/ mibgħut f'talba jiġi solvut lura għall-mudell reali bir-raġunament imrażżan. Mitfi: ma jintwera l-ebda varjant u ID no-think/ jiġi ttrattat bħal kull ID ieħor ta' mudell mhux magħruf. L-għażla ta' inklużjoni/esklużjoni ModelSpec.noThinkingAlias għal kull mudell tibqa' tapplika waqt li din l-għażla tkun mixgħula.",
   "featureFlagChatVirtualLanesEnabledDescription": "Ippermetti korsiji virtwali adattivi tad-dħul għal kull tenant għad-dispaċċ tal-fornituri (#9654): żieda f'daqqa fit-traffiku ta' tenant wieħed ma tibqax tikkawża żball 503 għal ieħor. Il-varjabbli tal-ambjent OMNIROUTE_CHAT_VIRTUAL_LANES jieħu preċedenza fuq din is-sovrasKitba tad-dashboard; il-bidliet jidħlu fis-seħħ meta jerġa' jinbeda s-server.",
+  "featureFlagFreeBadgeRequiresProviderFreeTierDescription": "Dashboard provider pages: show the Free badge only on signals the provider honors — drops the display-name heuristic, non-boolean free fields and :free suffixes on registered providers without a documented free tier. Off keeps the historical badge rule.",
   "sidebar": {
     "home": "Paġna Ewlenija",
     "dashboard": "Dashboard",
@@ -12984,6 +12985,9 @@
       "STREAM_RECOVERY_MIDSTREAM_ENABLED": {
         "description": "Ħalli l-irkupru tal-fluss jitlob it-tweġiba mill-ġdid u jgħaqqadha wara li l-bytes ikunu diġà waslu għand il-klijent."
       },
+      "STREAM_RECOVERY_TOOLCALL_ORDER_FIX": {
+        "description": "__MISSING__:Make mid-stream continuation tool-call safe: never resume a cut stream after a tool call was sent (still in progress or already finished), and stop after one empty continuation instead of using the whole retry budget."
+      },
       "MODEL_CATALOG_INCLUDE_NAMES": {
         "description": "Inkludi oqsma tal-isem adattati għall-wiri fit-tweġibiet ta’ /v1/models. Iddiżattiva dan għal klijenti li jaċċettaw biss IDs tal-mudelli."
       },
@@ -13020,6 +13024,14 @@
       "SERVER_OWNED_TOOL_LOOP_ENABLED": {
         "label": "Ċiklu tal-Għodod Immexxi mis-Server",
         "description": "Kompli s-sejħiet mhux streaming tal-għodod immexxija mis-server sakemm il-mudell jirritorna tweġiba li tista’ tintuża mill-klijent."
+      },
+      "RETRY_AFTER_PROVENANCE_ENABLED": {
+        "label": "__MISSING__:Retry-After Provenance",
+        "description": "__MISSING__:On aggregated 429/503 unavailable responses, omit Retry-After when no concrete future retry time is known instead of sending a synthetic 1s, add error.retry_after_provenance, and read prose retry hints on combo drain paths."
+      },
+      "PROTECTED_PRIORITY_INFRA_502_ENABLED": {
+        "label": "__MISSING__:Protected-Priority Infra Stops as 502",
+        "description": "__MISSING__:Answer 502 instead of 503 when a quota-only-fallback priority target stops the combo for a cause that is provably not quota: an open provider circuit breaker or a predictive latency skip."
       }
     }
   },
@@ -13633,6 +13645,7 @@
   },
   "featureFlagCapabilityFilterEnabledDescription": "Irrifjuta t-talbiet qabel jintbagħtu meta l-mudell fil-mira ma jkollux il-kapaċitajiet meħtieġa (viżjoni, għodod, output strutturat, tieqa tal-kuntest). Jipproteġi t-talbiet diretti lil fornitur wieħed li jaqbżu l-filtru tal-kompatibbiltà tas-saff tal-kombinazzjonijiet.",
   "featureFlagDisableContextWindowChecksDescription": "Aqbeż il-verifika lokali ta' OmniRoute għat-tieqa tal-kuntest u l-għadd massimu ta' tokens tal-input għal talbiet diretti lil mudell wieħed. Il-fornituri upstream xorta jinfurzaw il-limiti effettivi tagħhom. Il-kompressjoni tal-prompt u l-limiti tat-tokens tal-output jibqgħu attivi.",
+  "featureFlagSearchStatsHideDeletedConnectionsDescription": "Search stats and recent searches only count providers that still have a live connection (keyless providers such as duckduckgo-free always count). Off keeps every retained search row with a provider id.",
   "publicSystem": {
     "notFound": {
       "title": "Il-paġna ma nstabitx",

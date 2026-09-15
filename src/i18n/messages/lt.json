@@ -992,6 +992,7 @@
   "featureFlagExposeCcDiscoveryAliasesDescription": "Skelbti claude/&lt;provider&gt;/&lt;model&gt; atspindžio ID per /v1/models, kad Claude Code šliuzo modelių aptikimas rodytų ir ne-Claude modelius. Įspėjimas: įjungus visuotinai, katalogo įrašų skaičius padvigubėja visiems klientams.",
   "featureFlagNoThinkingAliasEnabledDescription": "Pagrindinis no-think/&lt;provider&gt;/&lt;model&gt; šliuzo aliasų jungiklis. Įjungta (numatyta): /v1/models skelbia „no-thinking“ variantą kiekvienam tinkamam mąstymo galimybę turinčiam Claude modeliui, o užklausoje pateiktas no-think/ ID nukreipiamas atgal į tikrąjį modelį su slopintu samprotavimu. Išjungta: variantai nėra skelbiami, o no-think/ ID laikomas kaip bet koks kitas nežinomas modelio ID. Kol tai įjungta, vis tiek taikomas kiekvieno modelio ModelSpec.noThinkingAlias sutikimo/atsisakymo nustatymas.",
   "featureFlagChatVirtualLanesEnabledDescription": "Įjungti kiekvienam nuomotojui pritaikomas adaptyvias virtualias priėmimo juostas teikėjų siuntimui (#9654): vieno nuomotojo srautas nebesukelia 503 klaidos kitam. Aplinkos kintamasis OMNIROUTE_CHAT_VIRTUAL_LANES turi pirmenybę prieš šį skydelio nustatymą; pakeitimai įsigalioja po serverio paleidimo iš naujo.",
+  "featureFlagFreeBadgeRequiresProviderFreeTierDescription": "Dashboard provider pages: show the Free badge only on signals the provider honors — drops the display-name heuristic, non-boolean free fields and :free suffixes on registered providers without a documented free tier. Off keeps the historical badge rule.",
   "sidebar": {
     "home": "Pradžia",
     "dashboard": "Suvestinė",
@@ -12984,6 +12985,9 @@
       "STREAM_RECOVERY_MIDSTREAM_ENABLED": {
         "description": "Leisti atkuriant srautą dar kartą paprašyti atsakymo ir jį sujungti, net jei klientas jau gavo dalį baitų."
       },
+      "STREAM_RECOVERY_TOOLCALL_ORDER_FIX": {
+        "description": "__MISSING__:Make mid-stream continuation tool-call safe: never resume a cut stream after a tool call was sent (still in progress or already finished), and stop after one empty continuation instead of using the whole retry budget."
+      },
       "MODEL_CATALOG_INCLUDE_NAMES": {
         "description": "Į /v1/models atsakymus įtraukti patogiam rodymui skirtus pavadinimų laukus. Išjunkite tai klientams, kurie priima tik modelių ID."
       },
@@ -13020,6 +13024,14 @@
       "SERVER_OWNED_TOOL_LOOP_ENABLED": {
         "label": "Serverio valdomas įrankių ciklas",
         "description": "Tęsti serverio valdomus nesrautinius įrankių iškvietimus, kol modelis pateiks klientui tinkamą atsakymą."
+      },
+      "RETRY_AFTER_PROVENANCE_ENABLED": {
+        "label": "__MISSING__:Retry-After Provenance",
+        "description": "__MISSING__:On aggregated 429/503 unavailable responses, omit Retry-After when no concrete future retry time is known instead of sending a synthetic 1s, add error.retry_after_provenance, and read prose retry hints on combo drain paths."
+      },
+      "PROTECTED_PRIORITY_INFRA_502_ENABLED": {
+        "label": "__MISSING__:Protected-Priority Infra Stops as 502",
+        "description": "__MISSING__:Answer 502 instead of 503 when a quota-only-fallback priority target stops the combo for a cause that is provably not quota: an open provider circuit breaker or a predictive latency skip."
       }
     }
   },
@@ -13633,6 +13645,7 @@
   },
   "featureFlagCapabilityFilterEnabledDescription": "Atmesti užklausas prieš jas perduodant, kai tikslinis modelis neturi reikiamų galimybių (vaizdų apdorojimo, įrankių, struktūrizuotos išvesties, konteksto lango). Tai apsaugo tiesiogines vienam teikėjui skirtas užklausas, kurios apeina derinių lygmens suderinamumo filtrą.",
   "featureFlagDisableContextWindowChecksDescription": "Tiesioginėms vieno modelio užklausoms praleisti OmniRoute vietinę konteksto lango ir didžiausio įvesties žetonų skaičiaus patikrą. Išoriniai teikėjai vis tiek taiko savo faktinius apribojimus. Raginimų glaudinimas ir išvesties žetonų apribojimai lieka aktyvūs.",
+  "featureFlagSearchStatsHideDeletedConnectionsDescription": "Search stats and recent searches only count providers that still have a live connection (keyless providers such as duckduckgo-free always count). Off keeps every retained search row with a provider id.",
   "publicSystem": {
     "notFound": {
       "title": "Puslapis nerastas",

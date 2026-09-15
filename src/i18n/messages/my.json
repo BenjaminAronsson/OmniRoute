@@ -992,6 +992,7 @@
   "featureFlagExposeCcDiscoveryAliasesDescription": "Claude Code gateway ၏ မော်ဒယ်ရှာဖွေမှုစာရင်းတွင် Claude မဟုတ်သော မော်ဒယ်များ ပါဝင်စေရန် /v1/models တွင် claude/&lt;provider&gt;/&lt;model&gt; mirror ids များကို ဖော်ပြပါ။ သတိပေးချက်- အားလုံးအတွက် ဖွင့်ထားပါက client အားလုံးတွင် catalog entry အရေအတွက် နှစ်ဆဖြစ်စေသည်။",
   "featureFlagNoThinkingAliasEnabledDescription": "no-think/&lt;provider&gt;/&lt;model&gt; gateway aliases များအတွက် အဓိကခလုတ်။ ဖွင့်ထားလျှင် (မူလသတ်မှတ်ချက်)- /v1/models သည် သတ်မှတ်ချက်ပြည့်မီသော စဉ်းစားဆင်ခြင်နိုင်သည့် Claude မော်ဒယ်တိုင်းအတွက် မစဉ်းစားသည့် မူကွဲတစ်ခုကို ဖော်ပြပြီး တောင်းဆိုမှုတစ်ခုတွင် ပေးပို့သော no-think/ id ကို reasoning ပိတ်ထားသည့် တကယ့်မော်ဒယ်သို့ ပြန်လည်ချိတ်ဆက်ပေးသည်။ ပိတ်ထားလျှင်- မည်သည့်မူကွဲကိုမျှ မဖော်ပြဘဲ no-think/ id ကို အခြားမသိသော model id များကဲ့သို့ သတ်မှတ်သည်။ ဤခလုတ်ဖွင့်ထားစဉ် မော်ဒယ်တစ်ခုချင်းစီ၏ ModelSpec.noThinkingAlias opt-in/opt-out သတ်မှတ်ချက်သည် ဆက်လက်သက်ရောက်သည်။",
   "featureFlagChatVirtualLanesEnabledDescription": "provider dispatch (#9654) အတွက် tenant တစ်ခုချင်းစီအလိုက် အလိုက်သင့်ပြောင်းလဲနိုင်သော virtual admission lanes များကို ဖွင့်ပါ။ tenant တစ်ခု၏ ရုတ်တရက်မြင့်တက်လာသော အသုံးပြုမှုကြောင့် အခြား tenant တွင် 503 ဖြစ်ပေါ်တော့မည်မဟုတ်ပါ။ OMNIROUTE_CHAT_VIRTUAL_LANES env var သည် ဤ dashboard override ထက် ဦးစားပေးသက်ရောက်ပြီး ပြောင်းလဲမှုများသည် server ပြန်လည်စတင်ချိန်တွင် အသက်ဝင်မည်ဖြစ်သည်။",
+  "featureFlagFreeBadgeRequiresProviderFreeTierDescription": "Dashboard provider pages: show the Free badge only on signals the provider honors — drops the display-name heuristic, non-boolean free fields and :free suffixes on registered providers without a documented free tier. Off keeps the historical badge rule.",
   "sidebar": {
     "home": "ပင်မစာမျက်နှာ",
     "dashboard": "ဒက်ရှ်ဘုတ်",
@@ -12984,6 +12985,9 @@
       "STREAM_RECOVERY_MIDSTREAM_ENABLED": {
         "description": "Byte များ client ထံ ရောက်ရှိပြီးနောက်တွင်ပင် stream recovery က response ကို ထပ်မံတောင်းခံ၍ ဆက်စပ်ပေါင်းစည်းနိုင်ရန် ခွင့်ပြုပါ။"
       },
+      "STREAM_RECOVERY_TOOLCALL_ORDER_FIX": {
+        "description": "__MISSING__:Make mid-stream continuation tool-call safe: never resume a cut stream after a tool call was sent (still in progress or already finished), and stop after one empty continuation instead of using the whole retry budget."
+      },
       "MODEL_CATALOG_INCLUDE_NAMES": {
         "description": "/v1/models response များတွင် ဖတ်ရှုရလွယ်ကူသော name field များကို ထည့်သွင်းပါ။ Model ID များကိုသာ လက်ခံသော client များအတွက် ၎င်းကို ပိတ်ပါ။"
       },
@@ -13020,6 +13024,14 @@
       "SERVER_OWNED_TOOL_LOOP_ENABLED": {
         "label": "Server ပိုင် Tool Loop",
         "description": "Model က client အသုံးပြုနိုင်သော response တစ်ခုကို ပြန်ပေးသည်အထိ non-streaming server-owned tool call များကို ဆက်လက်လုပ်ဆောင်ပါ။"
+      },
+      "RETRY_AFTER_PROVENANCE_ENABLED": {
+        "label": "__MISSING__:Retry-After Provenance",
+        "description": "__MISSING__:On aggregated 429/503 unavailable responses, omit Retry-After when no concrete future retry time is known instead of sending a synthetic 1s, add error.retry_after_provenance, and read prose retry hints on combo drain paths."
+      },
+      "PROTECTED_PRIORITY_INFRA_502_ENABLED": {
+        "label": "__MISSING__:Protected-Priority Infra Stops as 502",
+        "description": "__MISSING__:Answer 502 instead of 503 when a quota-only-fallback priority target stops the combo for a cause that is provably not quota: an open provider circuit breaker or a predictive latency skip."
       }
     }
   },
@@ -13633,6 +13645,7 @@
   },
   "featureFlagCapabilityFilterEnabledDescription": "ပစ်မှတ်မော်ဒယ်တွင် လိုအပ်သော စွမ်းဆောင်ရည်များ (အမြင်၊ ကိရိယာများ၊ ဖွဲ့စည်းပုံကျ အထွက်၊ ကွန်တက်စ်ဝင်းဒိုး) မရှိပါက ဖြန့်ပို့ခြင်းမပြုမီ တောင်းဆိုမှုများကို ပယ်ချပါ။ ၎င်းသည် combo-layer လိုက်ဖက်ညီမှု စစ်ထုတ်မှုကို ကျော်လွှားသော တစ်ခုတည်းသောပံ့ပိုးသူထံ တိုက်ရိုက်တောင်းဆိုမှုများကို ကာကွယ်ပေးသည်။",
   "featureFlagDisableContextWindowChecksDescription": "တစ်ခုတည်းသောမော်ဒယ်ထံ တိုက်ရိုက်တောင်းဆိုမှုများအတွက် OmniRoute ၏ စက်တွင်း ကွန်တက်စ်ဝင်းဒိုးနှင့် အများဆုံးထည့်သွင်းတိုကင် စစ်ဆေးမှုကို ကျော်ပါ။ မူလပံ့ပိုးသူများက ၎င်းတို့၏ အမှန်တကယ်ကန့်သတ်ချက်များကို ဆက်လက်အတည်ပြုကျင့်သုံးမည်ဖြစ်သည်။ ပရောမ့်ချုံ့ခြင်းနှင့် အထွက်တိုကင် အများဆုံးကန့်သတ်ချက်များမှာ ဆက်လက်အသက်ဝင်နေမည်ဖြစ်သည်။",
+  "featureFlagSearchStatsHideDeletedConnectionsDescription": "Search stats and recent searches only count providers that still have a live connection (keyless providers such as duckduckgo-free always count). Off keeps every retained search row with a provider id.",
   "publicSystem": {
     "notFound": {
       "title": "စာမျက်နှာကို ရှာမတွေ့ပါ",

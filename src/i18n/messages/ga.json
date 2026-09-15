@@ -992,6 +992,7 @@
   "featureFlagExposeCcDiscoveryAliasesDescription": "Fógraigh aitheantais scátháin claude/&lt;soláthraí&gt;/&lt;samhail&gt; ar /v1/models ionas go bhfógróidh fionnachtain samhla geata Claude Code samhlacha neamh-Claude. Rabhadh: déanann sé iontrálacha catalóige a dhúbailt do gach cliant nuair a chumasaítear go domhanda é.",
   "featureFlagNoThinkingAliasEnabledDescription": "Príomh-lasc do na haliasanna geataí no-think/&lt;soláthraí&gt;/&lt;samhail&gt;. Ar (réamhshocrú): fógraíonn /v1/models leagan gan smaoineamh do gach samhail Claude atá in ann smaoineamh, agus réitíonn aitheantas no-think/ a sheoltar ar iarratas ar ais go dtí an tsamhail fíor le réasúnaíocht faoi chois. As: ní fhógraítear aon leaganacha agus caitear le haitheantas no-think/ mar aon aitheantas samhla anaithnid eile. Tá an rogha per-model ModelSpec.noThinkingAlias fós i bhfeidhm agus é seo ar siúl.",
   "featureFlagChatVirtualLanesEnabledDescription": "Cumasaigh lánaí iontrála oiriúnaitheacha fíorúla in aghaidh an tionónta le haghaidh seolta soláthraí (#9654): ní chruthaíonn pléascadh tionónta amháin 503 do thionónta eile a thuilleadh. Tá an athróg timpeallachta OMNIROUTE_CHAT_VIRTUAL_LANES níos cumhachtaí ná an sárú deais seo; tagann athruithe i bhfeidhm ag atosú freastalaí.",
+  "featureFlagFreeBadgeRequiresProviderFreeTierDescription": "Dashboard provider pages: show the Free badge only on signals the provider honors — drops the display-name heuristic, non-boolean free fields and :free suffixes on registered providers without a documented free tier. Off keeps the historical badge rule.",
   "sidebar": {
     "home": "Baile",
     "dashboard": "Deais",
@@ -12984,6 +12985,9 @@
       "STREAM_RECOVERY_MIDSTREAM_ENABLED": {
         "description": "Ceadaigh d'aisghabháil srutha an freagra a iarraidh arís agus é a fhuáil le chéile tar éis do bhearta a bheith sroichte ag an gcliant cheana féin."
       },
+      "STREAM_RECOVERY_TOOLCALL_ORDER_FIX": {
+        "description": "__MISSING__:Make mid-stream continuation tool-call safe: never resume a cut stream after a tool call was sent (still in progress or already finished), and stop after one empty continuation instead of using the whole retry budget."
+      },
       "MODEL_CATALOG_INCLUDE_NAMES": {
         "description": "Cuir réimsí ainmneacha atá cairdiúil don taispeáint san áireamh i bhfreagraí /v1/models. Díchumasaigh é seo do chliaint a ghlacann le haitheantóirí múnla amháin."
       },
@@ -13020,6 +13024,14 @@
       "SERVER_OWNED_TOOL_LOOP_ENABLED": {
         "label": "Lúb Uirlisí faoi Úinéireacht an Fhreastalaí",
         "description": "Lean ar aghaidh le glaonna uirlise neamhshruthaithe atá faoi úinéireacht an fhreastalaí go dtí go gcuirfidh an tsamhail freagra ar fáil is féidir leis an gcliant a úsáid."
+      },
+      "RETRY_AFTER_PROVENANCE_ENABLED": {
+        "label": "__MISSING__:Retry-After Provenance",
+        "description": "__MISSING__:On aggregated 429/503 unavailable responses, omit Retry-After when no concrete future retry time is known instead of sending a synthetic 1s, add error.retry_after_provenance, and read prose retry hints on combo drain paths."
+      },
+      "PROTECTED_PRIORITY_INFRA_502_ENABLED": {
+        "label": "__MISSING__:Protected-Priority Infra Stops as 502",
+        "description": "__MISSING__:Answer 502 instead of 503 when a quota-only-fallback priority target stops the combo for a cause that is provably not quota: an open provider circuit breaker or a predictive latency skip."
       }
     }
   },
@@ -13633,6 +13645,7 @@
   },
   "featureFlagCapabilityFilterEnabledDescription": "Diúltaigh iarratais roimh seoladh nuair nach bhfuil cumais riachtanacha ag an sprioc-mhúnla (radharc, uirlisí, aschur struchtúrtha, fuinneog comhthéacs). Cosnaíonn sé iarrataí aonair díreach-aonair-bhunaithe a sheachann an scagaire comhoiriúlachta sraithe chomhcheangail.",
   "featureFlagDisableContextWindowChecksDescription": "Léim thar seiceáil fuinneog comhthéacs agus ionchur comhartha uasta OmniRoute d'iarrataí múnla-aonair dhíreacha. Fórsíonn na soláthraithe suasshrutha a dteorainn fíor-fholláin fós. Fanann comhbhrú leideanna agus teorainn aschur comhartha gníomhach.",
+  "featureFlagSearchStatsHideDeletedConnectionsDescription": "Search stats and recent searches only count providers that still have a live connection (keyless providers such as duckduckgo-free always count). Off keeps every retained search row with a provider id.",
   "publicSystem": {
     "notFound": {
       "title": "Leathanach gan aimsiú",

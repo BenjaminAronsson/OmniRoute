@@ -992,6 +992,7 @@
   "featureFlagExposeCcDiscoveryAliasesDescription": "Izziņot claude/&lt;provider&gt;/&lt;model&gt; spoguļa ID vietnē /v1/models, lai Claude Code vārtejas modeļu atrašana uzrādītu ne-Claude modeļus. Brīdinājums: kad iespējots globāli, dublējas katalogā ieraksti visiem klientiem.",
   "featureFlagNoThinkingAliasEnabledDescription": "Galvenais slēdzis no-think/&lt;provider&gt;&lt;model&gt; vārtejas aizstājvārdiem. Iesl. (pēc noklusējuma): /v1/models izziņo bezdomāšanas variantu katram atbilstošajam domāšanas spējīgajam Claude modelim, un no-think/ ID, kas nosūtīts pieprasījumā, tiek atrisināts atpakaļ uz reālo modeli ar apspiestu argumentāciju. Izsl.: nekādi varianti netiek izziņoti, un no-think/ ID tiek uzskatīts par jebkuru citu nezināmu modeļa ID. Modeļa ModelSpec.noThinkingAlias iekļaušanās/izslēgšanās iespēja joprojām darbojas, kamēr šis ir iespējots.",
   "featureFlagChatVirtualLanesEnabledDescription": "Iespējot katra nomnieka adaptīvas virtuālās uzņemšanas joslas nodrošinātāju izsūtīšanai (#9654): viena nomnieka slodzes lēciens vairs neizraisa 503 kļūdu citam. OMNIROUTE_CHAT_VIRTUAL_LANES vides mainīgais ir prioritārāks par šo paneļa iestatījumu; izmaiņas stājas spēkā pēc servera pārstartēšanas.",
+  "featureFlagFreeBadgeRequiresProviderFreeTierDescription": "Dashboard provider pages: show the Free badge only on signals the provider honors — drops the display-name heuristic, non-boolean free fields and :free suffixes on registered providers without a documented free tier. Off keeps the historical badge rule.",
   "sidebar": {
     "home": "Sākums",
     "dashboard": "Panelis",
@@ -12984,6 +12985,9 @@
       "STREAM_RECOVERY_MIDSTREAM_ENABLED": {
         "description": "Ļaut straumes atkopšanai atkārtoti pieprasīt atbildi un pievienot to straumei pēc tam, kad baiti jau ir sasnieguši klientu."
       },
+      "STREAM_RECOVERY_TOOLCALL_ORDER_FIX": {
+        "description": "__MISSING__:Make mid-stream continuation tool-call safe: never resume a cut stream after a tool call was sent (still in progress or already finished), and stop after one empty continuation instead of using the whole retry budget."
+      },
       "MODEL_CATALOG_INCLUDE_NAMES": {
         "description": "Iekļaut lietotājam draudzīga attēlojamā nosaukuma laukus /v1/models atbildēs. Atspējojiet šo opciju klientiem, kas pieņem tikai modeļu ID."
       },
@@ -13020,6 +13024,14 @@
       "SERVER_OWNED_TOOL_LOOP_ENABLED": {
         "label": "Servera pārvaldīta rīku izsaukumu cilpa",
         "description": "Turpināt servera pārvaldītos rīku izsaukumus bez straumēšanas, līdz modelis atgriež klientam izmantojamu atbildi."
+      },
+      "RETRY_AFTER_PROVENANCE_ENABLED": {
+        "label": "__MISSING__:Retry-After Provenance",
+        "description": "__MISSING__:On aggregated 429/503 unavailable responses, omit Retry-After when no concrete future retry time is known instead of sending a synthetic 1s, add error.retry_after_provenance, and read prose retry hints on combo drain paths."
+      },
+      "PROTECTED_PRIORITY_INFRA_502_ENABLED": {
+        "label": "__MISSING__:Protected-Priority Infra Stops as 502",
+        "description": "__MISSING__:Answer 502 instead of 503 when a quota-only-fallback priority target stops the combo for a cause that is provably not quota: an open provider circuit breaker or a predictive latency skip."
       }
     }
   },
@@ -13633,6 +13645,7 @@
   },
   "featureFlagCapabilityFilterEnabledDescription": "Noraidīt pieprasījumus pirms nosūtīšanas, ja mērķa modelim trūkst nepieciešamo iespēju (redze, rīki, strukturēta izvade, konteksta logs). Aizsargā tiešus viena pakalpojumu sniedzēja pieprasījumus, kas apiet combo-layer saderības filtru.",
   "featureFlagDisableContextWindowChecksDescription": "Izlaist OmniRoute lokālo konteksta loga un max-input-token pārbaudi tiešiem viena modeļa pieprasījumiem. Augšupējie pakalpojumu sniedzēji joprojām piemēro savus faktiskos ierobežojumus. Uzvedņu saspiešana un izvades marķieru ierobežojumi paliek aktīvi.",
+  "featureFlagSearchStatsHideDeletedConnectionsDescription": "Search stats and recent searches only count providers that still have a live connection (keyless providers such as duckduckgo-free always count). Off keeps every retained search row with a provider id.",
   "publicSystem": {
     "notFound": {
       "title": "Lapa nav atrasta",

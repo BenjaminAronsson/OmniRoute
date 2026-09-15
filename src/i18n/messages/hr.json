@@ -992,6 +992,7 @@
   "featureFlagExposeCcDiscoveryAliasesDescription": "Oglašavaj claude/&lt;provider&gt;/&lt;model&gt; zrcalne identifikatore na /v1/models kako bi otkrivanje modela Claude Code gatewaya prikazivalo modele koji nisu Claude. Upozorenje: udvostručuje unose kataloga za sve klijente kada je globalno omogućeno.",
   "featureFlagNoThinkingAliasEnabledDescription": "Glavni prekidač za no-think/&lt;provider&gt;/&lt;model&gt; pseudonime gatewaya. Uključeno (zadano): /v1/models oglašava varijantu bez razmišljanja za svaki prihvatljivi Claude model sposoban za razmišljanje, a no-think/ identifikator poslan u zahtjevu razrješava se natrag na pravi model s potisnutim zaključivanjem. Isključeno: nijedna varijanta se ne oglašava i no-think/ identifikator tretira se kao bilo koji drugi nepoznati identifikator modela. Opt-in/opt-out ModelSpec.noThinkingAlias po modelu i dalje se primjenjuje dok je ovo uključeno.",
   "featureFlagChatVirtualLanesEnabledDescription": "Omogući adaptivne virtualne prijamne trake po korisniku za raspodjelu pružatelja (#9654): opterećenje jednog korisnika više neće uzrokovati 503 grešku drugome. Varijabla okoline OMNIROUTE_CHAT_VIRTUAL_LANES ima prednost nad ovim nadjačavanjem nadzorne ploče; promjene stupaju na snagu pri ponovnom pokretanju poslužitelja.",
+  "featureFlagFreeBadgeRequiresProviderFreeTierDescription": "Dashboard provider pages: show the Free badge only on signals the provider honors — drops the display-name heuristic, non-boolean free fields and :free suffixes on registered providers without a documented free tier. Off keeps the historical badge rule.",
   "sidebar": {
     "home": "Početna",
     "dashboard": "Nadzorna ploča",
@@ -12984,6 +12985,9 @@
       "STREAM_RECOVERY_MIDSTREAM_ENABLED": {
         "description": "Dopusti oporavku toka da ponovo zatraži odgovor i spoji ga nakon što su bajtovi već stigli do klijenta."
       },
+      "STREAM_RECOVERY_TOOLCALL_ORDER_FIX": {
+        "description": "__MISSING__:Make mid-stream continuation tool-call safe: never resume a cut stream after a tool call was sent (still in progress or already finished), and stop after one empty continuation instead of using the whole retry budget."
+      },
       "MODEL_CATALOG_INCLUDE_NAMES": {
         "description": "Uključi polja s imenima prilagođenim za prikaz u odgovorima /v1/models. Onemogući ovo za klijente koji prihvaćaju samo ID-ove modela."
       },
@@ -13020,6 +13024,14 @@
       "SERVER_OWNED_TOOL_LOOP_ENABLED": {
         "label": "Petlja alata pod nadzorom poslužitelja",
         "description": "Nastavi s nestrujnim pozivima alata pod nadzorom poslužitelja sve dok model ne vrati odgovor koji klijent može upotrijebiti."
+      },
+      "RETRY_AFTER_PROVENANCE_ENABLED": {
+        "label": "__MISSING__:Retry-After Provenance",
+        "description": "__MISSING__:On aggregated 429/503 unavailable responses, omit Retry-After when no concrete future retry time is known instead of sending a synthetic 1s, add error.retry_after_provenance, and read prose retry hints on combo drain paths."
+      },
+      "PROTECTED_PRIORITY_INFRA_502_ENABLED": {
+        "label": "__MISSING__:Protected-Priority Infra Stops as 502",
+        "description": "__MISSING__:Answer 502 instead of 503 when a quota-only-fallback priority target stops the combo for a cause that is provably not quota: an open provider circuit breaker or a predictive latency skip."
       }
     }
   },
@@ -13633,6 +13645,7 @@
   },
   "featureFlagCapabilityFilterEnabledDescription": "Odbij zahtjeve prije otpreme kada ciljnom modelu nedostaju potrebne mogućnosti (vizija, alati, strukturirani izlaz, kontekstni prozor). Štiti izravne zahtjeve prema jednom pružatelju koji zaobilaze filtar kompatibilnosti combo-sloja.",
   "featureFlagDisableContextWindowChecksDescription": "Preskoči OmniRoute-ovu lokalnu provjeru kontekstnog prozora i maksimalnog ulaznog tokena za izravne zahtjeve prema jednom modelu. Uzlazni pružatelji i dalje primjenjuju stvarna ograničenja. Kompresija upita i ograničenja izlaznih tokena ostaju aktivni.",
+  "featureFlagSearchStatsHideDeletedConnectionsDescription": "Search stats and recent searches only count providers that still have a live connection (keyless providers such as duckduckgo-free always count). Off keeps every retained search row with a provider id.",
   "publicSystem": {
     "notFound": {
       "title": "Stranica nije pronađena",

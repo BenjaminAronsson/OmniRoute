@@ -992,6 +992,7 @@
   "featureFlagExposeCcDiscoveryAliasesDescription": "claude/&lt;provider&gt;/&lt;model&gt; ಮಿರರ್ ಐಡಿಗಳನ್ನು /v1/models ನಲ್ಲಿ ಪ್ರಕಟಿಸಿ, ಆದ್ದರಿಂದ Claude Code gateway ಮಾಡೆಲ್ ಆವಿಷ್ಕಾರವು non-Claude ಮಾಡೆಲ್ಗಳನ್ನು ಪಟ್ಟಿಮಾಡುತ್ತದೆ. ಎಚ್ಚರಿಕೆ: ಜಾಗತಿಕವಾಗಿ ಸಕ್ರಿಯಗೊಳಿಸಿದಾಗ ಎಲ್ಲಾ ಕ್ಲೈಂಟ್ಗಳಿಗೆ ಕ್ಯಾಟಲಾಗ್ ಎಂಟ್ರಿಗಳನ್ನು ದ್ವಿಗುಣಗೊಳಿಸುತ್ತದೆ.",
   "featureFlagNoThinkingAliasEnabledDescription": "no-think/&lt;provider&gt;/&lt;model&gt; gateway ಅಲಿಯಾಸ್ಗಳಿಗಾಗಿ ಮಾಸ್ಟರ್ ಸ್ವಿಚ್. ಆನ್ (ಡೀಫಾಲ್ಟ್): /v1/models ಪ್ರತಿ ಅರ್ಹ ಥಿಂಕಿಂಗ್-ಸಾಮರ್ಥ್ಯ Claude ಮಾಡೆಲ್ಗಾಗಿ ನೋ-ಥಿಂಕಿಂಗ್ ವೇರಿಯಂಟ್ ಅನ್ನು ಪ್ರಕಟಿಸುತ್ತದೆ, ಮತ್ತು ವಿನಂತಿಯಲ್ಲಿ ಕಳುಹಿಸಿದ no-think/ ಐಡಿಯು ಕಾರಣವನ್ನು ಅಡಗಿಸಿ ನಿಜವಾದ ಮಾಡೆಲ್ಗೆ ಪರಿಹರಿಸುತ್ತದೆ. ಆಫ್: ಯಾವುದೇ ವೇರಿಯಂಟ್ಗಳನ್ನು ಪ್ರಕಟಿಸಲಾಗುವುದಿಲ್ಲ ಮತ್ತು no-think/ ಐಡಿಯನ್ನು ಯಾವುದೇ ಅಜ್ಞಾತ ಮಾಡೆಲ್ ಐಡಿಯಂತೆ ಪರಿಗಣಿಸಲಾಗುತ್ತದೆ. ಈ ಆನ್ ಆಗಿರುವಾಗ ಪ್ರತಿ-ಮಾಡೆಲ್ ModelSpec.noThinkingAlias ಆಯ್ಕೆ-ಆನ್/ಆಫ್ ಇನ್ನೂ ಅನ್ವಯಿಸುತ್ತದೆ.",
   "featureFlagChatVirtualLanesEnabledDescription": "ಪ್ರೊವೈಡರ್ ಡಿಸ್ಪ್ಯಾಚ್ ಗಾಗಿ ಪ್ರತಿ-ಟೆನಂಟ್ ಅಡಾಪ್ಟಿವ್ ವರ್ಚುವಲ್ ಅಡ್ಮಿಷನ್ ಲೇನ್ಗಳನ್ನು ಸಕ್ರಿಯಗೊಳಿಸಿ (#9654): ಒಂದು ಟೆನಂಟ್ನ ಬರ್ಸ್ಟ್ ಇನ್ನು ಮುಂದೆ ಮತ್ತೊಂದನ್ನು 503 ಮಾಡುವುದಿಲ್ಲ. OMNIROUTE_CHAT_VIRTUAL_LANES ಎನ್ವಿ ವೇರಿಯಬಲ್ ಈ ಡ್ಯಾಶ್ಬೋರ್ಡ್ ಓವರ್ರೈಡ್ ಮೇಲೆ ಗೆಲ್ಲುತ್ತದೆ; ಬದಲಾವಣೆಗಳು ಸರ್ವರ್ ರೀಸ್ಟಾರ್ಟ್ ನಲ್ಲಿ ಜಾರಿಗೆ ಬರುತ್ತವೆ.",
+  "featureFlagFreeBadgeRequiresProviderFreeTierDescription": "Dashboard provider pages: show the Free badge only on signals the provider honors — drops the display-name heuristic, non-boolean free fields and :free suffixes on registered providers without a documented free tier. Off keeps the historical badge rule.",
   "sidebar": {
     "home": "ಹೋಮ್",
     "dashboard": "ಡ್ಯಾಶ್ಬೋರ್ಡ್",
@@ -12984,6 +12985,9 @@
       "STREAM_RECOVERY_MIDSTREAM_ENABLED": {
         "description": "ಬೈಟ್ಗಳು ಈಗಾಗಲೇ ಕ್ಲೈಂಟ್ ಅನ್ನು ತಲುಪಿದ ನಂತರವೂ ಪ್ರತಿಕ್ರಿಯೆಯನ್ನು ಮತ್ತೊಮ್ಮೆ ವಿನಂತಿಸಿ, ಅದನ್ನು ಜೋಡಿಸಲು ಸ್ಟ್ರೀಮ್ ಮರುಪಡೆಯುವಿಕೆಗೆ ಅನುಮತಿಸಿ."
       },
+      "STREAM_RECOVERY_TOOLCALL_ORDER_FIX": {
+        "description": "__MISSING__:Make mid-stream continuation tool-call safe: never resume a cut stream after a tool call was sent (still in progress or already finished), and stop after one empty continuation instead of using the whole retry budget."
+      },
       "MODEL_CATALOG_INCLUDE_NAMES": {
         "description": "/v1/models ಪ್ರತಿಕ್ರಿಯೆಗಳಲ್ಲಿ ಪ್ರದರ್ಶನಕ್ಕೆ ಸೂಕ್ತವಾದ ಹೆಸರು ಕ್ಷೇತ್ರಗಳನ್ನು ಸೇರಿಸಿ. ಕೇವಲ ಮಾದರಿ IDಗಳನ್ನು ಸ್ವೀಕರಿಸುವ ಕ್ಲೈಂಟ್ಗಳಿಗಾಗಿ ಇದನ್ನು ನಿಷ್ಕ್ರಿಯಗೊಳಿಸಿ."
       },
@@ -13020,6 +13024,14 @@
       "SERVER_OWNED_TOOL_LOOP_ENABLED": {
         "label": "ಸರ್ವರ್-ಸ್ವಾಮ್ಯದ ಪರಿಕರ ಲೂಪ್",
         "description": "ಮಾದರಿಯು ಕ್ಲೈಂಟ್ಗೆ ಬಳಸಬಹುದಾದ ಪ್ರತಿಕ್ರಿಯೆಯನ್ನು ಹಿಂದಿರುಗಿಸುವವರೆಗೆ ಸ್ಟ್ರೀಮಿಂಗ್ ಅಲ್ಲದ ಸರ್ವರ್-ಸ್ವಾಮ್ಯದ ಪರಿಕರ ಕರೆಗಳನ್ನು ಮುಂದುವರಿಸಿ."
+      },
+      "RETRY_AFTER_PROVENANCE_ENABLED": {
+        "label": "__MISSING__:Retry-After Provenance",
+        "description": "__MISSING__:On aggregated 429/503 unavailable responses, omit Retry-After when no concrete future retry time is known instead of sending a synthetic 1s, add error.retry_after_provenance, and read prose retry hints on combo drain paths."
+      },
+      "PROTECTED_PRIORITY_INFRA_502_ENABLED": {
+        "label": "__MISSING__:Protected-Priority Infra Stops as 502",
+        "description": "__MISSING__:Answer 502 instead of 503 when a quota-only-fallback priority target stops the combo for a cause that is provably not quota: an open provider circuit breaker or a predictive latency skip."
       }
     }
   },
@@ -13633,6 +13645,7 @@
   },
   "featureFlagCapabilityFilterEnabledDescription": "ಗುರಿ ಮಾದರಿಯಲ್ಲಿ ಅಗತ್ಯ ಸಾಮರ್ಥ್ಯಗಳು (ದೃಷ್ಟಿ, ಪರಿಕರಗಳು, ರಚನಾತ್ಮಕ ಔಟ್ಪುಟ್, ಸಂದರ್ಭ ವಿಂಡೋ) ಇಲ್ಲದಿದ್ದಾಗ ರವಾನಿಸುವ ಮೊದಲು ವಿನಂತಿಗಳನ್ನು ತಿರಸ್ಕರಿಸಿ. ಇದು ಕಾಂಬೊ-ಲೇಯರ್ ಹೊಂದಾಣಿಕೆ ಫಿಲ್ಟರ್ ಅನ್ನು ತಪ್ಪಿಸುವ ನೇರ ಏಕ-ಪೂರೈಕೆದಾರ ವಿನಂತಿಗಳನ್ನು ರಕ್ಷಿಸುತ್ತದೆ.",
   "featureFlagDisableContextWindowChecksDescription": "ನೇರ ಏಕ-ಮಾದರಿ ವಿನಂತಿಗಳಿಗಾಗಿ OmniRoute ನ ಸ್ಥಳೀಯ ಸಂದರ್ಭ-ವಿಂಡೋ ಮತ್ತು ಗರಿಷ್ಠ-ಇನ್ಪುಟ್-ಟೋಕನ್ ಪರಿಶೀಲನೆಯನ್ನು ಬಿಟ್ಟುಬಿಡಿ. ಅಪ್ಸ್ಟ್ರೀಮ್ ಪೂರೈಕೆದಾರರು ತಮ್ಮ ನೈಜ ಮಿತಿಗಳನ್ನು ಇನ್ನೂ ಜಾರಿಗೊಳಿಸುತ್ತಾರೆ. ಪ್ರಾಂಪ್ಟ್ ಸಂಕುಚನ ಮತ್ತು ಔಟ್ಪುಟ್-ಟೋಕನ್ ಮಿತಿಗಳು ಸಕ್ರಿಯವಾಗಿಯೇ ಇರುತ್ತವೆ.",
+  "featureFlagSearchStatsHideDeletedConnectionsDescription": "Search stats and recent searches only count providers that still have a live connection (keyless providers such as duckduckgo-free always count). Off keeps every retained search row with a provider id.",
   "publicSystem": {
     "notFound": {
       "title": "ಪುಟ ಕಂಡುಬಂದಿಲ್ಲ",
