@@ -29,6 +29,24 @@ function serviceBlock(compose: string, serviceName: string): string {
   return block.join("\n");
 }
 
+/**
+ * The service's `networks:` entries, read line by line. A regex over the whole
+ * block would need nested quantifiers (`(\s*-\s*.*\n)*`), which CodeQL flags as
+ * a ReDoS risk (js/redos) — and the line walk is easier to read anyway.
+ */
+function listedNetworks(serviceYaml: string): string[] {
+  const lines = serviceYaml.split("\n");
+  const start = lines.findIndex((line) => /^\s*networks:\s*$/.test(line));
+  if (start === -1) return [];
+  const names: string[] = [];
+  for (const line of lines.slice(start + 1)) {
+    const item = line.match(/^\s*-\s*(\S+)\s*$/);
+    if (!item) break;
+    names.push(item[1]);
+  }
+  return names;
+}
+
 test("docker-compose.yml declares a dedicated network for the CDP proxy sidecar", () => {
   const compose = readCompose();
   assert.match(
@@ -49,9 +67,8 @@ test("chatgpt-web-codex-browser is isolated off the shared default network", () 
     "chatgpt-web-codex-browser must declare an explicit `networks:` list — otherwise it " +
       "attaches to the implicit default network shared with redis/qdrant/bifrost/etc."
   );
-  assert.doesNotMatch(
-    block,
-    /networks:\s*\n(\s*-\s*.*\n)*\s*-\s*default\s*$/m,
+  assert.ok(
+    !listedNetworks(block).includes("default"),
     "chatgpt-web-codex-browser must not also list `default` — that would put it right back " +
       "on the shared bridge with every unrelated sibling container"
   );
