@@ -996,6 +996,7 @@
   "featureFlagProxySkipRecentlyFailedDescription": "Pools de proxy e a rotação por conta do opencode deixam de reutilizar um proxy que acabou de falhar (sonda TCP recusada, ou um 429 recebido por ele) por um período por processo que dobra a cada repetição, até um limite. Nenhum status de proxy é gravado; com todos os candidatos deixados de lado, a escolha não muda. Desligado por padrão: a ordem de seleção é exatamente a rotação simples.",
   "featureFlagProxyPoolEgressObservationDescription": "Mostra, abaixo de um pool de proxy no painel, quantos IPs de saída observados atenderam seus membros nas últimas 24 h, quantas conexões os usaram e o máximo visto atrás de um mesmo IP. Somente leitura, calculado a partir do log de proxy, nunca usado para roteamento. Desligado por padrão: o editor de pool não muda e a rota de observação responde null.",
   "featureFlagProxyHealthBlockedResetsStreakDescription": "Na varredura de saúde de proxy, permite que uma sonda recusada pelo destino (401/403/429: o proxy retransmitiu, o destino recusou este IP de saída) zere a sequência de falhas consecutivas do proxy, como uma sonda atendida. Desligado por padrão: a recusa continua neutra e mantém a sequência. Um 5xx continua inconclusivo em qualquer caso, e uma recusa nunca remove, desativa ou reativa um proxy.",
+  "featureFlagXaiOauthLiveModelDiscoveryDescription": "__MISSING__:Fetch the live xAI model catalog for xai-oauth connections from https://api.x.ai/v1/models using the OAuth bearer token, instead of the frozen static seed. Off by default: xai-oauth keeps serving the static seed unchanged. On any resolution error, discovery falls back to the seed.",
   "sidebar": {
     "home": "Início",
     "dashboard": "Painel",
@@ -6125,6 +6126,7 @@
       "agentrouter": "Obtenha $200 em créditos gratuitos em https://agentrouter.org/register — sem necessidade de cartão de crédito.",
       "unorouter": "Crie uma chave de API em https://unorouter.ai e cole aqui como Bearer token.",
       "agnes": "Obtenha a chave de API em agnes-ai.com",
+      "agnes-cn": "Connect Agnes AI (China) with an API key issued for api.agnes-ai.cn. Keys from apihub.agnes-ai.com will not work.",
       "aimlapi": "Nível gratuito pausado (2026) — a AI/ML API agora é apenas pay-as-you-go (recarga mínima de $20); sem créditos gratuitos recorrentes.",
       "ai21": "$10 em créditos de teste no cadastro (válidos por 3 meses), sem necessidade de cartão de crédito",
       "alibaba": "Conecte a Alibaba com uma chave de API.",
@@ -7764,6 +7766,7 @@
     "retentionMcpAudit": "Auditoria MCP (dias)",
     "retentionA2aEvents": "Eventos A2A (dias)",
     "retentionCallLogs": "Registros de chamadas (dias)",
+    "retentionConversationTurnNodes": "Nós de turno de conversa (dias)",
     "retentionUsageHistory": "Histórico de uso (dias)",
     "retentionMemoryEntries": "Entradas de memória (dias)",
     "retentionXpAuditLog": "Log de Auditoria de XP (dias)",
