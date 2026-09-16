@@ -463,7 +463,8 @@
       "tests/unit/guardrails/visionBridgeRouter.test.ts",
       "tests/unit/issue-11912-opencode-roundrobin-collapse.test.ts",
       "tests/unit/opencode-400-model-unavailable.test.ts",
-      "tests/unit/strong-credential-token-linear-scan.test.ts"
+      "tests/unit/strong-credential-token-linear-scan.test.ts",
+      "tests/unit/provider-401-ambiguous-runtime.test.ts"
     ],
     "nodeArgs": [
       "--import",
