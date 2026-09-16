@@ -12,6 +12,26 @@ import {
 } from "../../open-sse/services/modelEndpointPolicy.ts";
 import { detectTestKind } from "@/lib/api/modelTestRunner";
 
+// The two "live Lemonade" tests below hit a real embedding server on the
+// contributor's private LAN (192.168.31.147) — unreachable from CI or any
+// other machine. A unit test must never depend on live network access
+// (tests/integration/semantic-cache-lemonade.test.ts already gates the same
+// endpoint this way for the integration suite), so both self-skip instead of
+// failing when the endpoint isn't reachable.
+const LEMONADE_TEST_BASE_URL = "http://192.168.31.147:13305";
+
+async function isEndpointReachable(url: string, timeoutMs = 1500): Promise<boolean> {
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    const res = await fetch(url, { method: "HEAD", signal: controller.signal }).catch(() => null);
+    clearTimeout(timer);
+    return res !== null;
+  } catch {
+    return false;
+  }
+}
+
 test("detectModelModality flags Lemonade embeddings model and pulls dimensions and context length", () => {
   // Lemonade verbatim /v1/models shape for harrier-oss-v1-0.6b
   const lemonadeRecord = {
@@ -119,7 +139,12 @@ test("detectTestKind in modelTestRunner detects embedding test probe for harrier
   assert.equal(result3.isEmbedding, true);
 });
 
-test("test-embedding route validates inputs and generates embeddings via live Lemonade", async () => {
+test("test-embedding route validates inputs and generates embeddings via live Lemonade", async (t) => {
+  const reachable = await isEndpointReachable(LEMONADE_TEST_BASE_URL);
+  if (!reachable) {
+    t.skip(`Lemonade server not reachable at ${LEMONADE_TEST_BASE_URL}`);
+    return;
+  }
   const testEmbeddingRoute =
     await import("../../src/app/api/settings/cache-config/test-embedding/route.ts");
 
@@ -143,7 +168,12 @@ test("test-embedding route validates inputs and generates embeddings via live Le
   assert.ok(typeof data.latencyMs === "number" && data.latencyMs > 0);
 });
 
-test("test-embedding route automatically resolves connection details from DB when not passed", async () => {
+test("test-embedding route automatically resolves connection details from DB when not passed", async (t) => {
+  const reachable = await isEndpointReachable(LEMONADE_TEST_BASE_URL);
+  if (!reachable) {
+    t.skip(`Lemonade server not reachable at ${LEMONADE_TEST_BASE_URL}`);
+    return;
+  }
   const { getDbInstance } = await import("@/lib/db/core");
   const testEmbeddingRoute =
     await import("../../src/app/api/settings/cache-config/test-embedding/route.ts");
