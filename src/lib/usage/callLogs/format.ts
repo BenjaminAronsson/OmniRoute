@@ -1,7 +1,9 @@
+import { z } from "zod";
 import type { RequestPipelinePayloads } from "@omniroute/open-sse/utils/requestLogger.ts";
 import {
   classifyProviderError,
   type ErrorTypeContract,
+  ERROR_TYPE_CONTRACT,
 } from "@omniroute/open-sse/services/errorClassifier.ts";
 import {
   sanitizeErrorMessage,
@@ -189,4 +191,32 @@ export function classifyCallLogError(
   const errorText = typeof error === "string" ? error : error instanceof Error ? error.message : "";
   if (status === 0 ? errorText.length === 0 : status < 400) return null;
   return classifyProviderError(status, errorText, provider) ?? "unknown";
+}
+
+// #13441: defense in depth at the `call_logs.error_type` write boundary. The
+// classifier is typed to the contract, but its runtime values come from
+// PROVIDER_ERROR_TYPES while the contract is a frozen snapshot — a family added
+// to one and not the other (or any future caller handing in its own string)
+// would otherwise persist free text. Built once, on first use, so an import
+// cycle through the classifier cannot observe the contract uninitialised.
+let storedErrorTypeSchema: z.ZodEnum<Record<ErrorTypeContract, ErrorTypeContract>> | null = null;
+
+function getStoredErrorTypeSchema() {
+  if (storedErrorTypeSchema === null) {
+    storedErrorTypeSchema = z.enum(
+      ERROR_TYPE_CONTRACT as readonly [ErrorTypeContract, ...ErrorTypeContract[]]
+    );
+  }
+  return storedErrorTypeSchema;
+}
+
+/**
+ * Value persisted in `call_logs.error_type`. `null`/`undefined` (not a failure)
+ * stay NULL; a contract value passes through; anything else is stored as
+ * `unknown` — never thrown, so a log line is never lost.
+ */
+export function toStoredErrorType(value: unknown): ErrorTypeContract | null {
+  if (value === null || value === undefined) return null;
+  const parsed = getStoredErrorTypeSchema().safeParse(value);
+  return parsed.success ? parsed.data : "unknown";
 }
