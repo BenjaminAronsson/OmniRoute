@@ -11429,7 +11429,9 @@
       "correlationIdValue": "معرّف الارتباط: {id}",
       "detailedPayloadInfo": "قم بتمكين تسجيل الدخول التفصيلي أولاً إذا كنت ترغب في عرض الحمولة من أربعة مراحل للعميل/المزود للطلبات الجديدة.",
       "copyAll": "نسخ الكل",
-      "copiedAll": "تم نسخ الكل"
+      "copiedAll": "تم نسخ الكل",
+      "rawViewOff": "__MISSING__:Raw view: off",
+      "rawViewOn": "__MISSING__:Raw view: on"
     }
   },
   "proxyLogger": {

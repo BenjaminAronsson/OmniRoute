@@ -11429,7 +11429,9 @@
       "correlationIdValue": "ID Korelasi: {id}",
       "detailedPayloadInfo": "Aktifkan log terperinci terlebih dahulu jika anda ingin pandangan muatan klien/pemberi perkhidmatan empat peringkat untuk permintaan baru.",
       "copyAll": "Salin semua",
-      "copiedAll": "Semua telah disalin"
+      "copiedAll": "Semua telah disalin",
+      "rawViewOff": "__MISSING__:Raw view: off",
+      "rawViewOn": "__MISSING__:Raw view: on"
     }
   },
   "proxyLogger": {

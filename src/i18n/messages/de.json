@@ -11429,7 +11429,9 @@
       "correlationIdValue": "Korrelations-ID: {id}",
       "detailedPayloadInfo": "Aktivieren Sie zuerst das detaillierte Protokollieren, wenn Sie die vierstufige Client/Provider-Payload-Ansicht für neue Anfragen wünschen.",
       "copyAll": "Alle kopieren",
-      "copiedAll": "Alles kopiert"
+      "copiedAll": "Alles kopiert",
+      "rawViewOff": "__MISSING__:Raw view: off",
+      "rawViewOn": "__MISSING__:Raw view: on"
     }
   },
   "proxyLogger": {

@@ -11429,7 +11429,9 @@
       "correlationIdValue": "Ідентифікатор кореляції: {id}",
       "detailedPayloadInfo": "Спочатку увімкніть детальне ведення журналів, якщо ви хочете перегляд чотирьохетапного навантаження клієнта/постачальника для нових запитів.",
       "copyAll": "Копіювати все",
-      "copiedAll": "Усе скопійовано"
+      "copiedAll": "Усе скопійовано",
+      "rawViewOff": "__MISSING__:Raw view: off",
+      "rawViewOn": "__MISSING__:Raw view: on"
     }
   },
   "proxyLogger": {

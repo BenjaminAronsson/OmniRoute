@@ -11429,7 +11429,9 @@
       "correlationIdValue": "លេខសម្គាល់សហសម្ព័ន្ធ៖ {id}",
       "detailedPayloadInfo": "សូមបើកការកត់ត្រាលម្អិតជាមុនសិន ប្រសិនបើអ្នកចង់មើល payload បួនដំណាក់កាលរបស់កម្មវិធីអតិថិជន/អ្នកផ្តល់សេវា សម្រាប់សំណើថ្មីៗ។",
       "copyAll": "ចម្លងទាំងអស់",
-      "copiedAll": "បានចម្លងទាំងអស់"
+      "copiedAll": "បានចម្លងទាំងអស់",
+      "rawViewOff": "__MISSING__:Raw view: off",
+      "rawViewOn": "__MISSING__:Raw view: on"
     }
   },
   "proxyLogger": {

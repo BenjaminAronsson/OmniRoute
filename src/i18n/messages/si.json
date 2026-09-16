@@ -11429,7 +11429,9 @@
       "correlationIdValue": "සහසම්බන්ධතා හැඳුනුම්කාරකය: {id}",
       "detailedPayloadInfo": "නව ඉල්ලීම් සඳහා අදියර හතරක සේවාලාභී/සපයන්නා දත්ත කොටස් දසුන අවශ්ය නම්, පළමුව සවිස්තරාත්මක ලොග් කිරීම සබල කරන්න.",
       "copyAll": "සියල්ල පිටපත් කරන්න",
-      "copiedAll": "සියල්ල පිටපත් කරන ලදී"
+      "copiedAll": "සියල්ල පිටපත් කරන ලදී",
+      "rawViewOff": "__MISSING__:Raw view: off",
+      "rawViewOn": "__MISSING__:Raw view: on"
     }
   },
   "proxyLogger": {

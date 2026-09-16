@@ -11429,7 +11429,9 @@
       "correlationIdValue": "關聯 ID: {id}",
       "detailedPayloadInfo": "如果您想要新請求的四階段客戶端/提供者有效載荷視圖，請先啟用詳細日誌記錄。",
       "copyAll": "全部複製",
-      "copiedAll": "已全部複製"
+      "copiedAll": "已全部複製",
+      "rawViewOff": "__MISSING__:Raw view: off",
+      "rawViewOn": "__MISSING__:Raw view: on"
     }
   },
   "proxyLogger": {

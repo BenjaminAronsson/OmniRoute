@@ -11429,7 +11429,9 @@
       "correlationIdValue": "Идентификатор корреляции: {id}",
       "detailedPayloadInfo": "Сначала включите детализированный логгинг, если вы хотите получить четырехступенчатый просмотр полезной нагрузки клиента/поставщика для новых запросов.",
       "copyAll": "Копировать всё",
-      "copiedAll": "Всё скопировано"
+      "copiedAll": "Всё скопировано",
+      "rawViewOff": "__MISSING__:Raw view: off",
+      "rawViewOn": "__MISSING__:Raw view: on"
     }
   },
   "proxyLogger": {

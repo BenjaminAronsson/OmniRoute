@@ -11429,7 +11429,9 @@
       "correlationIdValue": "شناسه همبستگی: {id}",
       "detailedPayloadInfo": "ابتدا لاگ‌برداری دقیق را فعال کنید اگر می‌خواهید نمای بارگذاری چهار مرحله‌ای مشتری/تأمین‌کننده برای درخواست‌های جدید را مشاهده کنید.",
       "copyAll": "کپی همه",
-      "copiedAll": "همه کپی شدند"
+      "copiedAll": "همه کپی شدند",
+      "rawViewOff": "__MISSING__:Raw view: off",
+      "rawViewOn": "__MISSING__:Raw view: on"
     }
   },
   "proxyLogger": {

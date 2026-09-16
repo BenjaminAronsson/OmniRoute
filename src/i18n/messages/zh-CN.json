@@ -11429,7 +11429,9 @@
       "correlationIdValue": "关联 ID: {id}",
       "detailedPayloadInfo": "如果您想要新请求的四阶段客户端/提供者负载视图，请先启用详细日志记录。",
       "copyAll": "全部复制",
-      "copiedAll": "已全部复制"
+      "copiedAll": "已全部复制",
+      "rawViewOff": "__MISSING__:Raw view: off",
+      "rawViewOn": "__MISSING__:Raw view: on"
     }
   },
   "proxyLogger": {

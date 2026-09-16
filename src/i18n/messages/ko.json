@@ -11429,7 +11429,9 @@
       "correlationIdValue": "상관 ID: {id}",
       "detailedPayloadInfo": "새 요청에 대한 4단계 클라이언트/제공자 페이로드 보기를 원하시면 먼저 자세한 로깅을 활성화하세요.",
       "copyAll": "모두 복사",
-      "copiedAll": "모두 복사됨"
+      "copiedAll": "모두 복사됨",
+      "rawViewOff": "__MISSING__:Raw view: off",
+      "rawViewOn": "__MISSING__:Raw view: on"
     }
   },
   "proxyLogger": {

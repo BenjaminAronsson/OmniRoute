@@ -11429,7 +11429,9 @@
       "correlationIdValue": "कोरिलेसन ID: {id}",
       "detailedPayloadInfo": "नयाँ अनुरोधहरूका लागि चार-चरणीय क्लाइन्ट/प्रदायक पेलोड दृश्य चाहनुहुन्छ भने पहिले विस्तृत लगिङ सक्षम गर्नुहोस्।",
       "copyAll": "सबै प्रतिलिपि गर्नुहोस्",
-      "copiedAll": "सबै प्रतिलिपि गरियो"
+      "copiedAll": "सबै प्रतिलिपि गरियो",
+      "rawViewOff": "__MISSING__:Raw view: off",
+      "rawViewOn": "__MISSING__:Raw view: on"
     }
   },
   "proxyLogger": {

@@ -11429,7 +11429,9 @@
       "correlationIdValue": "ID Korelasi: {id}",
       "detailedPayloadInfo": "Aktifkan logging terperinci terlebih dahulu jika Anda ingin tampilan payload klien/penyedia empat tahap untuk permintaan baru.",
       "copyAll": "Salin semua",
-      "copiedAll": "Semua disalin"
+      "copiedAll": "Semua disalin",
+      "rawViewOff": "__MISSING__:Raw view: off",
+      "rawViewOn": "__MISSING__:Raw view: on"
     }
   },
   "proxyLogger": {

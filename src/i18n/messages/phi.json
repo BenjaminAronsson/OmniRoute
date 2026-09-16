@@ -11429,7 +11429,9 @@
       "correlationIdValue": "ID ng Korelasyon: {id}",
       "detailedPayloadInfo": "I-enable ang detalyadong pag-log muna kung nais mo ang apat na yugto ng view ng client/provider payload para sa mga bagong kahilingan.",
       "copyAll": "Kopyahin lahat",
-      "copiedAll": "Nakopya na ang lahat"
+      "copiedAll": "Nakopya na ang lahat",
+      "rawViewOff": "__MISSING__:Raw view: off",
+      "rawViewOn": "__MISSING__:Raw view: on"
     }
   },
   "proxyLogger": {

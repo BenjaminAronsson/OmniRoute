@@ -11429,7 +11429,9 @@
       "correlationIdValue": "Korrelations-ID: {id}",
       "detailedPayloadInfo": "Aktivera detaljerad loggning först om du vill ha den fyrastegs klient/leverantörs payload-vyn för nya förfrågningar.",
       "copyAll": "Kopiera alla",
-      "copiedAll": "Alla kopierade"
+      "copiedAll": "Alla kopierade",
+      "rawViewOff": "__MISSING__:Raw view: off",
+      "rawViewOn": "__MISSING__:Raw view: on"
     }
   },
   "proxyLogger": {

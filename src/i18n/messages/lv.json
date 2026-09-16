@@ -11429,7 +11429,9 @@
       "correlationIdValue": "Korelācijas ID: {id}",
       "detailedPayloadInfo": "Vispirms iespējojiet detalizētu žurnalēšanu, ja vēlaties četru posmu klienta/nodrošinātāja derīgās slodzes skatu jauniem pieprasījumiem.",
       "copyAll": "Kopēt visu",
-      "copiedAll": "Viss nokopēts"
+      "copiedAll": "Viss nokopēts",
+      "rawViewOff": "__MISSING__:Raw view: off",
+      "rawViewOn": "__MISSING__:Raw view: on"
     }
   },
   "proxyLogger": {

@@ -11429,7 +11429,9 @@
       "correlationIdValue": "Korrelaatio-ID: {id}",
       "detailedPayloadInfo": "Ota ensin käyttöön yksityiskohtainen lokitus, jos haluat nelivaiheisen asiakas/toimittaja kuormitusnäkymän uusille pyyntöille.",
       "copyAll": "Kopioi kaikki",
-      "copiedAll": "Kaikki kopioitu"
+      "copiedAll": "Kaikki kopioitu",
+      "rawViewOff": "__MISSING__:Raw view: off",
+      "rawViewOn": "__MISSING__:Raw view: on"
     }
   },
   "proxyLogger": {

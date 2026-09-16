@@ -11429,7 +11429,9 @@
       "correlationIdValue": "รหัสความสัมพันธ์: {id}",
       "detailedPayloadInfo": "โปรดเปิดใช้งานการบันทึกข้อมูลอย่างละเอียดก่อนหากคุณต้องการดูข้อมูลการส่งข้อมูลของไคลเอนต์/ผู้ให้บริการแบบสี่ขั้นตอนสำหรับคำขอใหม่",
       "copyAll": "คัดลอกทั้งหมด",
-      "copiedAll": "คัดลอกทั้งหมดแล้ว"
+      "copiedAll": "คัดลอกทั้งหมดแล้ว",
+      "rawViewOff": "__MISSING__:Raw view: off",
+      "rawViewOn": "__MISSING__:Raw view: on"
     }
   },
   "proxyLogger": {

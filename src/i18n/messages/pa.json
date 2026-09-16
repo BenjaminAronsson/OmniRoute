@@ -11429,7 +11429,9 @@
       "correlationIdValue": "ਕੋਰੀਲੇਸ਼ਨ ID: {id}",
       "detailedPayloadInfo": "ਜੇ ਤੁਸੀਂ ਨਵੀਆਂ ਬੇਨਤੀਆਂ ਲਈ ਚਾਰ-ਪੜਾਅ ਵਾਲਾ ਕਲਾਇੰਟ/Provider ਪੇਲੋਡ ਦ੍ਰਿਸ਼ ਚਾਹੁੰਦੇ ਹੋ, ਤਾਂ ਪਹਿਲਾਂ ਵਿਸਤ੍ਰਿਤ ਲੌਗਿੰਗ ਚਾਲੂ ਕਰੋ।",
       "copyAll": "ਸਭ ਕਾਪੀ ਕਰੋ",
-      "copiedAll": "ਸਭ ਕਾਪੀ ਹੋ ਗਿਆ"
+      "copiedAll": "ਸਭ ਕਾਪੀ ਹੋ ਗਿਆ",
+      "rawViewOff": "__MISSING__:Raw view: off",
+      "rawViewOn": "__MISSING__:Raw view: on"
     }
   },
   "proxyLogger": {

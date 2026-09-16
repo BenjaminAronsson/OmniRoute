@@ -11429,7 +11429,9 @@
       "correlationIdValue": "Կապակցման ID՝ {id}",
       "detailedPayloadInfo": "Նոր հարցումների համար հաճախորդի/մատակարարի օգտակար բեռների քառափուլ տեսքը դիտելու նպատակով նախ միացրեք մանրամասն գրանցումը։",
       "copyAll": "Պատճենել բոլորը",
-      "copiedAll": "Բոլորը պատճենված են"
+      "copiedAll": "Բոլորը պատճենված են",
+      "rawViewOff": "__MISSING__:Raw view: off",
+      "rawViewOn": "__MISSING__:Raw view: on"
     }
   },
   "proxyLogger": {

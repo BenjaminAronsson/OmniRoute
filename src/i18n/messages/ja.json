@@ -11429,7 +11429,9 @@
       "correlationIdValue": "相関ID: {id}",
       "detailedPayloadInfo": "新しいリクエストのために四段階のクライアント/プロバイダー ペイロードビューを表示したい場合は、まず詳細なログ記録を有効にしてください。",
       "copyAll": "すべてコピー",
-      "copiedAll": "すべてコピーしました"
+      "copiedAll": "すべてコピーしました",
+      "rawViewOff": "__MISSING__:Raw view: off",
+      "rawViewOn": "__MISSING__:Raw view: on"
     }
   },
   "proxyLogger": {

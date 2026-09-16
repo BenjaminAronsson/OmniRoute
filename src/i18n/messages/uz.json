@@ -11429,7 +11429,9 @@
       "correlationIdValue": "Korrelyatsiya identifikatori: {id}",
       "detailedPayloadInfo": "Yangi soʻrovlar uchun mijoz/provayder maʼlumotlarining toʻrt bosqichli koʻrinishini koʻrmoqchi boʻlsangiz, avval batafsil jurnallashni yoqing.",
       "copyAll": "Barchasini nusxalash",
-      "copiedAll": "Barchasi nusxalandi"
+      "copiedAll": "Barchasi nusxalandi",
+      "rawViewOff": "__MISSING__:Raw view: off",
+      "rawViewOn": "__MISSING__:Raw view: on"
     }
   },
   "proxyLogger": {

@@ -11429,7 +11429,9 @@
       "correlationIdValue": "ಸಹಸಂಬಂಧ ID: {id}",
       "detailedPayloadInfo": "ಹೊಸ ವಿನಂತಿಗಳಿಗಾಗಿ ನಾಲ್ಕು-ಹಂತದ ಕ್ಲೈಂಟ್/ಪೂರೈಕೆದಾರ ಪೇಲೋಡ್ ವೀಕ್ಷಣೆ ಬೇಕಿದ್ದರೆ ಮೊದಲು ವಿವರವಾದ ಲಾಗಿಂಗ್ ಅನ್ನು ಸಕ್ರಿಯಗೊಳಿಸಿ.",
       "copyAll": "ಎಲ್ಲವನ್ನೂ ನಕಲಿಸಿ",
-      "copiedAll": "ಎಲ್ಲವನ್ನೂ ನಕಲಿಸಲಾಗಿದೆ"
+      "copiedAll": "ಎಲ್ಲವನ್ನೂ ನಕಲಿಸಲಾಗಿದೆ",
+      "rawViewOff": "__MISSING__:Raw view: off",
+      "rawViewOn": "__MISSING__:Raw view: on"
     }
   },
   "proxyLogger": {

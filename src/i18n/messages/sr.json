@@ -11429,7 +11429,9 @@
       "correlationIdValue": "ID корелације: {id}",
       "detailedPayloadInfo": "Прво омогућите детаљно логовање ако желите приказ пакета у четири фазе клијент/провајдер за нове захтеве.",
       "copyAll": "Копирај све",
-      "copiedAll": "Све копирано"
+      "copiedAll": "Све копирано",
+      "rawViewOff": "__MISSING__:Raw view: off",
+      "rawViewOn": "__MISSING__:Raw view: on"
     }
   },
   "proxyLogger": {

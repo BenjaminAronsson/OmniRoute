@@ -11429,7 +11429,9 @@
       "correlationIdValue": "የትስስር መታወቂያ፦ {id}",
       "detailedPayloadInfo": "ለአዳዲስ ጥያቄዎች ባለአራት-ደረጃ የደንበኛ/አቅራቢ ውሂብ እይታን ከፈለጉ፣ መጀመሪያ ዝርዝር ምዝግብን ያንቁ።",
       "copyAll": "ሁሉንም ቅዳ",
-      "copiedAll": "ሁሉም ተቀድቷል"
+      "copiedAll": "ሁሉም ተቀድቷል",
+      "rawViewOff": "__MISSING__:Raw view: off",
+      "rawViewOn": "__MISSING__:Raw view: on"
     }
   },
   "proxyLogger": {

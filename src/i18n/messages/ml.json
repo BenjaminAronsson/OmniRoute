@@ -11429,7 +11429,9 @@
       "correlationIdValue": "കോറിലേഷൻ ID: {id}",
       "detailedPayloadInfo": "പുതിയ അഭ്യർത്ഥനകൾക്കായുള്ള നാല്-ഘട്ട ക്ലയന്റ്/പ്രൊവൈഡർ പേലോഡ് കാഴ്ച വേണമെങ്കിൽ ആദ്യം വിശദമായ ലോഗിംഗ് പ്രവർത്തനക്ഷമമാക്കുക.",
       "copyAll": "എല്ലാം പകർത്തുക",
-      "copiedAll": "എല്ലാം പകർത്തി"
+      "copiedAll": "എല്ലാം പകർത്തി",
+      "rawViewOff": "__MISSING__:Raw view: off",
+      "rawViewOn": "__MISSING__:Raw view: on"
     }
   },
   "proxyLogger": {

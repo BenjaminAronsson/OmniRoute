@@ -11429,7 +11429,9 @@
       "correlationIdValue": "Kitambulisho cha Uhusiano: {id}",
       "detailedPayloadInfo": "Washa ufuatiliaji wa kina kwanza ikiwa unataka mtazamo wa mzigo wa mteja/mtoa huduma wa hatua nne kwa maombi mapya.",
       "copyAll": "Nakili zote",
-      "copiedAll": "Zote zimenakiliwa"
+      "copiedAll": "Zote zimenakiliwa",
+      "rawViewOff": "__MISSING__:Raw view: off",
+      "rawViewOn": "__MISSING__:Raw view: on"
     }
   },
   "proxyLogger": {

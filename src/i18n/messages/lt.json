@@ -11429,7 +11429,9 @@
       "correlationIdValue": "Koreliacijos ID: {id}",
       "detailedPayloadInfo": "Jei norite naujoms užklausoms matyti keturių etapų kliento ir teikėjo turinio rodinį, pirmiausia įjunkite išsamų registravimą.",
       "copyAll": "Kopijuoti viską",
-      "copiedAll": "Viskas nukopijuota"
+      "copiedAll": "Viskas nukopijuota",
+      "rawViewOff": "__MISSING__:Raw view: off",
+      "rawViewOn": "__MISSING__:Raw view: on"
     }
   },
   "proxyLogger": {

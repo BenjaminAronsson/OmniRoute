@@ -11429,7 +11429,9 @@
       "correlationIdValue": "Korrelatsiooni-ID: {id}",
       "detailedPayloadInfo": "Uute päringute neljaetapilise kliendi ja teenusepakkuja andmekehavaate kasutamiseks lubage esmalt üksikasjalik logimine.",
       "copyAll": "Kopeeri kõik",
-      "copiedAll": "Kõik kopeeritud"
+      "copiedAll": "Kõik kopeeritud",
+      "rawViewOff": "__MISSING__:Raw view: off",
+      "rawViewOn": "__MISSING__:Raw view: on"
     }
   },
   "proxyLogger": {

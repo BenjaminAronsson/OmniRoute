@@ -11429,7 +11429,9 @@
       "correlationIdValue": "संबंध पहचानकर्ता: {id}",
       "detailedPayloadInfo": "यदि आप नए अनुरोधों के लिए चार-चरणीय क्लाइंट/प्रदाता पेलोड दृश्य चाहते हैं, तो पहले विस्तृत लॉगिंग सक्षम करें।",
       "copyAll": "सभी कॉपी करें",
-      "copiedAll": "सभी कॉपी किए गए"
+      "copiedAll": "सभी कॉपी किए गए",
+      "rawViewOff": "__MISSING__:Raw view: off",
+      "rawViewOn": "__MISSING__:Raw view: on"
     }
   },
   "proxyLogger": {

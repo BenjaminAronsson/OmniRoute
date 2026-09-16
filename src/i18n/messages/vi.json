@@ -11429,7 +11429,9 @@
       "correlationIdValue": "ID tương quan: {id}",
       "detailedPayloadInfo": "Hãy bật ghi nhật ký chi tiết trước nếu bạn muốn xem giao diện payload client/nhà cung cấp gồm 4 giai đoạn cho các yêu cầu mới.",
       "copyAll": "Sao chép tất cả",
-      "copiedAll": "Đã sao chép tất cả"
+      "copiedAll": "Đã sao chép tất cả",
+      "rawViewOn": "Chế độ xem thô: bật",
+      "rawViewOff": "Chế độ xem thô: tắt"
     }
   },
   "proxyLogger": {

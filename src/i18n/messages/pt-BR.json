@@ -11429,7 +11429,9 @@
       "correlationIdValue": "ID de Correlação: {id}",
       "detailedPayloadInfo": "Ative o registro detalhado primeiro se você quiser a visualização de carga útil de cliente/provedor em quatro etapas para novas solicitações.",
       "copyAll": "Copiar tudo",
-      "copiedAll": "Tudo copiado"
+      "copiedAll": "Tudo copiado",
+      "rawViewOff": "__MISSING__:Raw view: off",
+      "rawViewOn": "__MISSING__:Raw view: on"
     }
   },
   "proxyLogger": {

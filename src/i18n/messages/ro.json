@@ -11429,7 +11429,9 @@
       "correlationIdValue": "ID de corelare: {id}",
       "detailedPayloadInfo": "Activați mai întâi jurnalizarea detaliată dacă doriți vizualizarea payload-ului client/provider în patru etape pentru cererile noi.",
       "copyAll": "Copiază tot",
-      "copiedAll": "Totul a fost copiat"
+      "copiedAll": "Totul a fost copiat",
+      "rawViewOff": "__MISSING__:Raw view: off",
+      "rawViewOn": "__MISSING__:Raw view: on"
     }
   },
   "proxyLogger": {

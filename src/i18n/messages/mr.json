@@ -11429,7 +11429,9 @@
       "correlationIdValue": "संबंधित आयडी: {id}",
       "detailedPayloadInfo": "नवीन विनंत्यांसाठी चार-चरणीय क्लायंट/प्रदाता पेलोड दृश्य पाहण्यासाठी प्रथम तपशीलवार लॉगिंग सक्षम करा.",
       "copyAll": "सर्व कॉपी करा",
-      "copiedAll": "सर्व कॉपी केले"
+      "copiedAll": "सर्व कॉपी केले",
+      "rawViewOff": "__MISSING__:Raw view: off",
+      "rawViewOn": "__MISSING__:Raw view: on"
     }
   },
   "proxyLogger": {

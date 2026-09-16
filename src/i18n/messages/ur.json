@@ -11429,7 +11429,9 @@
       "correlationIdValue": "کوریلیشن ID: {id}",
       "detailedPayloadInfo": "پہلے تفصیلی لاگنگ فعال کریں اگر آپ نئے درخواستوں کے لیے چار مرحلوں کے کلائنٹ/فراہم کنندہ پے لوڈ ویو چاہتے ہیں۔",
       "copyAll": "سب کاپی کریں",
-      "copiedAll": "سب کاپی ہو گیا"
+      "copiedAll": "سب کاپی ہو گیا",
+      "rawViewOff": "__MISSING__:Raw view: off",
+      "rawViewOn": "__MISSING__:Raw view: on"
     }
   },
   "proxyLogger": {

@@ -11429,7 +11429,9 @@
       "correlationIdValue": "సంబంధిత ID: {id}",
       "detailedPayloadInfo": "కొత్త అభ్యర్థనల కోసం నాలుగు దశల క్లయింట్/ప్రొవైడర్ పేమెంట్ వీక్షణను కావాలంటే, మొదట వివరణాత్మక లాగింగ్‌ను ప్రారంభించండి.",
       "copyAll": "అన్నింటినీ కాపీ చేయండి",
-      "copiedAll": "అన్నీ కాపీ చేయబడ్డాయి"
+      "copiedAll": "అన్నీ కాపీ చేయబడ్డాయి",
+      "rawViewOff": "__MISSING__:Raw view: off",
+      "rawViewOn": "__MISSING__:Raw view: on"
     }
   },
   "proxyLogger": {

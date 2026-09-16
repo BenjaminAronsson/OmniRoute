@@ -11429,7 +11429,9 @@
       "correlationIdValue": "Identyfikator korelacji: {id}",
       "detailedPayloadInfo": "Najpierw włącz szczegółowe logowanie, jeśli chcesz uzyskać widok ładunku klienta/dostawcy w czterech etapach dla nowych żądań.",
       "copyAll": "Kopiuj wszystko",
-      "copiedAll": "Skopiowano wszystko"
+      "copiedAll": "Skopiowano wszystko",
+      "rawViewOff": "__MISSING__:Raw view: off",
+      "rawViewOn": "__MISSING__:Raw view: on"
     }
   },
   "proxyLogger": {

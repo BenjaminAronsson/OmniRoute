@@ -11429,7 +11429,9 @@
       "correlationIdValue": "კორელაციის ID: {id}",
       "detailedPayloadInfo": "ახალი მოთხოვნებისთვის კლიენტის/პროვაიდერის მონაცემების ოთხეტაპიანი ხედის გამოსაყენებლად, ჯერ დეტალური ჟურნალის წარმოება ჩართეთ.",
       "copyAll": "ყველაფრის კოპირება",
-      "copiedAll": "ყველაფერი დაკოპირებულია"
+      "copiedAll": "ყველაფერი დაკოპირებულია",
+      "rawViewOff": "__MISSING__:Raw view: off",
+      "rawViewOn": "__MISSING__:Raw view: on"
     }
   },
   "proxyLogger": {

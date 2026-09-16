@@ -11429,7 +11429,9 @@
       "correlationIdValue": "ဆက်စပ်မှု ID: {id}",
       "detailedPayloadInfo": "တောင်းဆိုမှုအသစ်များအတွက် အဆင့်လေးဆင့်ပါ Client/Provider payload မြင်ကွင်းကို ကြည့်လိုပါက အသေးစိတ်မှတ်တမ်းတင်ခြင်းကို ဦးစွာ ဖွင့်ပါ။",
       "copyAll": "အားလုံးကို ကူးယူရန်",
-      "copiedAll": "အားလုံးကို ကူးယူပြီးပါပြီ"
+      "copiedAll": "အားလုံးကို ကူးယူပြီးပါပြီ",
+      "rawViewOff": "__MISSING__:Raw view: off",
+      "rawViewOn": "__MISSING__:Raw view: on"
     }
   },
   "proxyLogger": {

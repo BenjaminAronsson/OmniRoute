@@ -11429,7 +11429,9 @@
       "correlationIdValue": "ID tal-Korrelazzjoni: {id}",
       "detailedPayloadInfo": "L-ewwel attiva r-reġistrazzjoni dettaljata jekk trid id-dehra tal-payload tal-klijent/fornitur f'erba' stadji għal talbiet ġodda.",
       "copyAll": "Ikkopja kollox",
-      "copiedAll": "Kollox ġie kkupjat"
+      "copiedAll": "Kollox ġie kkupjat",
+      "rawViewOff": "__MISSING__:Raw view: off",
+      "rawViewOn": "__MISSING__:Raw view: on"
     }
   },
   "proxyLogger": {
