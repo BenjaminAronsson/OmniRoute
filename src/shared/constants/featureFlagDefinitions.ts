@@ -738,6 +738,18 @@ export const FEATURE_FLAG_DEFINITIONS: FeatureFlagDefinition[] = [
     requiresRestart: false,
     warningLevel: "danger",
   },
+  {
+    key: "ANTIGRAVITY_ACCOUNT_LEASE_ENABLED",
+    label: "Antigravity Account Lease",
+    description:
+      "Reserve the selected Antigravity account for the streaming lifecycle of the request that picked it, so a concurrent retry or the credential handoff cannot re-pick an account already committed to an in-flight stream. The reservation is scoped to (connection, callable upstream model), so one account can still serve two different models at once. When every eligible account is already leased for that model, the request returns a structured 503 POOL_BUSY with a bounded Retry-After instead of piling onto a busy account. Off by default: account selection stays exactly as before, and no reservation is taken.",
+    descriptionI18nKey: "featureFlagAntigravityAccountLeaseEnabledDescription",
+    category: "runtime",
+    defaultValue: "false",
+    type: "boolean",
+    requiresRestart: false,
+    warningLevel: "caution",
+  },
 
   // ──────────────── CLI (5) ────────────────
   {

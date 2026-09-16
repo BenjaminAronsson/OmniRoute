@@ -1,4 +1,5 @@
 {
+  "_rebaseline_2026_09_16_10011_antigravity_account_lease": "Re-land of #10011 (@Ardem2025): the Antigravity account lease. src/sse/handlers/chat.ts->2533 (+35), src/sse/services/auth.ts->3577 (+20). The lease registry, its lifecycle glue and its selection glue were extracted into three NEW modules (src/sse/services/antigravityRoutingState.ts, antigravityLeaseLifecycle.ts, antigravityLeaseSelection.ts) precisely to keep this growth to the call sites; what remains in chat.ts/auth.ts is the wiring itself, which cannot be moved out of the selection loop and the dispatch path. Every added hunk is inert unless ANTIGRAVITY_ACCOUNT_LEASE_ENABLED (default false) is on. Covered by tests/unit/antigravity-routing-state.test.ts, antigravity-lease-lifecycle.test.ts and antigravity-account-lease-flag.test.ts.",
   "_rebaseline_2026_09_16_jxnlexn_wave_growth": "Combined growth of the 2026-09-15 maxmad64bis uplift batch (each PR rebaselined its own growth; the merged sum is larger): src/sse/handlers/chat.ts->2498; open-sse/handlers/chatCore.ts->6181. Every hunk is flag-gated or a verified fix covered by that PR's tests; see the batch report.",
   "_rebaseline_2026_09_16_wave22_growth": "Combined growth of the 2026-09-15 maxmad64bis uplift batch (each PR rebaselined its own growth; the merged sum is larger): src/sse/handlers/chatHelpers.ts->1231; open-sse/executors/cursor.ts->1808. Every hunk is flag-gated or a verified fix covered by that PR's tests; see the batch report.",
   "_rebaseline_2026_09_15_13572_combined_growth": "Combined growth of the 2026-09-15 maxmad64bis uplift batch (each PR rebaselined its own growth; the merged sum is larger): open-sse/executors/base.ts->1754. Every hunk is flag-gated or a verified fix covered by that PR's tests; see the batch report.",
@@ -501,8 +502,8 @@
     "src/shared/components/RequestLoggerV2.tsx": 1718,
     "src/shared/constants/providers/apikey/gateways.ts": 1502,
     "src/shared/services/cliRuntime.ts": 1296,
-    "src/sse/handlers/chat.ts": 2498,
-    "src/sse/services/auth.ts": 3557,
+    "src/sse/handlers/chat.ts": 2533,
+    "src/sse/services/auth.ts": 3577,
     "tests/unit/account-fallback-service.test.ts": 2453,
     "tests/unit/provider-validation-specialty.test.ts": 4656,
     "open-sse/services/autoCombo/virtualFactory.ts": 1230,
