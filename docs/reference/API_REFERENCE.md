@@ -530,7 +530,12 @@ OpenAI-compatible files endpoint for batch input/output and file-purpose uploads
 | DELETE | `/v1/files/[id]`         | Delete a file                                                                                                 |
 | GET    | `/v1/files/[id]/content` | Stream the raw file body back                                                                                 |
 
-**Auth:** Bearer API key — files are scoped per-API-key via `getApiKeyRequestScope`.
+**Auth:** Bearer API key — files are scoped per-API-key via `getApiKeyRequestScope`. A key
+sees, downloads and deletes its own files only; a dashboard session without a key reads the
+whole instance; a file with no owner (anonymous or dashboard-session upload) is denied to every
+non-session caller. `GET /v1/files` rejects an anonymous caller — and a presented key that does
+not resolve — with `401` even when `REQUIRE_API_KEY=false`, instead of listing every tenant's
+files (GHSA-m3hp-hq9g-fpmv, GHSA-2jm2-mpx8-6523).
 
 ---
 
@@ -546,7 +551,10 @@ OpenAI-compatible batch processing.
 | DELETE | `/v1/batches/[id]`        | Delete a finished/failed batch                                                                            |
 | POST   | `/v1/batches/[id]/cancel` | Cancel an in-progress batch                                                                               |
 
-**Auth:** Bearer API key. Batches are scoped per-API-key.
+**Auth:** Bearer API key. Batches are scoped per-API-key under the same three-way rule as
+files: own key only, dashboard session instance-wide, null-owner records denied to every
+non-session caller (retrieve, delete, cancel, and the `input_file_id` check on create).
+`GET /v1/batches` rejects an anonymous caller with `401` even when `REQUIRE_API_KEY=false`.
 
 ---
 
