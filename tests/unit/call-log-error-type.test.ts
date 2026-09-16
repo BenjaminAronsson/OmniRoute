@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { getDbInstance, resetDbInstance } from "../../src/lib/db/core.ts";
-import { classifyCallLogError } from "../../src/lib/usage/callLogs/format.ts";
+import { classifyCallLogError, toStoredErrorType } from "../../src/lib/usage/callLogs/format.ts";
 import { saveCallLog } from "../../src/lib/usage/callLogs.ts";
 import { ERROR_TYPE_CUTOVER_ISO, getErrorTypeBreakdown } from "../../src/lib/db/callLogStats.ts";
 import { getCallLogsForExport } from "../../src/lib/usage/callLogExportSource.ts";
@@ -210,6 +210,279 @@ test("getErrorTypeBreakdown groups failures by family, excludes successes", asyn
 test("getErrorTypeBreakdown with empty whereClause does not crash", () => {
   const breakdown = getErrorTypeBreakdown("", {});
   assert.ok(Array.isArray(breakdown));
+});
+
+test("getErrorTypeBreakdown maps free-text history to unclassified, keeps pre_migration", () => {
+  const ids = ["hx-typo", "hx-old", "hx-new"];
+  try {
+    insertRawErrorType("hx-typo", "typo_free", new Date().toISOString());
+    insertRawErrorType("hx-old", null, "2026-01-01T00:00:00.000Z");
+    insertRawErrorType("hx-new", null, new Date().toISOString());
+    const byType = Object.fromEntries(breakdownFor(ids).map((r) => [r.errorType, r.count]));
+    assert.equal(byType["typo_free"], undefined); // no longer leaks through as-is
+    assert.equal(byType["unclassified"], 2); // typo + recent NULL, merged into ONE row
+    assert.equal(byType["pre_migration"], 1);
+  } finally {
+    deleteCallLogs(ids);
+  }
+});
+
+test("legacy NULL rows neither vanish nor double-count next to the new unknown value", async () => {
+  const stamp = Date.now();
+  const legacyPre = `hx-legacy-pre-${stamp}`;
+  const legacyPost = `hx-legacy-post-${stamp}`;
+  const legacySuccess = `hx-legacy-ok-${stamp}`;
+  const vocab = `hx-vocab-${stamp}`;
+  const fresh = `hx-fresh-unknown-${stamp}`;
+  const ids = [legacyPre, legacyPost, legacySuccess, vocab, fresh];
+  try {
+    insertRawErrorType(legacyPre, null, "2026-02-01T00:00:00.000Z", 503);
+    insertRawErrorType(legacyPost, null, new Date().toISOString(), 403);
+    insertRawErrorType(legacySuccess, null, new Date().toISOString(), 200);
+    insertRawErrorType(vocab, "rate_limited", new Date().toISOString(), 429);
+    await saveCallLog({
+      id: fresh,
+      method: "POST",
+      path: "/v1/chat/completions",
+      status: 403,
+      error: "some other 403 body",
+      model: "m",
+      provider: "openai",
+      duration: 1,
+      tokens: { in: 1, out: 1 },
+    });
+
+    const rows = breakdownFor(ids);
+    const byType = Object.fromEntries(rows.map((r) => [r.errorType, r.count]));
+    assert.deepEqual(byType, {
+      pre_migration: 1,
+      unclassified: 1,
+      rate_limited: 1,
+      unknown: 1,
+    });
+    // One bucket per failure row: the breakdown total equals the failure count.
+    const failures = getDbInstance()
+      .prepare(
+        `SELECT COUNT(*) AS n FROM call_logs WHERE id IN (${ids.map(() => "?").join(",")}) AND (status >= 400 OR error_summary IS NOT NULL)`
+      )
+      .get(...ids) as { n: number };
+    assert.equal(
+      rows.reduce((sum, r) => sum + r.count, 0),
+      failures.n
+    );
+  } finally {
+    deleteCallLogs(ids);
+  }
+});
+
+test("cutover boundary: pre_migration only before ERROR_TYPE_CUTOVER_ISO", () => {
+  assert.equal(ERROR_TYPE_CUTOVER_ISO, "2026-08-20");
+  const ids = ["hx-b1", "hx-b2"];
+  try {
+    insertRawErrorType("hx-b1", null, "2026-08-19T23:59:59.000Z");
+    insertRawErrorType("hx-b2", null, "2026-08-20T00:00:00.000Z");
+    const byType = Object.fromEntries(breakdownFor(ids).map((r) => [r.errorType, r.count]));
+    assert.equal(byType["pre_migration"], 1);
+    assert.equal(byType["unclassified"], 1);
+  } finally {
+    deleteCallLogs(ids);
+  }
+});
+
+test("log export keeps both legacy NULL and the new unknown error_type intact", async () => {
+  const stamp = Date.now();
+  const legacy = `hx-export-null-${stamp}`;
+  const fresh = `hx-export-unknown-${stamp}`;
+  const db = getDbInstance();
+  const before = Number(
+    (db.prepare("SELECT COALESCE(MAX(rowid), 0) AS m FROM call_logs").get() as { m: number }).m
+  );
+  try {
+    insertRawErrorType(legacy, null, new Date().toISOString(), 500);
+    await saveCallLog({
+      id: fresh,
+      method: "POST",
+      path: "/v1/chat/completions",
+      status: 403,
+      error: "some other 403 body",
+      model: "m",
+      provider: "openai",
+      duration: 1,
+      tokens: { in: 1, out: 1 },
+    });
+
+    const exported = getCallLogsForExport(before, 50);
+    const byId = new Map(exported.map((row) => [row.record.id, row.record]));
+    assert.equal(byId.get(legacy)?.errorType, null);
+    assert.equal(byId.get(fresh)?.errorType, "unknown");
+
+    const exportedAt = new Date().toISOString();
+    assert.equal(toBigQueryRow(byId.get(legacy)!, exportedAt).error_type, null);
+    assert.equal(toBigQueryRow(byId.get(fresh)!, exportedAt).error_type, "unknown");
+  } finally {
+    deleteCallLogs([legacy, fresh]);
+  }
+});
+
+test("getErrorTypeBreakdown maps free-text history to unclassified, keeps pre_migration", () => {
+  const ids = ["hx-typo", "hx-old", "hx-new"];
+  try {
+    insertRawErrorType("hx-typo", "typo_free", new Date().toISOString());
+    insertRawErrorType("hx-old", null, "2026-01-01T00:00:00.000Z");
+    insertRawErrorType("hx-new", null, new Date().toISOString());
+    const byType = Object.fromEntries(breakdownFor(ids).map((r) => [r.errorType, r.count]));
+    assert.equal(byType["typo_free"], undefined); // no longer leaks through as-is
+    assert.equal(byType["unclassified"], 2); // typo + recent NULL, merged into ONE row
+    assert.equal(byType["pre_migration"], 1);
+  } finally {
+    deleteCallLogs(ids);
+  }
+});
+
+test("legacy NULL rows neither vanish nor double-count next to the new unknown value", async () => {
+  const stamp = Date.now();
+  const legacyPre = `hx-legacy-pre-${stamp}`;
+  const legacyPost = `hx-legacy-post-${stamp}`;
+  const legacySuccess = `hx-legacy-ok-${stamp}`;
+  const vocab = `hx-vocab-${stamp}`;
+  const fresh = `hx-fresh-unknown-${stamp}`;
+  const ids = [legacyPre, legacyPost, legacySuccess, vocab, fresh];
+  try {
+    insertRawErrorType(legacyPre, null, "2026-02-01T00:00:00.000Z", 503);
+    insertRawErrorType(legacyPost, null, new Date().toISOString(), 403);
+    insertRawErrorType(legacySuccess, null, new Date().toISOString(), 200);
+    insertRawErrorType(vocab, "rate_limited", new Date().toISOString(), 429);
+    await saveCallLog({
+      id: fresh,
+      method: "POST",
+      path: "/v1/chat/completions",
+      status: 403,
+      error: "some other 403 body",
+      model: "m",
+      provider: "openai",
+      duration: 1,
+      tokens: { in: 1, out: 1 },
+    });
+
+    const rows = breakdownFor(ids);
+    const byType = Object.fromEntries(rows.map((r) => [r.errorType, r.count]));
+    assert.deepEqual(byType, {
+      pre_migration: 1,
+      unclassified: 1,
+      rate_limited: 1,
+      unknown: 1,
+    });
+    // One bucket per failure row: the breakdown total equals the failure count.
+    const failures = getDbInstance()
+      .prepare(
+        `SELECT COUNT(*) AS n FROM call_logs WHERE id IN (${ids.map(() => "?").join(",")}) AND (status >= 400 OR error_summary IS NOT NULL)`
+      )
+      .get(...ids) as { n: number };
+    assert.equal(
+      rows.reduce((sum, r) => sum + r.count, 0),
+      failures.n
+    );
+  } finally {
+    deleteCallLogs(ids);
+  }
+});
+
+test("cutover boundary: pre_migration only before ERROR_TYPE_CUTOVER_ISO", () => {
+  assert.equal(ERROR_TYPE_CUTOVER_ISO, "2026-08-20");
+  const ids = ["hx-b1", "hx-b2"];
+  try {
+    insertRawErrorType("hx-b1", null, "2026-08-19T23:59:59.000Z");
+    insertRawErrorType("hx-b2", null, "2026-08-20T00:00:00.000Z");
+    const byType = Object.fromEntries(breakdownFor(ids).map((r) => [r.errorType, r.count]));
+    assert.equal(byType["pre_migration"], 1);
+    assert.equal(byType["unclassified"], 1);
+  } finally {
+    deleteCallLogs(ids);
+  }
+});
+
+test("log export keeps both legacy NULL and the new unknown error_type intact", async () => {
+  const stamp = Date.now();
+  const legacy = `hx-export-null-${stamp}`;
+  const fresh = `hx-export-unknown-${stamp}`;
+  const db = getDbInstance();
+  const before = Number(
+    (db.prepare("SELECT COALESCE(MAX(rowid), 0) AS m FROM call_logs").get() as { m: number }).m
+  );
+  try {
+    insertRawErrorType(legacy, null, new Date().toISOString(), 500);
+    await saveCallLog({
+      id: fresh,
+      method: "POST",
+      path: "/v1/chat/completions",
+      status: 403,
+      error: "some other 403 body",
+      model: "m",
+      provider: "openai",
+      duration: 1,
+      tokens: { in: 1, out: 1 },
+    });
+
+    const exported = getCallLogsForExport(before, 50);
+    const byId = new Map(exported.map((row) => [row.record.id, row.record]));
+    assert.equal(byId.get(legacy)?.errorType, null);
+    assert.equal(byId.get(fresh)?.errorType, "unknown");
+
+    const exportedAt = new Date().toISOString();
+    assert.equal(toBigQueryRow(byId.get(legacy)!, exportedAt).error_type, null);
+    assert.equal(toBigQueryRow(byId.get(fresh)!, exportedAt).error_type, "unknown");
+  } finally {
+    deleteCallLogs([legacy, fresh]);
+  }
+});
+
+test("toStoredErrorType: contract values pass, null stays null, anything else is unknown", () => {
+  for (const value of ERROR_TYPE_CONTRACT) {
+    assert.equal(toStoredErrorType(value), value);
+  }
+  assert.equal(toStoredErrorType(null), null);
+  assert.equal(toStoredErrorType(undefined), null);
+  for (const value of ["typo_free", "RATE_LIMITED", "", " rate_limited", 42, {}, ["unknown"]]) {
+    assert.equal(
+      toStoredErrorType(value),
+      "unknown",
+      `expected unknown for ${JSON.stringify(value)}`
+    );
+  }
+});
+
+test("saveCallLog stores unknown when the classifier emits a family outside the contract", async () => {
+  // Simulates vocabulary drift for real: classifyProviderError reads
+  // PROVIDER_ERROR_TYPES at call time, while ERROR_TYPE_CONTRACT is the frozen
+  // snapshot taken at load. A renamed family therefore reaches the write point
+  // as an out-of-contract string, and the guard must clamp it.
+  const types = PROVIDER_ERROR_TYPES as unknown as Record<string, string>;
+  const original = types.SERVER_ERROR;
+  const id = `test-errtype-drift-${Date.now()}`;
+  try {
+    types.SERVER_ERROR = "server_error_v2";
+    assert.equal(classifyCallLogError(503, "down", "test-provider"), "server_error_v2");
+    await saveCallLog({
+      id,
+      method: "POST",
+      path: "/v1/chat/completions",
+      status: 503,
+      error: "Service Unavailable",
+      model: "m",
+      provider: "test-provider",
+      duration: 1,
+      tokens: { in: 1, out: 1 },
+    });
+    const row = getDbInstance()
+      .prepare("SELECT error_type FROM call_logs WHERE id = ?")
+      .get(id) as {
+      error_type: string | null;
+    };
+    assert.equal(row.error_type, "unknown");
+  } finally {
+    types.SERVER_ERROR = original;
+    deleteCallLogs([id]);
+  }
 });
 
 test("getErrorTypeBreakdown maps free-text history to unclassified, keeps pre_migration", () => {
