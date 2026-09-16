@@ -35,10 +35,17 @@ import { isValidProviderIconUrl } from "@/shared/validation/iconUrl";
 
 export { validateProviderSpecificData };
 
+// Nullable as well as optional, to match dailyQuotaResetHourSchema below. The
+// dashboard sends both fields as null when they are left blank, and the two
+// schemas disagreeing about that meant an edit touching neither of them still
+// failed validation on this one (#13066). The storage layer already coerces to
+// null (`data.dailyQuotaResetTimezone || null` in db/providers/nodes.ts), so
+// accepting null here changes nothing downstream.
 const dailyQuotaResetTimezoneSchema = z
   .string()
   .trim()
   .optional()
+  .nullable()
   .or(z.literal(""))
   .refine((value) => !value || isValidIanaTimeZone(value), {
     message: "Unknown IANA timezone",
@@ -304,13 +311,19 @@ export const providerModelMutationSchema = z.object({
     .optional(),
   // #9820: optional async video-generation job preset for a custom
   // OpenAI-compatible provider whose /videos surface is a submit→poll API
-  // (agnes-video-job, muapi-video-job, sora-job). Persisted on the custom model
+  // (agnes-video-job, agnes-video-2.5-job, muapi-video-job, sora-job). Persisted on the custom model
   // row; the /v1/videos/generations handler branches on it between the
   // synchronous OpenAI-compatible path and the job/poll path. `"openai-video"`
   // is a legacy no-op value that keeps the sync handler selected.
   generationConfig: z
     .object({
-      preset: z.enum(["agnes-video-job", "muapi-video-job", "sora-job", "openai-video"]),
+      preset: z.enum([
+        "agnes-video-job",
+        "agnes-video-2.5-job",
+        "muapi-video-job",
+        "sora-job",
+        "openai-video",
+      ]),
     })
     .optional(),
 });
@@ -561,6 +574,7 @@ export const updateProviderConnectionSchema = z
         minTime: rateLimitOverrideNumber(60_000).optional(),
         maxConcurrent: rateLimitOverrideNumber(10_000).optional(),
         maxWaitMs: rateLimitOverrideNumber(120_000).optional(),
+        executionMaxWaitMs: rateLimitOverrideNumber(600_000).optional(),
       })
       .partial()
       .strict()

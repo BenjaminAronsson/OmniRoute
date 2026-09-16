@@ -31,7 +31,13 @@ export async function checkSemanticCache({
   semanticCacheEnabled: boolean;
   // Only the fields this read path actually touches are named; everything else
   // on the request body stays `unknown` via the index signature.
-  body: Record<string, unknown> & { temperature?: number; top_p?: number };
+  body: Record<string, unknown> & {
+    temperature?: number;
+    top_p?: number;
+    tool_choice?: unknown;
+    tools?: unknown;
+    response_format?: unknown;
+  };
   clientRawRequest: { headers?: unknown } | null;
   model: string;
   provider: string;
@@ -68,13 +74,16 @@ export async function checkSemanticCache({
       hitType = managerResult.type || "exact";
       similarity = managerResult.similarity;
     } else {
-      // Legacy SQLite / in-memory cache check fallback
+      // Legacy SQLite / in-memory cache check fallback. Include tool_choice/tools/
+      // response_format in the signature (#12309/#12734): they change model behavior
+      // and must not collide with a signature computed without them.
       const signature = generateSignature(
         model,
         body.messages ?? body.input,
         body.temperature,
         body.top_p,
-        apiKeyId ?? undefined
+        apiKeyId ?? undefined,
+        { toolChoice: body.tool_choice, tools: body.tools, responseFormat: body.response_format }
       );
       const legacyCached = getCachedResponse(signature);
       if (legacyCached) {
@@ -122,7 +131,8 @@ export async function checkSemanticCache({
         body.messages ?? body.input,
         body.temperature,
         body.top_p,
-        apiKeyId ?? undefined
+        apiKeyId ?? undefined,
+        { toolChoice: body.tool_choice, tools: body.tools, responseFormat: body.response_format }
       );
 
       const targetSignature =
