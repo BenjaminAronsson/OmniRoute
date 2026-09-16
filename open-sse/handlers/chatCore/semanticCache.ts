@@ -5,7 +5,7 @@ import {
   recordSemanticCacheHit,
 } from "@/lib/semanticCache";
 import { calculateCost } from "@/lib/usage/costCalculator";
-import { trackPendingRequest } from "@/lib/usageDb";
+import { finalizePendingScope, type PendingRequestScope } from "@/lib/usage/pendingRequestScope";
 import { synthesizeOpenAiSseFromJson } from "../../utils/jsonToSse.ts";
 import { attachOmniRouteMetaHeaders } from "@/domain/omnirouteResponseMeta";
 import { extractUsageFromResponse } from "../usageExtractor.ts";
@@ -21,7 +21,7 @@ export async function checkSemanticCache({
   stream,
   reqLogger,
   effectiveServiceTier,
-  connectionId,
+  pendingScope,
   startTime,
   log,
   persistAttemptLogs,
@@ -44,7 +44,7 @@ export async function checkSemanticCache({
   stream: boolean;
   reqLogger: { logConvertedResponse: (response: Record<string, unknown>) => void };
   effectiveServiceTier: string | null | undefined;
-  connectionId: string | null;
+  pendingScope: PendingRequestScope;
   startTime: number;
   log: { debug?: (...args: unknown[]) => void } | null;
   persistAttemptLogs: (args: unknown) => void;
@@ -112,7 +112,14 @@ export async function checkSemanticCache({
         clientResponse: cached,
         cacheSource: hitType === "semantic" ? "semantic_similarity" : "semantic",
       });
-      trackPendingRequest(model, provider, connectionId, false);
+      // Finalize by exact request id (#12910): a (model, provider, connectionId)
+      // tuple can match the wrong in-flight request when connectionId is null or
+      // multiple requests share the same connection.
+      finalizePendingScope(pendingScope, {
+        status: 200,
+        providerResponse: cached,
+        clientResponse: cached,
+      });
 
       const cachedSse = stream
         ? managerResult.entry
