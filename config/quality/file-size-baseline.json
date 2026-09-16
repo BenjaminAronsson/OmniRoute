@@ -1,4 +1,5 @@
 {
+  "_rebaseline_2026_09_16_jxnlexn_wave_growth": "Combined growth of the 2026-09-15 maxmad64bis uplift batch (each PR rebaselined its own growth; the merged sum is larger): src/sse/handlers/chat.ts->2498; open-sse/handlers/chatCore.ts->6181. Every hunk is flag-gated or a verified fix covered by that PR's tests; see the batch report.",
   "_rebaseline_2026_09_16_wave22_growth": "Combined growth of the 2026-09-15 maxmad64bis uplift batch (each PR rebaselined its own growth; the merged sum is larger): src/sse/handlers/chatHelpers.ts->1231; open-sse/executors/cursor.ts->1808. Every hunk is flag-gated or a verified fix covered by that PR's tests; see the batch report.",
   "_rebaseline_2026_09_15_13572_combined_growth": "Combined growth of the 2026-09-15 maxmad64bis uplift batch (each PR rebaselined its own growth; the merged sum is larger): open-sse/executors/base.ts->1754. Every hunk is flag-gated or a verified fix covered by that PR's tests; see the batch report.",
   "_rebaseline_2026_09_15_13445_combined_growth": "Combined growth of the 2026-09-15 maxmad64bis uplift batch (each PR rebaselined its own growth; the merged sum is larger): open-sse/utils/proxyFetch.ts->1296. Every hunk is flag-gated or a verified fix covered by that PR's tests; see the batch report.",
@@ -460,7 +461,7 @@
     "open-sse/executors/codex.ts": 1528,
     "open-sse/executors/cursor.ts": 1847,
     "open-sse/executors/muse-spark-web.ts": 1405,
-    "open-sse/handlers/chatCore.ts": 6156,
+    "open-sse/handlers/chatCore.ts": 6181,
     "open-sse/handlers/imageGeneration.ts": 3293,
     "open-sse/handlers/search.ts": 1789,
     "open-sse/mcp-server/schemas/tools.ts": 1621,
@@ -500,7 +501,7 @@
     "src/shared/components/RequestLoggerV2.tsx": 1718,
     "src/shared/constants/providers/apikey/gateways.ts": 1502,
     "src/shared/services/cliRuntime.ts": 1296,
-    "src/sse/handlers/chat.ts": 2490,
+    "src/sse/handlers/chat.ts": 2498,
     "src/sse/services/auth.ts": 3557,
     "tests/unit/account-fallback-service.test.ts": 2453,
     "tests/unit/provider-validation-specialty.test.ts": 4656,
