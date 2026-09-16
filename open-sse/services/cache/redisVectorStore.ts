@@ -31,6 +31,7 @@ export interface RedisLike {
   keys(pattern: string): Promise<string[]>;
   call?(command: string, ...args: unknown[]): Promise<unknown>;
   quit?(): Promise<string>;
+  disconnect?(): void;
 }
 
 export interface RedisVectorStoreOptions {
