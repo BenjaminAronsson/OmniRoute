@@ -47,6 +47,7 @@ import type { CompressionExclusions } from "@omniroute/open-sse/services/compres
 import { resolveComboConfig } from "@omniroute/open-sse/services/comboConfig.ts";
 import { comboPinAllowlist } from "@/lib/combos/steps.ts";
 import { injectHandoffIntoBody } from "@omniroute/open-sse/services/contextHandoff.ts";
+import { runWithTransientBackendRetry } from "@omniroute/open-sse/services/transientBackendRetry.ts";
 import {
   HTTP_STATUS,
   ANTIGRAVITY_PRE_RESPONSE_TIMEOUT_CODE,
@@ -446,6 +447,14 @@ async function handleChatImplementation(
   } catch {
     log.warn("CHAT", "Invalid JSON body");
     return errorResponse(HTTP_STATUS.BAD_REQUEST, "Invalid JSON body");
+  }
+
+  // Only the server's policy resolver may attach execution directives or route traces.
+  // Discard lookalike JSON fields supplied by callers before evaluating any rule.
+  if (body && typeof body === "object") {
+    body = { ...body };
+    delete body._omnirouteReasoningRule;
+    delete body._omnirouteReasoningRouteTrace;
   }
 
   // Feature #6241: fold the canonical `effort` / `thinking` request params onto the
@@ -1246,25 +1255,29 @@ async function handleChatImplementation(
         `Combo "${combo.name}" exhausted — attempting global fallback: ${fallbackModel}`
       );
       try {
-        const fallbackResponse = await handleSingleModelChat(
-          body,
-          fallbackModel,
-          clientRawRequest,
-          request,
-          combo.name,
-          apiKeyInfo,
-          telemetry,
-          {
-            sessionId,
-            sessionAffinityKey,
-            emergencyFallbackTried: true,
-            forceLiveComboTest: isComboLiveTest,
-            conversationId,
-            managedLease,
-            videoBridgeLog,
-          },
-          combo.strategy,
-          true
+        const fallbackResponse = await runWithTransientBackendRetry(
+          () =>
+            handleSingleModelChat(
+              body,
+              fallbackModel,
+              clientRawRequest,
+              request,
+              combo.name,
+              apiKeyInfo,
+              telemetry,
+              {
+                sessionId,
+                sessionAffinityKey,
+                emergencyFallbackTried: true,
+                forceLiveComboTest: isComboLiveTest,
+                conversationId,
+                managedLease,
+                videoBridgeLog,
+              },
+              combo.strategy,
+              true
+            ),
+          { signal: request?.signal, source: "global-fallback" }
         );
         if (fallbackResponse.ok) {
           log.info("GLOBAL_FALLBACK", `Global fallback ${fallbackModel} succeeded`);
@@ -1932,7 +1945,12 @@ async function handleSingleModelChat(
       }
       let proxyInfo;
       try {
-        proxyInfo = await safeResolveProxy(credentials.connectionId, apiKeyInfo?.id, provider);
+        proxyInfo = await safeResolveProxy(
+          credentials.connectionId,
+          apiKeyInfo?.id,
+          provider,
+          comboName
+        );
       } catch (error) {
         releaseOAuthSession();
         throw error;
@@ -2071,7 +2089,9 @@ async function handleSingleModelChat(
           result.errorType === "stream_early_eof");
 
       if (
-        (result.errorType === "stream_timeout" || result.errorType === "stream_early_eof") &&
+        (result.errorType === "stream_timeout" ||
+          result.errorType === "stream_early_eof" ||
+          result.errorCode === "empty_response") &&
         !isAntigravityStreamReadinessFailure
       ) {
         // Bug #3758: flaky OpenAI-compatible upstreams (e.g. NVIDIA NIM) sometimes
