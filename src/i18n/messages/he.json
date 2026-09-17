@@ -11397,6 +11397,7 @@
         "clientResponse": "תגובה מהלקוח",
         "pipelineError": "שגיאת צינור"
       },
+      "payloadSizeLimitOmitted": "__MISSING__:Payload omitted — this section exceeded the call log size limit (CALL_LOG_PIPELINE_MAX_SIZE_KB) and was not stored, not a real upstream error.",
       "payloadMissing": "פרטי העמסה מפורטים אינם זמינים יותר עבור רשומת הלוג הזו.",
       "payloadCorrupt": "לא ניתן לנתח את הארטיפקט של העומס המפורט.",
       "notAvailable": "לא זמין",

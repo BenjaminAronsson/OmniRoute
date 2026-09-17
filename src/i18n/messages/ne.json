@@ -11397,6 +11397,7 @@
         "clientResponse": "क्लाइन्ट प्रतिक्रिया",
         "pipelineError": "पाइपलाइन त्रुटि"
       },
+      "payloadSizeLimitOmitted": "__MISSING__:Payload omitted — this section exceeded the call log size limit (CALL_LOG_PIPELINE_MAX_SIZE_KB) and was not stored, not a real upstream error.",
       "payloadMissing": "यो लग प्रविष्टिका लागि विस्तृत पेलोड आर्टिफ्याक्ट अब उपलब्ध छैन।",
       "payloadCorrupt": "विस्तृत पेलोड आर्टिफ्याक्ट पार्स गर्न सकिएन।",
       "notAvailable": "लागू हुँदैन",

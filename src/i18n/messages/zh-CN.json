@@ -11397,6 +11397,7 @@
         "clientResponse": "客户端响应",
         "pipelineError": "管道错误"
       },
+      "payloadSizeLimitOmitted": "__MISSING__:Payload omitted — this section exceeded the call log size limit (CALL_LOG_PIPELINE_MAX_SIZE_KB) and was not stored, not a real upstream error.",
       "payloadMissing": "此日志条目的详细有效负载工件不再可用。",
       "payloadCorrupt": "无法解析详细的有效负载工件。",
       "notAvailable": "不适用",

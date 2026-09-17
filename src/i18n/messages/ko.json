@@ -11397,6 +11397,7 @@
         "clientResponse": "클라이언트 응답",
         "pipelineError": "파이프라인 오류"
       },
+      "payloadSizeLimitOmitted": "__MISSING__:Payload omitted — this section exceeded the call log size limit (CALL_LOG_PIPELINE_MAX_SIZE_KB) and was not stored, not a real upstream error.",
       "payloadMissing": "이 로그 항목에 대한 상세 페이로드 아티팩트가 더 이상 사용 가능하지 않습니다.",
       "payloadCorrupt": "상세 페이로드 아티팩트를 구문 분석할 수 없습니다.",
       "notAvailable": "해당 없음",

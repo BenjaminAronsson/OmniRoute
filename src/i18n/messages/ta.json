@@ -11397,6 +11397,7 @@
         "clientResponse": "கிளையனின் பதில்",
         "pipelineError": "பைப்லைன் பிழை"
       },
+      "payloadSizeLimitOmitted": "__MISSING__:Payload omitted — this section exceeded the call log size limit (CALL_LOG_PIPELINE_MAX_SIZE_KB) and was not stored, not a real upstream error.",
       "payloadMissing": "இந்த பதிவு நுழைவுக்கு விரிவான payload கலைப்பொருள் இனி கிடைக்கவில்லை.",
       "payloadCorrupt": "விவரமான payload கலைப்பொருள் பகுப்பாய்வு செய்ய முடியவில்லை.",
       "notAvailable": "பொருந்தாது",

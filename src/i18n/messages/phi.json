@@ -11397,6 +11397,7 @@
         "clientResponse": "Tugon ng Kliyente",
         "pipelineError": "Error sa Pipeline"
       },
+      "payloadSizeLimitOmitted": "__MISSING__:Payload omitted — this section exceeded the call log size limit (CALL_LOG_PIPELINE_MAX_SIZE_KB) and was not stored, not a real upstream error.",
       "payloadMissing": "Ang detalyadong payload artifact ay hindi na available para sa log entry na ito.",
       "payloadCorrupt": "Hindi ma-parse ang detalyadong payload artifact.",
       "notAvailable": "Hindi naaangkop",

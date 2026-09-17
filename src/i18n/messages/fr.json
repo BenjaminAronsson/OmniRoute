@@ -11397,6 +11397,7 @@
         "clientResponse": "Réponse du client",
         "pipelineError": "Erreur du pipeline"
       },
+      "payloadSizeLimitOmitted": "__MISSING__:Payload omitted — this section exceeded the call log size limit (CALL_LOG_PIPELINE_MAX_SIZE_KB) and was not stored, not a real upstream error.",
       "payloadMissing": "L’artefact de charge utile détaillé n’est plus disponible pour cette entrée de journal.",
       "payloadCorrupt": "L’artefact de charge utile détaillé n’a pas pu être analysé.",
       "notAvailable": "N/D",

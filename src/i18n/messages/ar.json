@@ -11397,6 +11397,7 @@
         "clientResponse": "استجابة العميل",
         "pipelineError": "خطأ في خط الأنابيب"
       },
+      "payloadSizeLimitOmitted": "__MISSING__:Payload omitted — this section exceeded the call log size limit (CALL_LOG_PIPELINE_MAX_SIZE_KB) and was not stored, not a real upstream error.",
       "payloadMissing": "لا يتوفر حِمل البيانات التفصيلي بعد الآن لهذه السجل.",
       "payloadCorrupt": "تعذر تحليل الحمولة التفصيلية.",
       "notAvailable": "غير متوفر",

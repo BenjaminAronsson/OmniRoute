@@ -11397,6 +11397,7 @@
         "clientResponse": "Müşteri Yanıtı",
         "pipelineError": "Pipeline Hatası"
       },
+      "payloadSizeLimitOmitted": "__MISSING__:Payload omitted — this section exceeded the call log size limit (CALL_LOG_PIPELINE_MAX_SIZE_KB) and was not stored, not a real upstream error.",
       "payloadMissing": "Bu günlük girişi için ayrıntılı yük nesnesi artık mevcut değil.",
       "payloadCorrupt": "Ayrıntılı yük nesnesi ayrıştırılamadı.",
       "notAvailable": "Yok",

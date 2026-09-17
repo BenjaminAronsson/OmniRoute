@@ -11397,6 +11397,7 @@
         "clientResponse": "Risposta del Cliente",
         "pipelineError": "Errore della Pipeline"
       },
+      "payloadSizeLimitOmitted": "__MISSING__:Payload omitted — this section exceeded the call log size limit (CALL_LOG_PIPELINE_MAX_SIZE_KB) and was not stored, not a real upstream error.",
       "payloadMissing": "L'articolo del payload dettagliato non è più disponibile per questa voce di log.",
       "payloadCorrupt": "L'artifact del payload dettagliato non può essere analizzato.",
       "notAvailable": "N/D",

@@ -11397,6 +11397,7 @@
         "clientResponse": "Majibu ya Mteja",
         "pipelineError": "Kosa la Pipeline"
       },
+      "payloadSizeLimitOmitted": "__MISSING__:Payload omitted — this section exceeded the call log size limit (CALL_LOG_PIPELINE_MAX_SIZE_KB) and was not stored, not a real upstream error.",
       "payloadMissing": "Kipande cha maelezo ya mzigo hakipatikani tena kwa ajili ya kipande hiki cha kumbukumbu.",
       "payloadCorrupt": "Kipande cha mzigo kilichofafanuliwa hakiwezi kufasiriwa.",
       "notAvailable": "Haitumiki",

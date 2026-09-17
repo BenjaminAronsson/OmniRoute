@@ -11397,6 +11397,7 @@
         "clientResponse": "Risposta lill-klijent",
         "pipelineError": "Żball fil-pipeline"
       },
+      "payloadSizeLimitOmitted": "__MISSING__:Payload omitted — this section exceeded the call log size limit (CALL_LOG_PIPELINE_MAX_SIZE_KB) and was not stored, not a real upstream error.",
       "payloadMissing": "L-artifatt dettaljat tal-payload m’għadux disponibbli għal din l-entrata tal-log.",
       "payloadCorrupt": "L-artifatt dettaljat tal-payload ma setax jiġi analizzat.",
       "notAvailable": "Mhux applikabbli",

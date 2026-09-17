@@ -11397,6 +11397,7 @@
         "clientResponse": "క్లయింట్ ప్రతిస్పందన",
         "pipelineError": "పైప్‌లైన్ లో పొరపాటు"
       },
+      "payloadSizeLimitOmitted": "__MISSING__:Payload omitted — this section exceeded the call log size limit (CALL_LOG_PIPELINE_MAX_SIZE_KB) and was not stored, not a real upstream error.",
       "payloadMissing": "ఈ లాగ్ ఎంట్రీకి సంబంధించి వివరమైన పేమెంట్ ఆర్టిఫాక్ట్ అందుబాటులో లేదు.",
       "payloadCorrupt": "వివరమైన పేమెంట్ ఆర్టిఫాక్ట్‌ను పార్స్ చేయలేకపోయింది.",
       "notAvailable": "వర్తించదు",

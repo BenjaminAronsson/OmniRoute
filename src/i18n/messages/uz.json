@@ -11397,6 +11397,7 @@
         "clientResponse": "Mijozga javob",
         "pipelineError": "Konveyer xatosi"
       },
+      "payloadSizeLimitOmitted": "__MISSING__:Payload omitted — this section exceeded the call log size limit (CALL_LOG_PIPELINE_MAX_SIZE_KB) and was not stored, not a real upstream error.",
       "payloadMissing": "Bu jurnal yozuvi uchun batafsil foydali yuk artefakti endi mavjud emas.",
       "payloadCorrupt": "Batafsil foydali yuk artefaktini tahlil qilib boʻlmadi.",
       "notAvailable": "Mavjud emas",

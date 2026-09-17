@@ -11397,6 +11397,7 @@
         "clientResponse": "Amsar Abokin Ciniki",
         "pipelineError": "Kuskuren Bututun Aiki"
       },
+      "payloadSizeLimitOmitted": "__MISSING__:Payload omitted — this section exceeded the call log size limit (CALL_LOG_PIPELINE_MAX_SIZE_KB) and was not stored, not a real upstream error.",
       "payloadMissing": "Cikakken bayanin da aka adana bai ƙara samuwa ga wannan shigarwar rajista ba.",
       "payloadCorrupt": "Ba a iya tantance cikakken bayanin da aka adana ba.",
       "notAvailable": "Bai Shafa ba",

@@ -11397,6 +11397,7 @@
         "clientResponse": "Freagra an Chliaint",
         "pipelineError": "Earráid Pipeline"
       },
+      "payloadSizeLimitOmitted": "__MISSING__:Payload omitted — this section exceeded the call log size limit (CALL_LOG_PIPELINE_MAX_SIZE_KB) and was not stored, not a real upstream error.",
       "payloadMissing": "Níl an mír pacáiste mionsonraithe ar fáil don iontráil logála seo a thuilleadh.",
       "payloadCorrupt": "Níorbh fhéidir an mír pacáiste mionsonraithe a pharsáil.",
       "notAvailable": "Níl infheidhme",

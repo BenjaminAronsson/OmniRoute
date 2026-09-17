@@ -11397,6 +11397,7 @@
         "clientResponse": "Odgovor odjemalcu",
         "pipelineError": "Napaka obdelovalnega cevovoda"
       },
+      "payloadSizeLimitOmitted": "__MISSING__:Payload omitted — this section exceeded the call log size limit (CALL_LOG_PIPELINE_MAX_SIZE_KB) and was not stored, not a real upstream error.",
       "payloadMissing": "Artefakt s podrobno vsebino za ta vnos v dnevniku ni več na voljo.",
       "payloadCorrupt": "Artefakta s podrobno vsebino ni bilo mogoče razčleniti.",
       "notAvailable": "Ni na voljo",

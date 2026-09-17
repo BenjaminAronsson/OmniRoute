@@ -11397,6 +11397,7 @@
         "clientResponse": "کلائنٹ کا جواب",
         "pipelineError": "پائپ لائن کی خرابی"
       },
+      "payloadSizeLimitOmitted": "__MISSING__:Payload omitted — this section exceeded the call log size limit (CALL_LOG_PIPELINE_MAX_SIZE_KB) and was not stored, not a real upstream error.",
       "payloadMissing": "اس لاگ اندراج کے لیے تفصیلی پیلوڈ آرٹيفیکٹ اب دستیاب نہیں ہے۔",
       "payloadCorrupt": "تفصیلی پیلوڈ آرٹفیکٹ کو پارس نہیں کیا جا سکا۔",
       "notAvailable": "دستیاب نہیں",

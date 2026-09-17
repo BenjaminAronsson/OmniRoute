@@ -11397,6 +11397,7 @@
         "clientResponse": "සේවාලාභී ප්රතිචාරය",
         "pipelineError": "නලමාර්ග දෝෂය"
       },
+      "payloadSizeLimitOmitted": "__MISSING__:Payload omitted — this section exceeded the call log size limit (CALL_LOG_PIPELINE_MAX_SIZE_KB) and was not stored, not a real upstream error.",
       "payloadMissing": "මෙම ලොග් සටහන සඳහා සවිස්තරාත්මක පේලෝඩ් කෘත්යකය තවදුරටත් ලබාගත නොහැක.",
       "payloadCorrupt": "සවිස්තරාත්මක පේලෝඩ් කෘත්යකය විග්රහ කළ නොහැකි විය.",
       "notAvailable": "අදාළ නොවේ",

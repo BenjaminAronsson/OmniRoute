@@ -11397,6 +11397,7 @@
         "clientResponse": "Client တုံ့ပြန်ချက်",
         "pipelineError": "Pipeline အမှား"
       },
+      "payloadSizeLimitOmitted": "__MISSING__:Payload omitted — this section exceeded the call log size limit (CALL_LOG_PIPELINE_MAX_SIZE_KB) and was not stored, not a real upstream error.",
       "payloadMissing": "ဤမှတ်တမ်းအတွက် အသေးစိတ် payload artifact ကို မရနိုင်တော့ပါ။",
       "payloadCorrupt": "အသေးစိတ် payload artifact ကို ခွဲခြမ်းဖတ်ရှု၍ မရပါ။",
       "notAvailable": "မသက်ဆိုင်ပါ",

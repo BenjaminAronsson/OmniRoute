@@ -11397,6 +11397,7 @@
         "clientResponse": "Klientens Svar",
         "pipelineError": "Pipeline-fel"
       },
+      "payloadSizeLimitOmitted": "__MISSING__:Payload omitted — this section exceeded the call log size limit (CALL_LOG_PIPELINE_MAX_SIZE_KB) and was not stored, not a real upstream error.",
       "payloadMissing": "Den detaljerade nyttolasten artefakt är inte längre tillgänglig för denna loggpost.",
       "payloadCorrupt": "Detaljerad payload-artikel kunde inte tolkas.",
       "notAvailable": "Ej tillämpligt",

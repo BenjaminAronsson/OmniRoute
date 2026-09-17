@@ -11397,6 +11397,7 @@
         "clientResponse": "Klienta atbilde",
         "pipelineError": "Konveijera kļūda"
       },
+      "payloadSizeLimitOmitted": "__MISSING__:Payload omitted — this section exceeded the call log size limit (CALL_LOG_PIPELINE_MAX_SIZE_KB) and was not stored, not a real upstream error.",
       "payloadMissing": "Detalizēts lietderīgās izlietnes artefakts šim žurnāla ierakstam nav pieejams.",
       "payloadCorrupt": "Detalizēto lietderīgās izlietnes artefaktu nevarēja parsēt.",
       "notAvailable": "N/P",

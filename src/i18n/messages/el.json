@@ -11397,6 +11397,7 @@
         "clientResponse": "Απόκριση Πελάτη",
         "pipelineError": "Σφάλμα Αγωγού"
       },
+      "payloadSizeLimitOmitted": "__MISSING__:Payload omitted — this section exceeded the call log size limit (CALL_LOG_PIPELINE_MAX_SIZE_KB) and was not stored, not a real upstream error.",
       "payloadMissing": "Το λεπτομερές τεχνούργημα φορτίου δεν είναι πλέον διαθέσιμο για αυτήν την καταχώριση αρχείου καταγραφής.",
       "payloadCorrupt": "Το λεπτομερές τεχνούργημα φορτίου δεν ήταν δυνατό να αναλυθεί.",
       "notAvailable": "Δ/Υ",

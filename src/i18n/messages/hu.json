@@ -11397,6 +11397,7 @@
         "clientResponse": "Ügyfél Válasz",
         "pipelineError": "Pipeline Hiba"
       },
+      "payloadSizeLimitOmitted": "__MISSING__:Payload omitted — this section exceeded the call log size limit (CALL_LOG_PIPELINE_MAX_SIZE_KB) and was not stored, not a real upstream error.",
       "payloadMissing": "A részletes payload artefaktum már nem elérhető ehhez a naplóbejegyzéshez.",
       "payloadCorrupt": "A részletes payload artefaktumot nem sikerült elemezni.",
       "notAvailable": "N/A",

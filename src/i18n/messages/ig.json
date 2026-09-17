@@ -11397,6 +11397,7 @@
         "clientResponse": "Nzaghachi Onye Ahịa",
         "pipelineError": "Njehie Pipeline"
       },
+      "payloadSizeLimitOmitted": "__MISSING__:Payload omitted — this section exceeded the call log size limit (CALL_LOG_PIPELINE_MAX_SIZE_KB) and was not stored, not a real upstream error.",
       "payloadMissing": "Nkọwa payload zuru ezu adịkwaghị maka ndekọ a.",
       "payloadCorrupt": "Enweghị ike ịtụgharị nkọwa payload zuru ezu.",
       "notAvailable": "Adịghị",
