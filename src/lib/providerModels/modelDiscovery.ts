@@ -41,12 +41,26 @@ function modalitiesIncludeImage(value: unknown): boolean {
   );
 }
 
+// #13918: Lemonade Server's GET /v1/models exposes capabilities only through a
+// `labels[]` string array (e.g. ["chat", "vision", "reasoning", "tool-calling"]) —
+// it has none of the modality/architecture fields the other shapes below read.
+// See https://lemonade-server.ai/docs/api/openai/. Exact (case-insensitive,
+// trimmed) membership test only — not a substring match, per the earlier
+// false-positive lesson with bare `gemma` id-fragment matching.
+function labelsIncludeVision(value: unknown): boolean {
+  return (
+    Array.isArray(value) &&
+    value.some((entry) => toNonEmptyString(entry)?.toLowerCase() === "vision")
+  );
+}
+
 /**
  * #4264: detect image-input (vision) capability from a discovered model record.
  * Handles the common upstream shapes: an explicit `supportsVision` flag, the
  * OpenRouter `architecture.input_modalities` array and string `architecture.modality`
- * ("text+image->text" — the input side is everything before "->"), and a top-level
- * `input_modalities` array. Returns false when the upstream exposes no modality info.
+ * ("text+image->text" — the input side is everything before "->"), a top-level
+ * `input_modalities` array, and (#13918) Lemonade Server's `labels[]` array.
+ * Returns false when the upstream exposes no modality info.
  */
 export function detectVisionInput(record: JsonRecord): boolean {
   if (record.supportsVision === true) return true;
@@ -60,6 +74,9 @@ export function detectVisionInput(record: JsonRecord): boolean {
     const [inputPart] = modality.toLowerCase().split("->");
     if ((inputPart || "").includes("image")) return true;
   }
+
+  if (labelsIncludeVision(record.labels)) return true;
+
   return false;
 }
 
