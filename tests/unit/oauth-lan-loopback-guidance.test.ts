@@ -101,9 +101,15 @@ test("the flat warning string is still exported for non-UI callers", () => {
 test("OAuthModal renders the structured panel instead of the generic error step", () => {
   const modal = readSrc("shared/components/OAuthModal.tsx");
 
+  // #9944 added an explicit manual-entry bypass to this arm, so the condition is
+  // no longer a bare `isLocalhost` — it reads `isLocalhost && !opts?.manualLoopback`
+  // (choosing "Enter URL manually" skips the warning for that one attempt). The
+  // contract being asserted is unchanged: the isLocalhost arm must still build the
+  // structured hint rather than fall through to the generic red error step. Only the
+  // literal shape of the guard is allowed to vary.
   assert.match(
     modal,
-    /else if \(isLocalhost\) \{[\s\S]{0,300}buildPkceLoopbackMismatchHint/,
+    /else if \(isLocalhost[^)]*\) \{[\s\S]{0,300}buildPkceLoopbackMismatchHint/,
     "the isLocalhost arm of PKCE_CALLBACK_SERVER_PROVIDERS must build the structured hint"
   );
   assert.match(
