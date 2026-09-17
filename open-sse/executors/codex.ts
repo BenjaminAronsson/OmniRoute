@@ -34,7 +34,7 @@ import {
   withCodexFingerprintCredentials,
 } from "../config/codexIdentity.ts";
 import { getAccessToken } from "../services/tokenRefresh.ts";
-import { sanitizeResponsesInputItems } from "../services/responsesInputSanitizer.ts";
+import { sanitizeCodexResponsesInput } from "../services/responsesInputSanitizer.ts";
 import { applyReasoningInputPolicy } from "../services/reasoningInputPolicy.ts";
 import { getForcedReasoningEffort } from "../utils/reasoningRuleContext.ts";
 import { normalizeCodexVerbosity } from "../services/codexVerbosity.ts";
@@ -1306,11 +1306,7 @@ export class CodexExecutor extends BaseExecutor {
 
     normalizeCodexResponsesInput(body);
 
-    if (Array.isArray(body.input)) {
-      body.input = sanitizeResponsesInputItems(body.input, false, {
-        dropInternalAssistantMessages: !nativeCodexPassthrough,
-      });
-    }
+    sanitizeCodexResponsesInput(body, nativeCodexPassthrough);
     stripOrphanedCodexFunctionCallOutputs(body);
     repairMissingCodexToolCallOutputs(body);
 
