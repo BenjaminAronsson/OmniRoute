@@ -51,8 +51,8 @@ export async function DELETE(request: Request) {
   if (policy.rejection) return policy.rejection;
 
   // A presented API key always scopes the sweep to that key — even when the
-  // request also carries a dashboard session cookie — exactly like the
-  // list/count siblings (`apiKeyId || undefined`), so a leaked or over-shared
+  // request also carries a dashboard session cookie — the same rule the list
+  // siblings apply through `resolveListScope()`, so a leaked or over-shared
   // key can never widen a destructive sweep. Only a dashboard session WITHOUT a
   // key sweeps the whole instance; otherwise an ordinary key would delete every
   // tenant's completed batches and null out their file contents
@@ -95,6 +95,7 @@ export async function DELETE(request: Request) {
     apiKeyId: scope.apiKeyId,
     deletedBatches: result.deletedBatches,
     deletedFiles: result.deletedFiles,
+    hasMore: result.hasMore,
   };
   // A bulk delete is an audit event, not routine chatter: an instance-wide sweep
   // and any key-scoped sweep that actually removed rows log at warn so the trail
@@ -109,7 +110,12 @@ export async function DELETE(request: Request) {
   }
 
   return NextResponse.json(
-    { deleted: true, deletedBatches: result.deletedBatches, deletedFiles: result.deletedFiles },
+    {
+      deleted: true,
+      deletedBatches: result.deletedBatches,
+      deletedFiles: result.deletedFiles,
+      hasMore: result.hasMore,
+    },
     { headers: CORS_HEADERS }
   );
 }

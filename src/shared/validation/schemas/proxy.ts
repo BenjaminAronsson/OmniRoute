@@ -14,6 +14,7 @@ import {
   isForbiddenCustomHeaderName,
 } from "@/shared/constants/upstreamHeaders";
 import { MAX_TIMER_TIMEOUT_MS } from "@/shared/utils/runtimeTimeouts";
+import { PROXY_REGISTRY_STATUS_VALUES } from "@/shared/constants/proxyRegistryStatus";
 
 export const proxyConfigSchema = z
   .object({
@@ -116,7 +117,9 @@ export const proxyRegistryFieldsSchema = z
     password: z.string().optional(),
     region: z.string().trim().max(64).nullable().optional(),
     notes: z.string().trim().max(1000).nullable().optional(),
-    status: z.enum(["active", "inactive", "dead"]).optional().default("active"),
+    // No default: zod 4 applies it under .partial() too, which rewrote the stored status
+    // on every update or import that omitted it. New rows still start active in the DB.
+    status: z.enum(PROXY_REGISTRY_STATUS_VALUES).optional(),
     source: z
       .enum([
         "manual",
@@ -223,6 +226,23 @@ export const proxyPoolMemberSchema = z
   .strict()
   .superRefine((value, ctx) => {
     if (value.scope !== "global" && !value.scopeId?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "scopeId is required for provider/account/combo/key scope",
+        path: ["scopeId"],
+      });
+    }
+  });
+
+// GET /api/settings/proxies/pool/egress-observation query (#13581). Same scope vocabulary and
+// scopeId rule as the pool routes: an unknown scope is rejected, never read as "global".
+export const proxyPoolEgressObservationQuerySchema = z
+  .object({
+    scope: z.enum(["global", "provider", "account", "combo", "key"]),
+    scopeId: z.string().trim().max(256).nullable().optional(),
+  })
+  .superRefine((value, ctx) => {
+    if (value.scope !== "global" && !value.scopeId) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: "scopeId is required for provider/account/combo/key scope",
