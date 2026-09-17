@@ -35,6 +35,7 @@ import {
 import { getAccessToken } from "../services/tokenRefresh.ts";
 import { sanitizeResponsesInputItems } from "../services/responsesInputSanitizer.ts";
 import { applyReasoningInputPolicy } from "../services/reasoningInputPolicy.ts";
+import { getForcedReasoningEffort } from "../utils/reasoningRuleContext.ts";
 import { normalizeCodexVerbosity } from "../services/codexVerbosity.ts";
 import { getThinkingBudgetConfig, ThinkingMode } from "../services/thinkingBudget.ts";
 import { CORS_HEADERS } from "../utils/cors.ts";
@@ -819,6 +820,22 @@ export class CodexExecutor extends BaseExecutor {
       requestInput.body
     );
     const nextInput = { ...requestInput, credentials };
+    const forcedEffort = getForcedReasoningEffort(credentials);
+    if (forcedEffort) {
+      const nextBody =
+        nextInput.body && typeof nextInput.body === "object"
+          ? (nextInput.body as Record<string, unknown>)
+          : {};
+      nextInput.body = {
+        ...nextBody,
+        reasoning: {
+          ...(nextBody.reasoning && typeof nextBody.reasoning === "object"
+            ? nextBody.reasoning
+            : {}),
+          effort: forcedEffort,
+        },
+      };
+    }
 
     if (isCodexAppServerRequired(nextInput.credentials)) {
       if (!this.appServer) {
@@ -1380,8 +1397,13 @@ export class CodexExecutor extends BaseExecutor {
     // Issue #2331: model suffix aliases (for example gpt-5.5-xhigh) represent an
     // explicit model selection, so they must override client-injected defaults such
     // as OpenCode's automatic reasoning.effort=medium for GPT-5-family requests.
+    // A server-selected force rule is stronger than either source.
     const rawEffort =
-      modelEffort || explicitReasoning || requestReasoningEffort || fallbackReasoningEffort;
+      getForcedReasoningEffort(credentials) ||
+      modelEffort ||
+      explicitReasoning ||
+      requestReasoningEffort ||
+      fallbackReasoningEffort;
 
     if (rawEffort) {
       const clampedEffort = clampEffort(cleanModel, rawEffort);

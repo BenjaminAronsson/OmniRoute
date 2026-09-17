@@ -726,6 +726,18 @@ export const FEATURE_FLAG_DEFINITIONS: FeatureFlagDefinition[] = [
     requiresRestart: false,
     warningLevel: "caution",
   },
+  {
+    key: "BATCH_AND_FILE_AUTO_CLEANUP_ENABLED",
+    label: "Batch & File Auto-Cleanup",
+    description:
+      "Let the automatic cleanup sweep delete terminal (completed/failed/cancelled/expired) Batch API jobs older than OMNIROUTE_BATCH_RETENTION_DAYS, along with their per-line checkpoints, and clear the BLOB content of uploaded files past their own expires_at. Off by default: every existing install keeps this data exactly as before until an operator opts in. The operator-triggered DELETE /api/v1/batches/delete-completed route is unaffected either way -- it is a separate, unconditional public API contract.",
+    descriptionI18nKey: "featureFlagBatchAndFileAutoCleanupEnabledDescription",
+    category: "runtime",
+    defaultValue: "false",
+    type: "boolean",
+    requiresRestart: false,
+    warningLevel: "danger",
+  },
 
   // ──────────────── CLI (5) ────────────────
   {
