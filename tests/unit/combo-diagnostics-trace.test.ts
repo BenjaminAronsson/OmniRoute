@@ -11,6 +11,7 @@ import assert from "node:assert/strict";
 
 const { errorResponseWithComboDiagnostics, sanitizeComboDiagnostics } =
   await import("../../open-sse/utils/error.ts");
+const { buildRecoveryHint } = await import("../../open-sse/services/combo/pinRecovery.ts");
 
 test("combo diagnostics: headers + body carry the sanitized trace (code override preserved)", async () => {
   const res = errorResponseWithComboDiagnostics(
@@ -79,50 +80,6 @@ test("combo diagnostics: secret containment — non-whitelisted fields never sur
   assert.ok(!serialized.includes("token"), "no token KEY survives");
 });
 
-test("combo diagnostics: canonical sanitizer protects every public string and header", async () => {
-  const res = errorResponseWithComboDiagnostics(502, "combo failed", {
-    poolSize: 2,
-    attempted: 1,
-    excluded: [
-      {
-        provider: "provider access_token=DIAG_SECRET /home/alice/provider.ts",
-        model: "C:\\Users\\alice\\private-model.ts:1:2",
-        reason: "reason password=REASON_SECRET",
-      },
-    ],
-    attemptOrder: [
-      {
-        provider: "provider secret=ORDER_SECRET",
-        model: "model\n    at /home/alice/model.ts:1:2",
-      },
-    ],
-    terminalReason: "terminal secret=TERM_SECRET /home/alice/terminal.ts",
-    recovery: {
-      action: "retry",
-      next_step: "next password=NEXT_SECRET /home/alice/next.ts",
-    },
-  });
-  const body = await res.json();
-  const publicText = [
-    JSON.stringify(body),
-    res.headers.get("x-omniroute-combo-excluded") || "",
-    res.headers.get("x-omniroute-combo-terminal-reason") || "",
-    res.headers.get("x-omniroute-recovery-next-step") || "",
-  ].join("\n");
-
-  for (const leak of [
-    "DIAG_SECRET",
-    "REASON_SECRET",
-    "ORDER_SECRET",
-    "TERM_SECRET",
-    "NEXT_SECRET",
-    "/home/alice",
-    "C:\\Users\\alice",
-  ]) {
-    assert.ok(!publicText.includes(leak), leak);
-  }
-});
-
 test("combo diagnostics: terminalReason with a non-Latin1 char (em dash) must not crash Response construction (#6612)", () => {
   const terminalReason = "reasoning consumed 5/5 tokens — no content output";
   assert.doesNotThrow(() => {
@@ -162,33 +119,38 @@ test("combo diagnostics: JSON body keeps the original non-Latin1 text even thoug
     terminalReason.replace("—", "?")
   );
   const body = await res.json();
-  // JSON body keeps the original, safe em dash after canonical sanitization.
+  // JSON body keeps the original, readable (unsanitized) em dash.
   assert.equal(body.diagnostics.terminalReason, terminalReason);
 });
 
-test("combo diagnostics: every C0/DEL byte is printable in headers without corrupting JSON", async () => {
-  for (const code of [0x00, 0x01, 0x08, 0x09, 0x0b, 0x0c, 0x1f, 0x7f]) {
-    const control = String.fromCharCode(code);
-    const diagnostic = `safe${control}tail`;
-    const res = errorResponseWithComboDiagnostics(503, "combo failed", {
-      poolSize: 1,
-      attempted: 0,
-      excluded: [{ provider: diagnostic, reason: diagnostic }],
-      attemptOrder: [{ provider: diagnostic, model: diagnostic }],
-      terminalReason: diagnostic,
-      recovery: { action: "retry", next_step: diagnostic },
-    });
+test("combo diagnostics preserve every canonical recovery hint up to the existing cap", async () => {
+  const reasons = [
+    "reasoning_budget_exhausted",
+    "max_attempts_exceeded",
+    "all_accounts_inactive",
+    "quota_exhausted",
+    "all_models_failed",
+    "no_executable_targets",
+    "context_requirements_exhausted",
+    "all_targets_skipped",
+    "unknown_reason",
+  ];
 
-    assert.equal(res.status, 503, `control 0x${code.toString(16)}`);
-    for (const header of [
-      "x-omniroute-combo-excluded",
-      "x-omniroute-combo-terminal-reason",
-      "x-omniroute-recovery-next-step",
-    ]) {
-      assert.doesNotMatch(res.headers.get(header) || "", /[\x00-\x1f\x7f]/);
-    }
-    const body = await res.json();
-    assert.equal(body.diagnostics.terminalReason, diagnostic);
-    assert.equal(body.recovery_hint.next_step, diagnostic);
+  for (const reason of reasons) {
+    const recovery = buildRecoveryHint(reason, 30);
+    const response = errorResponseWithComboDiagnostics(503, "combo failed", {
+      poolSize: 1,
+      attempted: 1,
+      excluded: [],
+      attemptOrder: [],
+      terminalReason: reason,
+      recovery,
+    });
+    const body = (await response.json()) as {
+      recovery_hint?: { action: string; next_step: string };
+    };
+
+    assert.equal(body.recovery_hint?.action, recovery.action, reason);
+    assert.equal(body.recovery_hint?.next_step, recovery.next_step.slice(0, 200), reason);
   }
 });

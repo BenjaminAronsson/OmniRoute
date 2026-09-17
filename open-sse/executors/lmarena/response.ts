@@ -50,7 +50,7 @@ const ARENA_PUBLIC_MESSAGES = {
   botTokenNeeded:
     "If this persists, supply a browser reCAPTCHA v3 token via credentials.providerSpecificData.recaptchaV3Token (in addition to the session cookie).",
   tlsUnavailable:
-    "Arena TLS impersonation unavailable: Arena upstream error. Install/repair tls-client-node native binary.",
+    "Arena TLS impersonation unavailable: Arena upstream error. Verify the wreq-js 3.2 native binding.",
   upstream: "Arena upstream error",
   upstreamStream: "Arena upstream stream error",
 } as const;

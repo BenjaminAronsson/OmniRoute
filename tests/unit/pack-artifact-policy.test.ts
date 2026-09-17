@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 
 import {
   APP_STAGING_ALLOWED_EXACT_PATHS,
@@ -8,7 +8,6 @@ import {
   PACK_ARTIFACT_ALLOWED_EXACT_PATHS,
   PACK_ARTIFACT_ALLOWED_PATH_PREFIXES,
   PACK_ARTIFACT_REQUIRED_PATHS,
-  TLS_CLIENT_RUNTIME_SEED_PATHS,
   findMissingArtifactPaths,
   findUnexpectedArtifactPaths,
   normalizeArtifactPath,
@@ -16,14 +15,20 @@ import {
   parseJsonValuesOutput,
 } from "../../scripts/build/pack-artifact-policy.ts";
 
-const EXPECTED_TLS_CLIENT_RUNTIME_SEED_PATHS = [
-  "runtime-assets/tls-client/bin/tls-client-darwin-amd64-1.15.1.dylib",
-  "runtime-assets/tls-client/bin/tls-client-darwin-arm64-1.15.1.dylib",
-  "runtime-assets/tls-client/bin/tls-client-linux-arm64-1.15.1.so",
-  "runtime-assets/tls-client/bin/tls-client-linux-ubuntu-amd64-1.15.1.so",
-  "runtime-assets/tls-client/bin/tls-client-windows-32-1.15.1.dll",
-  "runtime-assets/tls-client/bin/tls-client-windows-64-1.15.1.dll",
-] as const;
+test("artifact path policy arrays contain no duplicate entries", () => {
+  const policies = {
+    APP_STAGING_ALLOWED_EXACT_PATHS,
+    APP_STAGING_ALLOWED_PATH_PREFIXES,
+    PACK_ARTIFACT_ALLOWED_EXACT_PATHS,
+    PACK_ARTIFACT_ALLOWED_PATH_PREFIXES,
+    PACK_ARTIFACT_REQUIRED_PATHS,
+  };
+
+  for (const [name, paths] of Object.entries(policies)) {
+    const duplicates = [...new Set(paths.filter((entry, index) => paths.indexOf(entry) !== index))];
+    assert.deepEqual(duplicates, [], `${name} contains duplicate paths: ${duplicates.join(", ")}`);
+  }
+});
 
 test("normalizeArtifactPath normalizes slashes and leading relative markers", () => {
   assert.equal(
@@ -196,31 +201,6 @@ test("build-next-isolated sibling imports are allowed in the published package",
   assert.deepEqual(unexpectedPaths, []);
 });
 
-test("assembleStandalone helper imports are published, allowed, and required", () => {
-  const packageFiles: string[] = JSON.parse(
-    readFileSync(new URL("../../package.json", import.meta.url), "utf8")
-  ).files;
-  const helperPaths = [
-    "scripts/build/standaloneSidecarCopy.mjs",
-    "scripts/build/tlsClientAssetCopy.mjs",
-  ];
-
-  for (const helperPath of helperPaths) {
-    assert.ok(
-      packageFiles.includes(helperPath),
-      `${helperPath} must ship via package.json files[]`
-    );
-    assert.ok(
-      PACK_ARTIFACT_ALLOWED_EXACT_PATHS.includes(helperPath),
-      `${helperPath} must be authorized by the tarball allowlist`
-    );
-    assert.ok(
-      PACK_ARTIFACT_REQUIRED_PATHS.includes(helperPath),
-      `${helperPath} must be required so npm packing fails loudly if it disappears`
-    );
-  }
-});
-
 test("webdav-handler.mjs is allowed in staging dist/ (server-ws.mjs dependency, missed in 3.8.22 build)", () => {
   const unexpectedPaths = findUnexpectedArtifactPaths(["webdav-handler.mjs"], {
     exactPaths: APP_STAGING_ALLOWED_EXACT_PATHS,
@@ -260,12 +240,32 @@ test("setupPolyfill.ts is allowed in the tarball (bin/omniroute.mjs imports it a
   assert.deepEqual(unexpectedPaths, []);
 });
 
-test("findMissingArtifactPaths flags missing root runtime files in the tarball", () => {
-  assert.deepEqual(
-    [...TLS_CLIENT_RUNTIME_SEED_PATHS].sort(),
-    EXPECTED_TLS_CLIENT_RUNTIME_SEED_PATHS
+test("config/i18n.json ships in the tarball: allowed, required, and in package.json files[]", () => {
+  // Locale source of truth read at runtime by bin/cli/i18n.mjs (OMNIROUTE_LANG alias
+  // resolution, e.g. uk → uk-UA / fil → phi) and bin/cli/commands/config.mjs
+  // (`config lang list`). package.json "files" never shipped config/, so the published
+  // CLI silently fell back to en for every alias — pin all three layers so the file can
+  // never drop out of the tarball again.
+  const configPath = "config/i18n.json";
+
+  const unexpectedPaths = findUnexpectedArtifactPaths([configPath], {
+    exactPaths: PACK_ARTIFACT_ALLOWED_EXACT_PATHS,
+    prefixPaths: PACK_ARTIFACT_ALLOWED_PATH_PREFIXES,
+  });
+  assert.deepEqual(unexpectedPaths, [], `${configPath} must be allowed in the tarball`);
+
+  assert.ok(
+    PACK_ARTIFACT_REQUIRED_PATHS.includes(configPath),
+    `${configPath} must be a required tarball path (check:pack-artifact regression guard)`
   );
 
+  const files: string[] = JSON.parse(
+    readFileSync(new URL("../../package.json", import.meta.url), "utf8")
+  ).files;
+  assert.ok(files.includes(configPath), `package.json "files" must list ${configPath}`);
+});
+
+test("findMissingArtifactPaths flags missing root runtime files in the tarball", () => {
   const missingPaths = findMissingArtifactPaths(
     [
       "dist/server.js",
@@ -281,7 +281,6 @@ test("findMissingArtifactPaths flags missing root runtime files in the tarball",
   // alphabetically (bin/ < dist/ < scripts/ < src/), minus the paths present
   // above (dist/server.js, bin/omniroute.mjs, package.json, the postinstall scripts).
   assert.deepEqual(missingPaths, [
-    "THIRD_PARTY_NOTICES.md",
     "bin/aliasResolver.mjs",
     "bin/aliasResolverHook.mjs",
     "bin/cli/data-dir.mjs",
@@ -290,35 +289,50 @@ test("findMissingArtifactPaths flags missing root runtime files in the tarball",
     "bin/cli/utils/parseEnvValue.mjs",
     "bin/cli/utils/storageKeyProvision.mjs",
     "bin/cli/utils/versionFastPath.mjs",
+    "bin/cli/utils/volatileEnvPath.mjs",
     "bin/mcp-server.mjs",
     "bin/mcpStdioConsoleGuard.mjs",
     "bin/nodeRuntimeSupport.mjs",
-    "dist/LICENSE",
-    "dist/THIRD_PARTY_NOTICES.md",
+    "config/i18n.json",
+    "config/release/wreq-js-native-manifest.json",
+    "config/release/wreq-js-rust-license-inventory.json",
+    "config/release/wreq-js-rust-notices.md",
     "dist/head-response-guard.cjs",
     "dist/http-method-guard.cjs",
+    "dist/httpClientAbortGuard.mjs",
     "dist/main-server-timeouts.mjs",
-    "dist/open-sse/config/tlsClientNativeManifest.json",
     "dist/open-sse/services/compression/engines/rtk/filters/generic-output.json",
     "dist/open-sse/services/compression/rules/en/filler.json",
     "dist/open-sse/vendor/codex-chatgpt-web/adapters/chatgpt-web/mcp-server.js",
     "dist/peer-stamp.mjs",
     "dist/responses-ws-proxy.mjs",
-    ...EXPECTED_TLS_CLIENT_RUNTIME_SEED_PATHS.map((seedPath) => `dist/${seedPath}`),
     "dist/server-ws.mjs",
+    "dist/src/lib/db/healthCheckWorker.js",
     "dist/src/lib/usage/callLogArtifactWorker.js",
     "dist/systemd-notify.mjs",
     "dist/tls-options.mjs",
     "dist/webdav-handler.mjs",
-    "open-sse/config/tlsClientNativeManifest.json",
     "scripts/build/colocateOptionals.mjs",
-    "scripts/build/fixTlsClientNodeBinary.mjs",
     "scripts/build/native-binary-compat.mjs",
     "scripts/build/runtime-env.mjs",
-    "scripts/build/standaloneSidecarCopy.mjs",
-    "scripts/build/tlsClientAssetCopy.mjs",
+    "scripts/build/wreqJsNative.mjs",
     "scripts/packs/optionalPackInstaller.mjs",
     "scripts/packs/optionalPackManifest.mjs",
     "src/shared/utils/nodeRuntimeSupport.ts",
   ]);
+});
+
+test("every shipped @omniroute workspace package is covered by an artifact prefix", () => {
+  const packageJson = JSON.parse(readFileSync("package.json", "utf8")) as { files: string[] };
+  assert.ok(packageJson.files.includes("@omniroute/"));
+
+  const workspacePackages = readdirSync("@omniroute", { withFileTypes: true })
+    .filter((entry) => entry.isDirectory() && existsSync(`@omniroute/${entry.name}/package.json`))
+    .map((entry) => `@omniroute/${entry.name}/`);
+
+  assert.ok(workspacePackages.includes("@omniroute/opencode-plugin-v2/"));
+  const uncovered = workspacePackages.filter(
+    (prefix) => !PACK_ARTIFACT_ALLOWED_PATH_PREFIXES.includes(prefix)
+  );
+  assert.deepEqual(uncovered, []);
 });

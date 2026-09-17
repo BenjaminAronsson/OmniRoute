@@ -45,24 +45,11 @@
  * removeGeneratedElectronArtifacts                             -               -           Y    UNIQUE (electron)
  */
 
-import fsSync from "node:fs";
 import fs from "node:fs/promises";
+import fsSync from "node:fs";
 import path from "node:path";
 import { colocateLlmlinguaOptionals, SEED_PACKAGES } from "./colocateOptionals.mjs";
-import { TLS_CLIENT_NATIVE_ASSETS } from "./fixTlsClientNodeBinary.mjs";
-import {
-  clearStaleDest,
-  copyNativeAssetsAndExtraModules,
-  repairEmptyExternalPackageDirs,
-  resolvesToSamePath,
-} from "./standaloneSidecarCopy.mjs";
-import {
-  auditTlsClientStandaloneBundle,
-  copyVerifiedTlsClientNativeAsset,
-  createTlsClientNativeAssetEntries,
-} from "./tlsClientAssetCopy.mjs";
-
-const TLS_CLIENT_NATIVE_ASSET_ENTRIES = createTlsClientNativeAssetEntries(TLS_CLIENT_NATIVE_ASSETS);
+import { WREQ_JS_NATIVE_BINDINGS } from "./wreqJsNative.mjs";
 
 /**
  * Check whether a path exists (async).
@@ -87,14 +74,9 @@ async function exists(targetPath) {
  *
  * Each entry uses path SEGMENT arrays (not pre-joined strings) so the source
  * (relative to projectRoot) and destination (relative to outDir) can be joined
- * for either path/platform.
- * @type {{label:string, src:string[], dest:string[], tlsClientSha256?:string}[]}
+ * for either path/platform. @type {{label:string, src:string[], dest:string[]}[]}
  */
 export const NATIVE_ASSET_ENTRIES = [
-  // tls-client-node loads one platform library dynamically, outside Next.js
-  // tracing. Copy only manifest-declared filenames: recursively copying bin/
-  // would distribute unverified upstream residue beside the pinned seeds.
-  ...TLS_CLIENT_NATIVE_ASSET_ENTRIES,
   {
     label: "better-sqlite3 native binary",
     src: ["node_modules", "better-sqlite3", "build"],
@@ -132,25 +114,6 @@ export const NATIVE_ASSET_ENTRIES = [
 /** @type {{label:string, src:string[], dest:string[]}[]} */
 const EXTRA_MODULE_ENTRIES = [
   {
-    // The project MIT license must accompany standalone, Docker, and Electron
-    // distributions just like third-party notices do.
-    label: "OmniRoute project license",
-    src: ["LICENSE"],
-    dest: ["LICENSE"],
-  },
-  {
-    label: "tls-client pinned native manifest",
-    src: ["open-sse", "config", "tlsClientNativeManifest.json"],
-    dest: ["open-sse", "config", "tlsClientNativeManifest.json"],
-  },
-  {
-    // Legal notices must travel with every standalone bundle. Docker copies the
-    // complete standalone tree into /app, so this one entry covers both outputs.
-    label: "third-party license notices",
-    src: ["THIRD_PARTY_NOTICES.md"],
-    dest: ["THIRD_PARTY_NOTICES.md"],
-  },
-  {
     // tlsClient.ts intentionally resolves wreq-js through a runtime-dynamic
     // require so Turbopack cannot rewrite the package name to a hashed external.
     // That also makes the package invisible to static tracing, so copy the whole
@@ -158,6 +121,31 @@ const EXTRA_MODULE_ENTRIES = [
     label: "wreq-js TLS runtime",
     src: ["node_modules", "wreq-js"],
     dest: ["node_modules", "wreq-js"],
+  },
+  ...WREQ_JS_NATIVE_BINDINGS.map((binding) => ({
+    label: `${binding.packageName} native binding`,
+    src: ["node_modules", ...binding.packageName.split("/")],
+    dest: ["node_modules", ...binding.packageName.split("/")],
+  })),
+  {
+    label: "third-party notices",
+    src: ["THIRD_PARTY_NOTICES.md"],
+    dest: ["THIRD_PARTY_NOTICES.md"],
+  },
+  {
+    label: "wreq-js native provenance manifest",
+    src: ["config", "release", "wreq-js-native-manifest.json"],
+    dest: ["config", "release", "wreq-js-native-manifest.json"],
+  },
+  {
+    label: "wreq-js Rust license inventory",
+    src: ["config", "release", "wreq-js-rust-license-inventory.json"],
+    dest: ["config", "release", "wreq-js-rust-license-inventory.json"],
+  },
+  {
+    label: "wreq-js Rust/native notice bundle",
+    src: ["config", "release", "wreq-js-rust-notices.md"],
+    dest: ["config", "release", "wreq-js-rust-notices.md"],
   },
   {
     label: "@swc/helpers",
@@ -339,14 +327,6 @@ const EXTRA_MODULE_ENTRIES = [
   ].map((pkg) => ({ label: pkg, src: ["node_modules", pkg], dest: ["node_modules", pkg] })),
 ];
 
-function nativeAssetEntriesFor(tlsClientNativeAssets) {
-  if (tlsClientNativeAssets === TLS_CLIENT_NATIVE_ASSETS) return NATIVE_ASSET_ENTRIES;
-  return [
-    ...createTlsClientNativeAssetEntries(tlsClientNativeAssets),
-    ...NATIVE_ASSET_ENTRIES.filter((entry) => !entry.tlsClientSha256),
-  ];
-}
-
 /**
  * Copy native standalone assets (better-sqlite3 build/prebuilds and TPROXY).
  *
@@ -356,25 +336,12 @@ function nativeAssetEntriesFor(tlsClientNativeAssets) {
  * @param {string} rootDir      - project root (node_modules are read from here)
  * @param {typeof fs} [fsImpl]  - fs/promises implementation (injectable for tests)
  * @param {Console|{log:Function}} [log] - logger
- * @param {{tlsClientNativeAssets?:Record<string, {file:string, sha256:string}>}} [options]
  * @returns {Promise<boolean>} true if any asset was copied
  */
-export async function syncStandaloneNativeAssets(
-  rootDir,
-  fsImpl = fs,
-  log = console,
-  outDir,
-  { tlsClientNativeAssets = TLS_CLIENT_NATIVE_ASSETS } = {}
-) {
+export async function syncStandaloneNativeAssets(rootDir, fsImpl = fs, log = console, outDir) {
   const standaloneRoot =
     outDir || path.join(rootDir, process.env.NEXT_DIST_DIR || ".build/next", "standalone");
-  return syncNativeAssetsToDir(
-    rootDir,
-    standaloneRoot,
-    fsImpl,
-    log,
-    nativeAssetEntriesFor(tlsClientNativeAssets)
-  );
+  return syncNativeAssetsToDir(rootDir, standaloneRoot, fsImpl, log);
 }
 
 /**
@@ -401,41 +368,16 @@ export async function syncStandaloneExtraModules(rootDir, fsImpl = fs, log = con
  * @param {string} outDir
  * @param {typeof fs} fsImpl
  * @param {Console|{log:Function}} log
- * @param {{label:string, src:string[], dest:string[], tlsClientSha256?:string}[]} nativeAssetEntries
  * @returns {Promise<boolean>}
  */
-async function syncNativeAssetsToDir(
-  projectRoot,
-  outDir,
-  fsImpl,
-  log,
-  nativeAssetEntries = NATIVE_ASSET_ENTRIES
-) {
+async function syncNativeAssetsToDir(projectRoot, outDir, fsImpl, log) {
   let changed = false;
 
-  for (const entry of nativeAssetEntries) {
+  for (const entry of NATIVE_ASSET_ENTRIES) {
     const sourcePath = path.join(projectRoot, ...entry.src);
-    const destinationPath = path.join(outDir, ...entry.dest);
-    if (entry.tlsClientSha256) {
-      const copied = copyVerifiedTlsClientNativeAsset({
-        sourceRoot: projectRoot,
-        sourcePath,
-        destinationPath,
-        expectedSha256: entry.tlsClientSha256,
-        outDir,
-      });
-      if (!copied) continue;
-      log.log(
-        `[assembleStandalone] Copied verified native standalone asset: ${path.relative(
-          projectRoot,
-          destinationPath
-        )}`
-      );
-      changed = true;
-      continue;
-    }
     if (!(await exists(sourcePath))) continue;
 
+    const destinationPath = path.join(outDir, ...entry.dest);
     // See resolvesToSamePath/clearStaleDest (sync copy path, same module) — the same
     // ERR_FS_CP_EINVAL/ERR_FS_CP_DIR_TO_NON_DIR races apply to fsImpl.cp here.
     if (resolvesToSamePath(sourcePath, destinationPath)) continue;
@@ -624,7 +566,169 @@ function copyStaticAndPublic({ distDir, relDistDir, projectRoot, resolvedOutDir 
   const publicSrc = path.join(projectRoot, "public");
   if (fsSync.existsSync(publicSrc)) {
     fsSync.cpSync(publicSrc, path.join(resolvedOutDir, "public"), { recursive: true, force: true });
+    stampServiceWorkerBuildId(resolvedOutDir);
   }
+}
+
+/**
+ * The service-worker update algorithm compares the BYTES of the fetched worker
+ * script against the installed worker; a changed query string only busts the
+ * HTTP cache, it does not make the browser install a new generation. So a
+ * build identifier has to be part of the sw.js bytes themselves. Stamp
+ * NEXT_PUBLIC_SW_BUILD_ID (same resolution chain as next.config.mjs) into the
+ * copied sw.js as a comment + CACHE_NAME suffix; the source file in public/
+ * stays generic for dev.
+ */
+function stampServiceWorkerBuildId(resolvedOutDir) {
+  const swDest = path.join(resolvedOutDir, "public", "sw.js");
+  if (!fsSync.existsSync(swDest)) return;
+  const buildId =
+    process.env.OMNIROUTE_SW_BUILD_ID || process.env.SOURCE_VERSION || String(Date.now());
+  let sw = fsSync.readFileSync(swDest, "utf8");
+  sw = sw.replace(
+    /^const CACHE_NAME = "omniroute-pwa-v3";$/m,
+    `const CACHE_NAME = "omniroute-pwa-v3-${buildId}"; // build ${buildId}`
+  );
+  fsSync.writeFileSync(swDest, sw);
+}
+
+/**
+ * Two independent copy passes assemble a bundle: the bulk "standalone -> outDir" tree
+ * copy (step 1 of assembleStandalone) can already have carried a prior entry's result
+ * into `dest` (e.g. an absolute pnpm-store symlink, or a directory) BEFORE this entry's
+ * own copy runs. `fs.cpSync`/`fs.cp` refuse to overwrite in two such cases even with
+ * `force: true`:
+ *   - dest already resolves (via symlink chain) to the exact same real path as src ->
+ *     ERR_FS_CP_EINVAL "src and dest cannot be the same".
+ *   - dest exists with a different node type than src (file/symlink vs directory) ->
+ *     ERR_FS_CP_DIR_TO_NON_DIR / ERR_FS_CP_NON_DIR_TO_DIR.
+ * Under heavy concurrent build I/O this manifested non-deterministically across
+ * different EXTRA_MODULE_ENTRIES/NATIVE_ASSET_ENTRIES on every retry. Resolve both
+ * cases up front: skip entirely when dest is already the right target, otherwise clear
+ * whatever stale node occupies dest (via lstat, so it also removes a broken symlink)
+ * so the fresh copy always lands cleanly.
+ *
+ * @param {string} src
+ * @param {string} dest
+ * @returns {boolean} true when dest already IS src's target and no copy is needed
+ */
+function resolvesToSamePath(src, dest) {
+  if (path.resolve(src) === path.resolve(dest)) return true;
+  if (!fsSync.existsSync(dest)) return false;
+  try {
+    return fsSync.realpathSync(src) === fsSync.realpathSync(dest);
+  } catch {
+    return false;
+  }
+}
+
+/** @see resolvesToSamePath — clears whatever stale node sits at `dest` before a copy. */
+function clearStaleDest(dest) {
+  try {
+    fsSync.lstatSync(dest);
+  } catch {
+    return;
+  }
+  fsSync.rmSync(dest, { recursive: true, force: true });
+}
+
+/**
+ * Copy native assets (better-sqlite3 and TPROXY) and extra runtime modules/sidecars
+ * (wreq-js, pino, migrations, MITM server, helper scripts, sqlite-vec platform packages, …)
+ * into the assembled bundle. Missing sources are skipped silently.
+ *
+ * @param {string} projectRoot
+ * @param {string} resolvedOutDir
+ */
+function copyNativeAssetsAndExtraModules(projectRoot, resolvedOutDir) {
+  for (const asset of NATIVE_ASSET_ENTRIES) {
+    const src = path.join(projectRoot, ...asset.src);
+    if (!fsSync.existsSync(src)) continue;
+    const dest = path.join(resolvedOutDir, ...asset.dest);
+    if (resolvesToSamePath(src, dest)) continue;
+    clearStaleDest(dest);
+    fsSync.mkdirSync(path.dirname(dest), { recursive: true });
+    fsSync.cpSync(src, dest, { recursive: true, force: true });
+    console.log(`[assembleStandalone] Copied native asset: ${asset.label}`);
+  }
+
+  for (const mod of EXTRA_MODULE_ENTRIES) {
+    const src = path.join(projectRoot, ...mod.src);
+    if (!fsSync.existsSync(src)) continue;
+    const dest = path.join(resolvedOutDir, ...mod.dest);
+    if (resolvesToSamePath(src, dest)) continue;
+    clearStaleDest(dest);
+    fsSync.mkdirSync(path.dirname(dest), { recursive: true });
+    fsSync.cpSync(src, dest, { recursive: true, force: true });
+    console.log(`[assembleStandalone] Synced module: ${mod.label}`);
+  }
+}
+
+/**
+ * Next/Turbopack standalone output can leave behind hollow top-level package
+ * directories for externalized runtime deps (directory exists, but contains no
+ * files). Those empty placeholders shadow the real repo-level install and make
+ * runtime ESM externals fail with "Cannot find package '<bundle>/node_modules/<pkg>/index.js'"
+ * even though the dependency is present in the source tree.
+ *
+ * Repair strategy: for each empty top-level package dir already present in the
+ * assembled bundle, if the same package exists in the project root node_modules,
+ * replace the hollow directory with a full recursive copy from the source install.
+ * This keeps the fix narrowly scoped to packages the standalone already expects.
+ *
+ * @param {string} projectRoot
+ * @param {string} bundleNodeModules
+ * @returns {{repaired: number, packages: string[]}}
+ */
+function repairEmptyExternalPackageDirs(projectRoot, bundleNodeModules) {
+  const summary = { repaired: 0, packages: [] };
+  const sourceNodeModules = path.join(projectRoot, "node_modules");
+  if (!fsSync.existsSync(bundleNodeModules) || !fsSync.existsSync(sourceNodeModules)) {
+    return summary;
+  }
+
+  for (const name of fsSync.readdirSync(bundleNodeModules)) {
+    if (name.startsWith(".") || name.startsWith("@")) continue;
+
+    const bundlePkgDir = path.join(bundleNodeModules, name);
+    const sourcePkgDir = path.join(sourceNodeModules, name);
+
+    let bundleStat;
+    try {
+      bundleStat = fsSync.statSync(bundlePkgDir);
+    } catch {
+      continue;
+    }
+    if (!bundleStat.isDirectory()) continue;
+
+    let bundleEntries = [];
+    try {
+      bundleEntries = fsSync.readdirSync(bundlePkgDir);
+    } catch {
+      continue;
+    }
+    if (bundleEntries.length > 0 || !fsSync.existsSync(sourcePkgDir)) continue;
+
+    let sourceStat;
+    try {
+      sourceStat = fsSync.statSync(sourcePkgDir);
+    } catch {
+      continue;
+    }
+    if (!sourceStat.isDirectory()) continue;
+    // See resolvesToSamePath/clearStaleDest above: bundlePkgDir can itself be a
+    // symlink to sourcePkgDir's realpath whose target momentarily read as empty
+    // under heavy concurrent build I/O (a transient readdirSync race, not a real
+    // hollow placeholder), or a stale non-directory node from an earlier pass.
+    if (resolvesToSamePath(sourcePkgDir, bundlePkgDir)) continue;
+    clearStaleDest(bundlePkgDir);
+
+    fsSync.cpSync(sourcePkgDir, bundlePkgDir, { recursive: true, force: true });
+    summary.repaired += 1;
+    summary.packages.push(name);
+  }
+
+  return summary;
 }
 
 /**
@@ -778,7 +882,6 @@ export function syncRebuiltNativeModuleIntoHashedEntries(rootModuleDir, nodeModu
  * @param {boolean} [opts.patchTurbopackChunks]  - strip hashed externals from .next/server js files (default false)
  * @param {boolean} [opts.copyNatives]           - copy native assets + extra modules (default true)
  * @param {boolean} [opts.materializeSymlinks]   - dereference Turbopack hashed-module symlinks in node_modules (default false)
- * @param {Record<string, {file:string, sha256:string}>} [opts.tlsClientNativeAssets] - integrity manifest (default pinned production manifest)
  * @returns {void}
  */
 export function assembleStandalone({
@@ -789,7 +892,6 @@ export function assembleStandalone({
   patchTurbopackChunks: doPatchChunks = false,
   copyNatives = true,
   materializeSymlinks = false,
-  tlsClientNativeAssets = TLS_CLIENT_NATIVE_ASSETS,
 }) {
   if (!distDir) throw new Error("[assembleStandalone] distDir is required");
   if (!outDir) throw new Error("[assembleStandalone] outDir is required");
@@ -844,12 +946,7 @@ export function assembleStandalone({
 
   // 6. Optionally copy native assets + extra modules (synchronous)
   if (copyNatives) {
-    copyNativeAssetsAndExtraModules({
-      projectRoot,
-      outDir: resolvedOutDir,
-      nativeAssetEntries: nativeAssetEntriesFor(tlsClientNativeAssets),
-      extraModuleEntries: EXTRA_MODULE_ENTRIES,
-    });
+    copyNativeAssetsAndExtraModules(projectRoot, resolvedOutDir);
     // Repair hollow externalized package dirs in BOTH locations Turbopack's standalone
     // tracer can populate: the top-level bundle node_modules, and — for projects with a
     // custom distDir (see next.config.mjs) — the nested <relDistDir>/node_modules mirrored
@@ -900,11 +997,4 @@ export function assembleStandalone({
       }
     }
   }
-
-  auditTlsClientStandaloneBundle({
-    outDir: resolvedOutDir,
-    projectRoot,
-    relativeNextDistDir: relDistDir,
-    nativeAssets: tlsClientNativeAssets,
-  });
 }

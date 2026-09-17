@@ -11,9 +11,10 @@ import {
   syncStandaloneNativeAssets as _syncNativeAssets,
   syncStandaloneExtraModules as _syncExtraModules,
 } from "./assembleStandalone.mjs";
-import { fixTlsClientNodeBinary } from "./fixTlsClientNodeBinary.mjs";
 import {
   isBackendOnlyBuild,
+  isContributorBuild,
+  stubContributorInstrumentation,
   stubDashboardPages,
   restoreDashboardPages,
 } from "./backendOnlyPages.mjs";
@@ -132,9 +133,12 @@ function runNextBuild() {
 }
 
 export function resolveNextBuildBundlerFlag(baseEnv = process.env) {
-  // Turbopack is the default on Node.js; on Bun or when explicitly disabled (=0),
-  // use Webpack (--webpack) to avoid Turbopack V8 internal worker API mismatches.
-  if (process.versions.bun || baseEnv.OMNIROUTE_USE_TURBOPACK === "0") {
+  // Turbopack is the default; OMNIROUTE_USE_TURBOPACK=0 is the documented escape hatch
+  // to webpack (Windows, native-binding trouble, RAM-constrained machines — #6409, and
+  // docs/reference/ENVIRONMENT.md). The choice is env-only ON PURPOSE: the variable is
+  // the operator's control and CI sets it explicitly, so sniffing the runtime here would
+  // silently override an operator who asked for Turbopack.
+  if (baseEnv.OMNIROUTE_USE_TURBOPACK === "0") {
     return "--webpack";
   }
   return "--turbopack";
@@ -260,35 +264,6 @@ export async function syncStandaloneExtraModules(
   return _syncExtraModules(rootDir, fsImpl, log);
 }
 
-/**
- * Assemble the movable standalone runtime, then verify the exact TLS native seed
- * that consumers will execute. Keeping both operations in one awaited composition
- * prevents a successful copy/prune from bypassing the pinned-digest gate.
- */
-export async function assembleAndVerifyStandalone({
-  rootDir = projectRoot,
-  buildDistDir = distDir,
-  standaloneDir = path.join(buildDistDir, "standalone"),
-  assembleImpl = assembleStandalone,
-  verifyImpl = fixTlsClientNodeBinary,
-} = {}) {
-  await assembleImpl({
-    distDir: buildDistDir,
-    outDir: standaloneDir,
-    projectRoot: rootDir,
-    patchTurbopackChunks: true,
-    copyNatives: true,
-    materializeSymlinks: true,
-  });
-
-  await verifyImpl({
-    rootDir,
-    standaloneDir,
-    strict: true,
-    requireStandalone: true,
-  });
-}
-
 export async function main() {
   const movedPaths = [];
   const transientBuildPaths = getTransientBuildPaths();
@@ -321,6 +296,12 @@ export async function main() {
         "[build-next-isolated] OMNIROUTE_BUILD_BACKEND_ONLY set — building API only (dashboard UI stubbed)"
       );
       stubbedPages = stubDashboardPages(projectRoot);
+      if (isContributorBuild()) {
+        stubbedPages.push(...stubContributorInstrumentation(projectRoot));
+        console.log(
+          "[build-next-isolated] Contributor profile: instrumentation entrypoint stubbed for compile-only validation"
+        );
+      }
       process.once("SIGINT", onFatalSignal);
       process.once("SIGTERM", onFatalSignal);
     }
@@ -329,21 +310,7 @@ export async function main() {
 
     const result = await runNextBuild();
     const standaloneDir = path.join(distDir, "standalone");
-    if (result.code === 0) {
-      let standaloneStats;
-      try {
-        standaloneStats = await fs.lstat(standaloneDir);
-      } catch (error) {
-        if (error?.code !== "ENOENT") throw error;
-      }
-
-      if (!standaloneStats?.isDirectory() || standaloneStats.isSymbolicLink()) {
-        throw new Error(
-          `Next.js build exited successfully but did not produce a standalone directory at ${standaloneDir}. ` +
-            'Ensure Next.js output is set to "standalone" and inspect the preceding build-worker logs.'
-        );
-      }
-
+    if (result.code === 0 && (await exists(standaloneDir)) && !isContributorBuild()) {
       try {
         await fs.cp(path.join(projectRoot, "docs"), path.join(standaloneDir, "docs"), {
           recursive: true,
@@ -381,29 +348,39 @@ export async function main() {
         );
       }
 
-      console.log(
-        "[build-next-isolated] Assembling standalone bundle (static + public + natives + extras)..."
-      );
-      // Match the hardened packaging path used by Electron builds:
-      // Turbopack can emit hashed external-package references and standalone
-      // symlinks that break after the bundle is moved/copied. The composition
-      // verifies the copied TLS seed before any later build step can succeed.
-      await assembleAndVerifyStandalone({
-        rootDir: projectRoot,
-        buildDistDir: distDir,
-        standaloneDir,
-      });
-      const { spawnSync } = await import("node:child_process");
-      const basePathWrite = spawnSync(
-        process.execPath,
-        [path.join(projectRoot, "scripts", "build", "write-build-base-path.mjs")],
-        { cwd: projectRoot, env: process.env, stdio: "inherit" }
-      );
-      if (basePathWrite.status !== 0) {
-        console.warn(
-          "[build-next-isolated] Non-fatal error writing BUILD_OMNIROUTE_BASE_PATH sentinel"
+      try {
+        console.log(
+          "[build-next-isolated] Assembling standalone bundle (static + public + natives + extras)..."
         );
+        assembleStandalone({
+          distDir,
+          outDir: standaloneDir,
+          projectRoot,
+          // Match the hardened packaging path used by Electron builds:
+          // Turbopack can emit hashed external-package references and
+          // standalone symlinks that break after the bundle is moved/copied.
+          patchTurbopackChunks: true,
+          copyNatives: true,
+          materializeSymlinks: true,
+        });
+        const { spawnSync } = await import("node:child_process");
+        const basePathWrite = spawnSync(
+          process.execPath,
+          [path.join(projectRoot, "scripts", "build", "write-build-base-path.mjs")],
+          { cwd: projectRoot, env: process.env, stdio: "inherit" }
+        );
+        if (basePathWrite.status !== 0) {
+          console.warn(
+            "[build-next-isolated] Non-fatal error writing BUILD_OMNIROUTE_BASE_PATH sentinel"
+          );
+        }
+      } catch (assembleErr) {
+        console.warn("[build-next-isolated] Non-fatal error assembling standalone:", assembleErr);
       }
+    } else if (result.code === 0 && isContributorBuild()) {
+      console.log(
+        "[build-next-isolated] Contributor profile: skipped standalone packaging (compile-only validation)"
+      );
     }
     process.exitCode = result.code;
   } catch (error) {

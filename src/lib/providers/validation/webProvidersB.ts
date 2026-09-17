@@ -1,11 +1,19 @@
 // Web-cookie provider key validators (part B): muse-spark-web, adapta-web, claude-web, gemini-web,
 // copilot-web, t3-web, jules, devin (cloud-agent), inner-ai. Extracted from validation.ts (god-file
-// decomposition) — top-level functions with no dispatcher-state captures; behavior is
-// regression-tested in this module.
-import { sanitizeErrorMessage } from "@omniroute/open-sse/utils/error.ts";
-import { buildJulesApiUrl } from "@/lib/cloudAgent/julesApi.ts";
-import { normalizeSessionCookieHeader } from "@/lib/providers/webCookieAuth";
+// decomposition) — top-level functions with no dispatcher-state captures; behavior is byte-identical
+// to the inline defs.
+import { spawn } from "child_process";
 import { applyCustomUserAgent } from "./headers";
+import {
+  isSecurityBlockError,
+  toValidationErrorResult,
+  validationRead,
+  validationWrite,
+} from "./transport";
+import { SafeOutboundFetchError } from "@/shared/network/safeOutboundFetch";
+import { normalizeSessionCookieHeader } from "@/lib/providers/webCookieAuth";
+import { normalizeGeminiCookieInput } from "@omniroute/open-sse/utils/geminiCookies.ts";
+import { buildJulesApiUrl } from "@/lib/cloudAgent/julesApi.ts";
 import {
   META_AI_ASBD_ID,
   META_AI_FRIENDLY_NAME,
@@ -13,39 +21,6 @@ import {
   META_AI_USER_AGENT,
   buildMetaAiValidationBody,
 } from "./metaAi";
-import {
-  isSafeOutboundFetchError,
-  isSecurityBlockError,
-  toValidationErrorResult,
-  validationRead,
-  validationWrite,
-} from "./transport";
-
-interface ErrorInstanceClassifier {
-  [Symbol.hasInstance](value: unknown): boolean;
-}
-
-function isErrorInstance(error: unknown, classifier: ErrorInstanceClassifier): boolean {
-  try {
-    return classifier[Symbol.hasInstance](error);
-  } catch {
-    // A rejected Proxy may throw while the classifier walks its prototype chain.
-    return false;
-  }
-}
-
-function sanitizeValidationThrownError(error: unknown): string {
-  let candidate = error;
-  try {
-    if (isErrorInstance(error, Error)) {
-      const message = (error as { message?: unknown }).message;
-      if (typeof message === "string") candidate = message;
-    }
-  } catch {
-    // Keep the unknown value for the canonical fail-closed sanitizer.
-  }
-  return sanitizeErrorMessage(candidate);
-}
 
 export async function validateMuseSparkWebProvider({ apiKey, providerSpecificData = {} }: any) {
   try {
@@ -193,11 +168,11 @@ export async function validateClaudeWebProvider({ apiKey, providerSpecificData =
         ),
         timeoutMs: 30_000,
       });
-    } catch (err: unknown) {
-      if (isErrorInstance(err, TlsClientUnavailableError)) {
+    } catch (err: any) {
+      if (err instanceof TlsClientUnavailableError) {
         return {
           valid: false,
-          error: `${sanitizeValidationThrownError(err)} (claude-web requires this — without it, Cloudflare blocks every request)`,
+          error: `${err.message} (claude-web requires this — without it, Cloudflare blocks every request)`,
         };
       }
       throw err;
@@ -240,11 +215,8 @@ export async function validateGeminiWebProvider({ apiKey, providerSpecificData =
       return { valid: false, error: "Paste your __Secure-1PSID cookie from gemini.google.com" };
     }
 
-    // Accept full cookie blob or bare value
-    let cookieHeader = raw;
-    if (!raw.includes("=")) {
-      cookieHeader = `__Secure-1PSID=${raw}`;
-    }
+    // Accept full cookie blob, bare value, or browser-export JSON.
+    const cookieHeader = normalizeGeminiCookieInput(raw);
 
     const response = await validationRead("https://gemini.google.com/app", {
       headers: applyCustomUserAgent(
@@ -288,22 +260,12 @@ export async function validateGeminiWebProvider({ apiKey, providerSpecificData =
     //   - accounts.google.com/ServiceLogin — expired session → valid:false
     //   - other accounts.google.com paths — ambiguous, warn but treat as valid
     //   - non-Google redirects (e.g. gemini.google.com redirect loop) — valid
-    let publicRedirect: { location: string } | null = null;
-    try {
-      if (
-        isSafeOutboundFetchError(error) &&
-        error.code === "REDIRECT_BLOCKED" &&
-        !isSecurityBlockError(error)
-      ) {
-        publicRedirect = {
-          location: typeof error.location === "string" ? error.location : "",
-        };
-      }
-    } catch {
-      // Hostile redirect metadata must degrade to the generic validation failure below.
-    }
-    if (publicRedirect) {
-      const { location } = publicRedirect;
+    if (
+      error instanceof SafeOutboundFetchError &&
+      error.code === "REDIRECT_BLOCKED" &&
+      !isSecurityBlockError(error)
+    ) {
+      const location = error.location ?? "";
       if (/accounts\.google\.com\/.*ServiceLogin/i.test(location)) {
         return {
           valid: false,
@@ -546,7 +508,7 @@ export async function validateJulesProvider({ apiKey }: { apiKey: string }) {
     const errorText = await response.text().catch(() => "");
     return {
       valid: false,
-      error: sanitizeErrorMessage(errorText.trim()) || `Jules API returned ${response.status}`,
+      error: errorText.trim() || `Jules API returned ${response.status}`,
     };
   } catch (error: unknown) {
     return toValidationErrorResult(error);
@@ -554,11 +516,50 @@ export async function validateJulesProvider({ apiKey }: { apiKey: string }) {
 }
 
 /**
+ * #devin-cli-key: fallback validator for CLI-format Devin keys.
+ *
+ * The devin provider's actual routing path (open-sse/executors/devin-cli.ts)
+ * shells out to the Devin CLI binary and passes the connection's apiKey as
+ * WINDSURF_API_KEY — never touching api.devin.ai. CLI keys (apk_user_…) are
+ * rejected by the HTTP API, so a 401 from the HTTP probe is NOT evidence the
+ * connection is broken. This runs the same probe the executor uses:
+ * `devin acp --agent-type summarizer` with the key in the environment
+ * (`devin models list` does NOT honor WINDSURF_API_KEY). Exit 0 = key works.
+ */
+async function validateDevinCliKeyFallback(
+  apiKey: unknown
+): Promise<{ valid: boolean; error: string | null }> {
+  const bin = process.env.CLI_DEVIN_BIN?.trim() || "devin";
+  return new Promise((resolve) => {
+    try {
+      const child = spawn(bin, ["acp", "--agent-type", "summarizer"], {
+        env: { ...process.env, WINDSURF_API_KEY: String(apiKey || "") },
+        stdio: ["ignore", "pipe", "pipe"],
+        timeout: 30_000,
+      });
+      child.on("error", () =>
+        resolve({ valid: false, error: "Devin CLI not available for fallback validation" })
+      );
+      child.on("close", (code) => {
+        if (code === 0) resolve({ valid: true, error: null });
+        else resolve({ valid: false, error: `Devin CLI key check failed (exit ${code})` });
+      });
+    } catch {
+      resolve({ valid: false, error: "Devin CLI fallback spawn failed" });
+    }
+  });
+}
+
+/**
  * Devin cloud-agent (Cognition) — GET /v1/sessions with Bearer auth
  * (see docs.devin.ai/api-reference/sessions/list-sessions). Distinct from the
  * "devin-cli" LLM provider (ACP), which is already wired via providerRegistry.
  */
-export async function validateDevinCloudAgentProvider({ apiKey }: { apiKey: string }) {
+export async function validateDevinCloudAgentProvider({
+  apiKey,
+}: {
+  apiKey: string;
+}): Promise<{ valid: boolean; error: string | null; warning?: string }> {
   try {
     const response = await validationWrite("https://api.devin.ai/v1/sessions?limit=1", {
       method: "GET",
@@ -568,6 +569,18 @@ export async function validateDevinCloudAgentProvider({ apiKey }: { apiKey: stri
     });
 
     if (response.status === 401 || response.status === 403) {
+      // #devin-cli-key: CLI-format keys (apk_user_…) are rejected by the HTTP API
+      // but are exactly what the devin-cli executor authenticates with (via
+      // WINDSURF_API_KEY). Fall back to probing the CLI itself — the real
+      // routing path — before declaring the key invalid.
+      const cliCheck = await validateDevinCliKeyFallback(apiKey);
+      if (cliCheck.valid) {
+        return {
+          valid: true,
+          error: null,
+          warning: "HTTP API rejected this key; validated via Devin CLI instead",
+        };
+      }
       return { valid: false, error: "Invalid API key" };
     }
 
@@ -578,7 +591,7 @@ export async function validateDevinCloudAgentProvider({ apiKey }: { apiKey: stri
     const errorText = await response.text().catch(() => "");
     return {
       valid: false,
-      error: sanitizeErrorMessage(errorText.trim()) || `Devin API returned ${response.status}`,
+      error: errorText.trim() || `Devin API returned ${response.status}`,
     };
   } catch (error: unknown) {
     return toValidationErrorResult(error);
@@ -636,10 +649,7 @@ export async function validateNotionWebProvider({ apiKey, providerSpecificData =
   }
 }
 
-export async function validateInnerAiProvider({
-  apiKey,
-  providerSpecificData: _providerData = {},
-}: any) {
+export async function validateInnerAiProvider({ apiKey }: any) {
   try {
     const raw = typeof apiKey === "string" ? apiKey.trim() : "";
     if (!raw) {

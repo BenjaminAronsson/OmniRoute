@@ -5,8 +5,12 @@ import {
   type EmbeddingProviderNodeRow,
 } from "@omniroute/open-sse/config/embeddingRegistry.ts";
 import { getProviderCredentials } from "@/sse/services/auth";
-import { getCachedProviderNodes } from "@/lib/localDb";
+import { getCachedProviderNodes } from "@/lib/db/readCache";
 import type { MemorySettingsExtended } from "@/shared/schemas/memory";
+import {
+  getEmbeddingProvider,
+  deriveEmbeddingProviderForChatProvider,
+} from "@omniroute/open-sse/config/embeddingRegistry.ts";
 import type {
   EmbeddingResolution,
   EmbeddingResult,
@@ -50,6 +54,39 @@ function makeSignature(
 function resolveRemoteDimensions(model: string): number | null {
   const dim = getEmbeddingDimension(model);
   return typeof dim === "number" ? dim : null;
+}
+
+/**
+ * Fill in the vector width the lazy probe was waiting for.
+ *
+ * `dimensions` is null for every source the hard-coded registry does not
+ * describe — a self-hosted endpoint by definition — and the only thing that can
+ * answer it is an embedding that has actually come back. Callers that hold one
+ * pass its length here; the signature is rebuilt the same way the resolution
+ * built it, so reindex detection still sees a model change as a change. (#12154)
+ */
+export function withMeasuredDimensions(
+  resolution: EmbeddingResolution,
+  dimensions: number
+): EmbeddingResolution {
+  if (
+    resolution.dimensions !== null ||
+    !resolution.source ||
+    !Number.isInteger(dimensions) ||
+    dimensions <= 0
+  ) {
+    return resolution;
+  }
+  return {
+    ...resolution,
+    dimensions,
+    signature: makeSignature(
+      resolution.source,
+      resolution.identity ?? resolution.model,
+      dimensions
+    ),
+    reason: `${resolution.reason} [dim=${dimensions} measured]`,
+  };
 }
 
 /** Build the remote EmbeddingResolution used by both explicit + auto paths. */
@@ -267,6 +304,33 @@ export async function embed(
 }
 
 /**
+ * Embed with a single retry (#13601).
+ *
+ * A failed embedding write used to skip vectorization immediately — one
+ * transient failure (slow potion load, brief remote 5xx) left the memory
+ * stored but never vectorized until the next reindex sweep. The retry covers
+ * error results only; a thrown error still propagates to the caller's catch
+ * (scheduleVectorUpsert marks needs_reindex there, as before).
+ */
+export async function embedWithRetry(
+  text: string,
+  settings: MemorySettingsExtended,
+  embedFn: (
+    text: string,
+    settings: MemorySettingsExtended
+  ) => Promise<EmbeddingResult | EmbeddingError> = embed,
+  maxAttempts = 2
+): Promise<EmbeddingResult | EmbeddingError> {
+  let last: EmbeddingResult | EmbeddingError | null = null;
+  for (let attempt = 1; attempt <= Math.max(1, maxAttempts); attempt++) {
+    const result = await embedFn(text, settings);
+    if ("vector" in result) return result;
+    last = result;
+  }
+  return last as EmbeddingResult | EmbeddingError;
+}
+
+/**
  * List providers that have embedding models, marking which ones have a configured API key.
  * Aggregates from EMBEDDING_PROVIDERS + local provider_nodes.
  */
@@ -332,6 +396,46 @@ export async function listEmbeddingProviders(): Promise<EmbeddingProviderListing
         dimensions: m.dimensions ?? null,
       })),
     });
+  }
+
+  // Generic fallback: configured OpenAI-compatible chat providers without a
+  // curated embedding entry (groq, mistral, vercel-ai-gateway, ...) expose a
+  // derivable /embeddings endpoint. They appear with an empty model catalog —
+  // the UI offers free-text input for the model id. Curated + local nodes win.
+  try {
+    const { REGISTRY } = await import("@omniroute/open-sse/config/providerRegistry.ts");
+    const chatRegistry = REGISTRY as Record<string, { baseUrl?: string } | undefined>;
+    // Cheap sync pass first: which providers CAN derive an endpoint at all.
+    const derivable: string[] = [];
+    for (const id of Object.keys(chatRegistry)) {
+      if (
+        !getEmbeddingProvider(id) &&
+        deriveEmbeddingProviderForChatProvider(id, chatRegistry[id])
+      ) {
+        derivable.push(id);
+      }
+    }
+    // Credential lookups only for derivable candidates (a handful), not the
+    // whole registry.
+    for (const id of derivable) {
+      let hasKey = false;
+      try {
+        const creds = await getProviderCredentials(id);
+        hasKey = !!(
+          creds &&
+          !("allRateLimited" in creds && creds.allRateLimited) &&
+          (("apiKey" in creds ? creds.apiKey : undefined) ||
+            ("accessToken" in creds ? creds.accessToken : undefined))
+        );
+      } catch {
+        hasKey = false;
+      }
+      if (hasKey) {
+        result.push({ provider: id, hasKey: true, models: [] });
+      }
+    }
+  } catch {
+    // Listing enhancement is best-effort; never fail the endpoint.
   }
 
   return result;

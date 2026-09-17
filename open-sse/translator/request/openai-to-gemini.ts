@@ -42,9 +42,15 @@ import {
   type GeminiPart,
   type GeminiContent,
   mergeConsecutiveSameRoleContents,
+  ensureHistoryDoesNotOpenWithFunctionCall,
 } from "./openai-to-gemini/helpers.ts";
 
-export { mergeConsecutiveSameRoleContents, type GeminiContent, type GeminiPart };
+export {
+  mergeConsecutiveSameRoleContents,
+  ensureHistoryDoesNotOpenWithFunctionCall,
+  type GeminiContent,
+  type GeminiPart,
+};
 
 // Observed Antigravity wrapper output cap, not an underlying model capability.
 // Keep this bridge-local: Antigravity currently caps visible output around 16K.
@@ -383,7 +389,6 @@ function openaiToGeminiBase(
         if (toolCalls && Array.isArray(toolCalls)) {
           const toolCallIds: string[] = [];
           const resolvedSignatures = new Map<string, string>();
-          let firstPersistedSignature: string | undefined;
           for (const tc of toolCalls) {
             const id = tc.id as string;
             const resolved = resolveGeminiThoughtSignature(
@@ -392,11 +397,9 @@ function openaiToGeminiBase(
             );
             if (typeof resolved === "string" && resolved.length > 0) {
               resolvedSignatures.set(id, resolved);
-              firstPersistedSignature ??= resolved;
             }
           }
 
-          let shouldUseEmbeddedSignature = !parts.some((p) => p.thoughtSignature);
           const signaturelessToolCallMode = toolNameOptions.signaturelessToolCallMode;
           const stringifySignaturelessToolCalls = signaturelessToolCallMode === "text";
           const contextualizeSignaturelessToolResponses =
@@ -433,13 +436,14 @@ function openaiToGeminiBase(
             }
 
             const args = tryParseJSON(fn.arguments || "{}");
-            const embeddedThoughtSignature = shouldUseEmbeddedSignature
-              ? firstPersistedSignature || signatureForToolCall
-              : undefined;
-
-            if (embeddedThoughtSignature) {
-              shouldUseEmbeddedSignature = false;
-            }
+            // #11510: each functionCall part carries its OWN resolved
+            // thoughtSignature — a parallel (multi tool_calls) turn can have a
+            // real, individually-valid signature per tool call, and Gemini 3.x
+            // rejects the request if any functionCall in the turn is missing
+            // one. Previously only the first functionCall of the message kept
+            // its signature; this dropped valid signatures for every
+            // subsequent parallel tool call in the same turn.
+            const embeddedThoughtSignature = signatureForToolCall;
 
             // Gemini expects the signature on the functionCall part itself.
             // If we are in a mode where missing signatures cause 400s (and we couldn't find one),
@@ -511,18 +515,12 @@ function openaiToGeminiBase(
               name = sanitizeToolName(name);
 
               const resp = toolResponses[fid];
-              let parsedResp = tryParseJSON(resp);
-              if (parsedResp === null) {
-                parsedResp = { result: resp };
-              } else if (typeof parsedResp !== "object") {
-                parsedResp = { result: parsedResp };
-              }
 
               toolParts.push({
                 functionResponse: {
                   ...(toolNameOptions.stripFunctionCallId ? {} : { id: fid }),
                   name: name,
-                  response: { result: parsedResp },
+                  response: { result: resp },
                 },
               });
             }
@@ -567,6 +565,9 @@ function openaiToGeminiBase(
 
   // Collapse any consecutive same-role contents Gemini would reject (9router#2191).
   result.contents = mergeConsecutiveSameRoleContents(result.contents ?? []);
+  // Guard the one alternation violation the merge above cannot reach: history
+  // that opens with a functionCall-bearing turn instead of a user turn.
+  result.contents = ensureHistoryDoesNotOpenWithFunctionCall(result.contents);
 
   // Convert tools
   const bodyTools = body.tools as Array<Record<string, unknown>> | undefined;

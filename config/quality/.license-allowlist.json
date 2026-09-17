@@ -75,16 +75,23 @@
       "risk": "low",
       "reviewAt": "v4.0.0"
     },
-    "tls-client-node": {
-      "version": "0.2.0",
-      "license": "Custom: LICENSE",
-      "justification": "TEMPORARY bridge for a restrictive, source-available dependency: tls-client-node uses Apache-2.0 with the Commons Clause, which removes the right to Sell the software when a paid product or service derives entirely or substantially from its functionality. The shared native TLS transport serves six providers: chatgpt-web, claude-web, perplexity-web, grok-web, notion-web, and lmarena. Shipping the required notices does not grant commercial rights. Legal review is required before commercial deployment; replace with a permissive transport such as wreq-js or obtain separate permission before this exception expires. Tracked by PR #11742.",
-      "risk": "medium",
-      "temporary": true,
-      "owner": "@diegosouzapw",
-      "reviewBy": "2026-09-30",
-      "reviewAt": "v3.9.0",
-      "classification": "Apache-2.0 with Commons Clause; non-OSI source-available"
+    "@eloqnt/config": {
+      "license": "MIT",
+      "justification": "Transitive of next-intl (MIT). npm registry SPDX for the @eloqnt scope is MIT; @eloqnt/config@0.1.0 republished with license: MIT. The locked 0.0.2 tarball (next-intl's ^0.0.2 range, which is 0.0.x only) omits both package.json#license and a LICENSE file, so license-checker reports UNKNOWN. Same author (Jan Amann / amannn). OmniRoute does not modify the package. Re-review when next-intl bumps the range to a release that ships the license field.",
+      "risk": "low",
+      "reviewAt": "v4.0.0"
+    },
+    "@eloqnt/format-json": {
+      "license": "MIT",
+      "justification": "Same as @eloqnt/config: next-intl transitive, registry SPDX MIT, locked 0.0.3 tarball omits license field and LICENSE file so the checker reports UNKNOWN. Re-review with the next-intl range bump.",
+      "risk": "low",
+      "reviewAt": "v4.0.0"
+    },
+    "@eloqnt/format-po": {
+      "license": "MIT",
+      "justification": "Same as @eloqnt/config: next-intl transitive, registry SPDX MIT, locked 0.0.3 tarball omits license field and LICENSE file so the checker reports UNKNOWN. Re-review with the next-intl range bump.",
+      "risk": "low",
+      "reviewAt": "v4.0.0"
     }
   }
 }

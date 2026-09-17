@@ -23,12 +23,11 @@ import {
   statSync,
   chmodSync,
 } from "node:fs";
-import { join, dirname } from "node:path";
+import { join, dirname, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { assembleStandalone } from "./assembleStandalone.mjs";
 import { isNativeExecutable, resolveLocalBinEntry } from "./buildToolRunner.mjs";
-import { fixTlsClientNodeBinary, TLS_CLIENT_NATIVE_ASSETS } from "./fixTlsClientNodeBinary.mjs";
 import { resolveBundledNpmEntry } from "./resolveNpmEntry.ts";
 import {
   APP_STAGING_ALLOWED_EXACT_PATHS,
@@ -36,6 +35,12 @@ import {
   APP_STAGING_REMOVAL_PATHS,
   findUnexpectedArtifactPaths,
 } from "./pack-artifact-policy.ts";
+import {
+  collectWorkspaceVersions,
+  findPackageJsonFiles,
+  hasWorkspaceProtocol,
+  resolvePackageJsonWorkspaceProtocols,
+} from "./resolveWorkspaceProtocols.ts";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -89,31 +94,6 @@ function runBuildTool(
 
 const DIST_DIR = join(ROOT, "dist");
 const METHOD_GUARD_REQUIRE = 'require("./http-method-guard.cjs").installHttpMethodGuard();\n';
-const TLS_CLIENT_ARCHES_BY_PLATFORM = Object.keys(TLS_CLIENT_NATIVE_ASSETS).reduce<
-  Record<string, string[]>
->((targets, target) => {
-  const separatorIndex = target.indexOf("-");
-  if (separatorIndex <= 0 || separatorIndex === target.length - 1) {
-    throw new Error(`Invalid tls-client native manifest target: ${target}`);
-  }
-  const platform = target.slice(0, separatorIndex);
-  const arch = target.slice(separatorIndex + 1);
-  (targets[platform] ??= []).push(arch);
-  return targets;
-}, {});
-
-async function verifyAllTlsClientRuntimeSeeds(targetStandaloneDir: string): Promise<void> {
-  for (const [platform, arches] of Object.entries(TLS_CLIENT_ARCHES_BY_PLATFORM)) {
-    await fixTlsClientNodeBinary({
-      rootDir: ROOT,
-      platform,
-      arches,
-      standaloneDir: targetStandaloneDir,
-      strict: true,
-      requireStandalone: true,
-    });
-  }
-}
 
 function walkFiles(dir: string, rootDir: string = dir, files: string[] = []): string[] {
   let entries: string[] = [];
@@ -195,8 +175,7 @@ if (existsSync(DIST_DIR)) {
 // .build/next/standalone artifact produced by `npm run build` (build-next-isolated.mjs).
 // If the artifact is absent we invoke it exactly once.
 const NEXT_DIST = process.env.NEXT_DIST_DIR || ".build/next";
-const standaloneDir = join(ROOT, NEXT_DIST, "standalone");
-const standaloneServerJs = join(standaloneDir, "server.js");
+const standaloneServerJs = join(ROOT, NEXT_DIST, "standalone", "server.js");
 if (!existsSync(standaloneServerJs)) {
   console.log("  🏗️  .build/next/standalone not found — running `npm run build` once...");
   execFileSync(process.execPath, ["scripts/build/build-next-isolated.mjs"], {
@@ -213,9 +192,6 @@ if (!existsSync(standaloneServerJs)) {
   }
 }
 console.log("  ✅ Standalone artifact present:", standaloneServerJs);
-
-console.log("  🔐 Verifying every pinned TLS client runtime seed...");
-await verifyAllTlsClientRuntimeSeeds(standaloneDir);
 
 // ── Step 3–7: Assemble standalone into dist/ ───────────────
 // All shared copy/sync/sanitize/chunk-patch operations are delegated to
@@ -352,10 +328,10 @@ const chatGptWebCodexMcpDestFile = join(
 if (existsSync(chatGptWebCodexMcpSrcFile)) {
   console.log("  🔨 Bundling ChatGPT Web (Codex) MCP bridge...");
   mkdirSync(dirname(chatGptWebCodexMcpDestFile), { recursive: true });
-  execFileSync(
-    NPX_BIN,
+  runBuildTool(
+    "esbuild",
+    "esbuild",
     [
-      "esbuild",
       "open-sse/vendor/codex-chatgpt-web/adapters/chatgpt-web/mcp-server.ts",
       "--bundle",
       "--platform=node",
@@ -368,6 +344,22 @@ if (existsSync(chatGptWebCodexMcpSrcFile)) {
 }
 
 // ── Step 8.6: Bundle call-log artifact worker ────────────────────────
+const healthWorkerDest = join(DIST_DIR, "src/lib/db/healthCheckWorker.js");
+mkdirSync(dirname(healthWorkerDest), { recursive: true });
+runBuildTool(
+  "esbuild",
+  "esbuild",
+  [
+    "src/lib/db/healthCheckWorker.ts",
+    "--bundle",
+    "--platform=node",
+    "--packages=external",
+    "--format=esm",
+    `--outfile=${healthWorkerDest}`,
+  ],
+  { cwd: ROOT, stdio: "inherit" }
+);
+
 const callLogWorkerSrc = join(ROOT, "src", "lib", "usage", "callLogArtifactWorker.ts");
 const callLogWorkerDest = join(DIST_DIR, "src", "lib", "usage", "callLogArtifactWorker.js");
 if (!existsSync(callLogWorkerSrc)) {
@@ -507,9 +499,11 @@ if (existsSync(cliSrcFile)) {
 // flow for every downstream user.
 const opencodePluginSrc = join(ROOT, "@omniroute", "opencode-plugin");
 const opencodePluginDist = join(opencodePluginSrc, "dist", "index.js");
-const opencodePluginCjs = join(opencodePluginSrc, "dist", "index.cjs");
 if (existsSync(opencodePluginSrc) && existsSync(join(opencodePluginSrc, "package.json"))) {
-  const pluginAlreadyBuilt = existsSync(opencodePluginDist) && existsSync(opencodePluginCjs);
+  // The plugin's tsup config is ESM-only (format: ["esm"]), so a successful
+  // build only ever produces dist/index.js (+ dist/index.d.ts) — never
+  // dist/index.cjs. Gate the skip solely on dist/index.js.
+  const pluginAlreadyBuilt = existsSync(opencodePluginDist);
   if (!pluginAlreadyBuilt) {
     console.log("\n  🔨 Building @omniroute/opencode-plugin (tsup)...");
     try {
@@ -737,8 +731,32 @@ if (remainingUnexpectedFiles.length > 0) {
   process.exit(1);
 }
 
-console.log("  🔐 Re-verifying every staged TLS client runtime seed after pruning...");
-await verifyAllTlsClientRuntimeSeeds(DIST_DIR);
+// -- Step 11: Resolve workspace: protocol dependencies -----------------
+// npm/pnpm workspace protocol specifiers (workspace:*, workspace:^, ...)
+// are meaningless to the npm registry and make `npm install -g omniroute`
+// fail with EUNSUPPORTEDPROTOCOL. Rewrite any that leaked into published
+// package.json files to the concrete workspace package version.
+// Only touch files inside the staged dist/ tree; workspace member source
+// package.json files must never be mutated by the publish step.
+const workspaceVersions = collectWorkspaceVersions(ROOT);
+const publishablePackageJsonDirs = [DIST_DIR];
+const publishablePackageJsonPaths = publishablePackageJsonDirs
+  .flatMap((dir) => (existsSync(dir) ? findPackageJsonFiles(dir) : []))
+  .filter((filePath) => existsSync(filePath));
+
+for (const pkgJsonPath of publishablePackageJsonPaths) {
+  let pkg: Record<string, unknown>;
+  try {
+    pkg = JSON.parse(readFileSync(pkgJsonPath, "utf8")) as Record<string, unknown>;
+  } catch {
+    continue;
+  }
+  if (!hasWorkspaceProtocol(pkg)) continue;
+
+  const resolved = resolvePackageJsonWorkspaceProtocols(pkg, workspaceVersions);
+  writeFileSync(pkgJsonPath, JSON.stringify(resolved, null, 2) + "\n");
+  console.log(`  [resolved] Resolved workspace: protocols in ${relative(ROOT, pkgJsonPath)}`);
+}
 
 // ── Done ───────────────────────────────────────────────────
 const distPkg = join(DIST_DIR, "package.json");

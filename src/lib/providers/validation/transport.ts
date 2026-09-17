@@ -1,8 +1,7 @@
 // Outbound fetch wrappers for provider validation: proxy-fallback, SSRF-aware proxy targeting, and
 // error→result mapping. Extracted from validation.ts (god-file decomposition) and kept as the
 // common boundary for sanitizing validation failures.
-import { sanitizeErrorMessage } from "@omniroute/open-sse/utils/error.ts";
-import { selectProxyForValidation } from "@omniroute/open-sse/services/proxyAutoSelector.ts";
+import { sanitizeErrorMessage } from "@omniroute/open-sse/utils/errorSanitization.ts";
 import {
   SAFE_OUTBOUND_FETCH_PRESETS,
   SafeOutboundFetchError,
@@ -11,21 +10,28 @@ import {
 } from "@/shared/network/safeOutboundFetch";
 import { isPrivateHost } from "@/shared/network/outboundUrlGuard";
 import { getProviderValidationGuard } from "@/shared/network/outboundUrlGuardPolicy";
+import { selectProxyForValidation } from "@omniroute/open-sse/services/proxyAutoSelector.ts";
 
-export function readProxyFallbackErrorState(error: unknown): {
-  isNetworkIssue: boolean;
-  isRetryable: boolean;
-} {
-  try {
-    const fetchError = error as { code?: unknown; isRetryable?: unknown } | null | undefined;
-    return {
-      isNetworkIssue: fetchError?.code === "NETWORK_ERROR" || fetchError?.code === "TIMEOUT",
-      isRetryable: fetchError?.isRetryable !== false,
-    };
-  } catch {
-    // Hostile accessors are not trustworthy enough to authorize a second outbound attempt.
-    return { isNetworkIssue: false, isRetryable: false };
+export type ProjectedProviderValidationResult<T> = {
+  [K in keyof T]: K extends "error" | "warning" ? string | null : T[K];
+} & {
+  error?: string | null;
+  warning?: string | null;
+};
+
+export function projectProviderValidationResultForPublicResponse<
+  T extends { error?: unknown; warning?: unknown },
+>(result: T): ProjectedProviderValidationResult<T>;
+export function projectProviderValidationResultForPublicResponse(
+  result: Record<string, unknown>
+): Record<string, unknown> {
+  const projected: Record<string, unknown> = { ...result };
+  for (const field of ["error", "warning"] as const) {
+    if (!Object.prototype.hasOwnProperty.call(result, field)) continue;
+    const value = result[field];
+    projected[field] = value === null || value === undefined ? null : sanitizeErrorMessage(value);
   }
+  return projected;
 }
 
 /**
@@ -48,7 +54,9 @@ export async function fetchWithProxyFallback(
   } catch (err: unknown) {
     // Only attempt proxy fallback for retryable errors (network / timeout)
     // and only when the target is not a local / LAN address.
-    const { isNetworkIssue, isRetryable } = readProxyFallbackErrorState(err);
+    const fetchErr = err as SafeOutboundFetchError;
+    const isNetworkIssue = fetchErr?.code === "NETWORK_ERROR" || fetchErr?.code === "TIMEOUT";
+    const isRetryable = fetchErr?.isRetryable !== false;
     const isValidTarget = !isLocal && isRetryableProxyTarget(url);
 
     if (isLocal || !isNetworkIssue || !isRetryable) throw err;
@@ -90,20 +98,20 @@ export async function validationWrite(url: string, init: RequestInit, isLocal: b
 // surfaces as a `provider.validation.ssrf_blocked` audit event + a security warning in
 // the UI) when it is a GENUINE SSRF/guard block — not for every outbound-guard 503.
 // A blocked redirect (REDIRECT_BLOCKED) to a PUBLIC host is benign: the redirect was
-// never followed, so no SSRF occurred. Web-cookie providers like qwen-web answer their
-// probe with a 307 to a public host, which used to be mislabeled as an SSRF block
-// (#3288 / #3758). Only treat a blocked redirect as a security event when its target is
-// a private/internal host.
+// never followed, so no SSRF occurred. Some web-cookie providers answer their probe
+// with a 307 to a public host, which used to be mislabeled as an SSRF block (#3288 /
+// #3758). Only treat a blocked redirect as a security event when its target is a
+// private/internal host.
 export function isSecurityBlockError(error: unknown): boolean {
-  try {
-    if (!isSafeOutboundFetchError(error)) return false;
-    if (error.code === "URL_GUARD_BLOCKED" || error.code === "INVALID_URL") return true;
-    if (error.code === "REDIRECT_BLOCKED") {
-      if (!error.location) return false;
+  if (!(error instanceof SafeOutboundFetchError)) return false;
+  if (error.code === "URL_GUARD_BLOCKED" || error.code === "INVALID_URL") return true;
+  if (error.code === "REDIRECT_BLOCKED") {
+    if (!error.location) return false;
+    try {
       return isPrivateHost(new URL(error.location, error.url).hostname);
+    } catch {
+      return false;
     }
-  } catch {
-    // Hostile error prototypes/accessors are never evidence of an SSRF block.
   }
   return false;
 }
@@ -122,15 +130,6 @@ export function isSecurityBlockError(error: unknown): boolean {
 // #7542 plan-file, "Risks").
 const WEB_COOKIE_PROVIDERS_WITH_UNRELIABLE_MODELS_PROBE = new Set(["lmarena"]);
 
-export function isSafeOutboundFetchError(error: unknown): error is SafeOutboundFetchError {
-  try {
-    return error instanceof SafeOutboundFetchError;
-  } catch {
-    // A rejected Proxy may throw while instanceof walks its prototype chain.
-    return false;
-  }
-}
-
 // #7857 — web-cookie providers whose registry `baseUrl` is a conversation/completion
 // endpoint, not a real API root (e.g. huggingchat's baseUrl is
 // "https://huggingface.co/chat/conversation", not "https://huggingface.co"). Appending
@@ -144,7 +143,6 @@ export function isSafeOutboundFetchError(error: unknown): error is SafeOutboundF
 // WEB_COOKIE_PROVIDERS_WITH_UNRELIABLE_MODELS_PROBE/REDIRECT_BLOCKED path above (#7542).
 export const WEB_COOKIE_PROVIDERS_WITHOUT_MODELS_API = new Set([
   "huggingchat",
-  "chatgpt-web",
   "grok-web",
   "notion-web",
   "t3-web",
@@ -153,21 +151,29 @@ export const WEB_COOKIE_PROVIDERS_WITHOUT_MODELS_API = new Set([
   "copilot-m365-web",
 ]);
 
+// #12107 — web-cookie providers whose registry entry exists to publish a model catalog
+// (so `/v1/models` and `/v1/providers/{id}/models` list something) but whose `baseUrl`
+// is a browser console, not an API host. gemini-business's entry points at
+// business.gemini.google/home: the executor only uses that origin to derive a
+// per-tenant StreamGenerate path (`/home/cid/{CID}/_/BardChatUi/...`), so there is no
+// side-effect-free auth probe on the host — `${baseUrl}/models` is a page Google never
+// served, and a 401/403 from a console page is not a credential signal either. Unlike
+// WEB_COOKIE_PROVIDERS_WITHOUT_MODELS_API these providers are therefore not probed at
+// all: validation stays the honest "unsupported" it reported before the registry entry
+// existed, decided BEFORE any network call.
+export const WEB_COOKIE_PROVIDERS_WITHOUT_AUTH_PROBE = new Set(["gemini-business"]);
+
 export function toWebCookieValidationErrorResult(provider: string, error: unknown) {
-  try {
-    if (
-      isSafeOutboundFetchError(error) &&
-      error.code === "REDIRECT_BLOCKED" &&
-      WEB_COOKIE_PROVIDERS_WITH_UNRELIABLE_MODELS_PROBE.has(provider)
-    ) {
-      return {
-        valid: false,
-        error: "Provider validation not supported",
-        unsupported: true as const,
-      };
-    }
-  } catch {
-    // Hostile error accessors must degrade to the generic validation result below.
+  if (
+    error instanceof SafeOutboundFetchError &&
+    error.code === "REDIRECT_BLOCKED" &&
+    WEB_COOKIE_PROVIDERS_WITH_UNRELIABLE_MODELS_PROBE.has(provider)
+  ) {
+    return {
+      valid: false,
+      error: "Provider validation not supported",
+      unsupported: true as const,
+    };
   }
   return toValidationErrorResult(error);
 }
@@ -185,7 +191,7 @@ export function toValidationErrorResult(error: unknown) {
   let securityBlocked = false;
   try {
     statusCode = getSafeOutboundFetchErrorStatus(error);
-    timeout = isSafeOutboundFetchError(error) && error.code === "TIMEOUT";
+    timeout = error instanceof SafeOutboundFetchError && error.code === "TIMEOUT";
     securityBlocked = isSecurityBlockError(error);
   } catch {
     // Classification is advisory; hostile accessors must not escape the safe error boundary.

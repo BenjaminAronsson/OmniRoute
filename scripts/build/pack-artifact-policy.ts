@@ -6,32 +6,6 @@
  * directories out of the staged dist/ tree and out of the final tarball.
  */
 
-import {
-  resolveTlsClientNativeAsset,
-  TLS_CLIENT_NATIVE_ASSETS,
-} from "./fixTlsClientNodeBinary.mjs";
-
-export function resolveTlsClientRuntimeSeedPath(
-  platform: NodeJS.Platform = process.platform,
-  arch: string = process.arch
-): string {
-  const asset = resolveTlsClientNativeAsset(platform, arch);
-  return `runtime-assets/tls-client/bin/${asset.file}`;
-}
-
-export const TLS_CLIENT_RUNTIME_SEED_PATHS: string[] = Object.keys(TLS_CLIENT_NATIVE_ASSETS)
-  .sort()
-  .map((target) => {
-    const separatorIndex = target.indexOf("-");
-    if (separatorIndex <= 0 || separatorIndex === target.length - 1) {
-      throw new Error(`Invalid tls-client native manifest target: ${target}`);
-    }
-    return resolveTlsClientRuntimeSeedPath(
-      target.slice(0, separatorIndex) as NodeJS.Platform,
-      target.slice(separatorIndex + 1)
-    );
-  });
-
 const STAGING_FORBIDDEN_DIRECTORIES = [
   "app.__qa_backup",
   "coverage",
@@ -60,8 +34,6 @@ export const APP_STAGING_REMOVAL_PATHS: string[] = [
 export const APP_STAGING_ALLOWED_EXACT_PATHS: string[] = [
   ".env.example",
   "BUILD_SHA",
-  "LICENSE",
-  "THIRD_PARTY_NOTICES.md",
   "docs/openapi.yaml",
   // #7065: imported by dist/server-ws.mjs; assembleStandalone copies it but without
   // this bare entry the prepublish prune deleted it → every `omniroute` boot of the
@@ -75,13 +47,15 @@ export const APP_STAGING_ALLOWED_EXACT_PATHS: string[] = [
   "open-sse/services/compression/engines/llmlingua/onnxWorker.js",
   "open-sse/services/compression/compressionWorker.js",
   "src/lib/usage/callLogArtifactWorker.js",
+  "src/lib/db/healthCheckWorker.js",
   "package.json",
   "peer-stamp.mjs",
   "main-server-timeouts.mjs",
-  "open-sse/config/tlsClientNativeManifest.json",
   // server-ws.mjs import (sd_notify helper) — enforced by the closure test
   // tests/unit/pack-artifact-server-ws-closure.test.ts.
   "systemd-notify.mjs",
+  // server-ws.mjs import (process crash guard, #13636) — same closure test.
+  "httpClientAbortGuard.mjs",
   "responses-ws-proxy.mjs",
   "bin/chatgpt-web-codex-mcp.mjs",
   "scripts/dev/sync-env.mjs",
@@ -93,7 +67,6 @@ export const APP_STAGING_ALLOWED_EXACT_PATHS: string[] = [
   // this bare entry the prepublish prune (Step 10.7) deletes it → `omniroute serve`
   // crashes with ERR_MODULE_NOT_FOUND (regressed in the published 3.8.41 tarball).
   "tls-options.mjs",
-  ...TLS_CLIENT_RUNTIME_SEED_PATHS,
   "webdav-handler.mjs",
 ];
 
@@ -124,6 +97,9 @@ export const PACK_ARTIFACT_ROOT_ALLOWED_EXACT_PATHS: string[] = [
   "LICENSE",
   "README.md",
   "THIRD_PARTY_NOTICES.md",
+  "config/release/wreq-js-native-manifest.json",
+  "config/release/wreq-js-rust-license-inventory.json",
+  "config/release/wreq-js-rust-notices.md",
   "bin/aliasResolver.mjs",
   "bin/chatgpt-web-codex-mcp.mjs",
   // #7808: ESM loader hook split out of bin/aliasResolver.mjs to silence CodeQL
@@ -149,6 +125,11 @@ export const PACK_ARTIFACT_ROOT_ALLOWED_EXACT_PATHS: string[] = [
   "bin/restore-policies.sh",
   "bin/rollback.sh",
   "bin/snapshot-data.sh",
+  // Locale source of truth read at runtime by bin/cli/i18n.mjs (OMNIROUTE_LANG alias
+  // resolution: uk → uk-UA, fil/tl → phi, zh-hk/zh-mo/zh-hant → zh-TW) and by
+  // bin/cli/commands/config.mjs (`config lang list`). Shipped via package.json "files";
+  // without it the published CLI cannot resolve aliases and `config lang list` is empty.
+  "config/i18n.json",
   "open-sse/mcp-server/README.md",
   "open-sse/mcp-server/audit.ts",
   "open-sse/mcp-server/httpTransport.ts",
@@ -161,19 +142,15 @@ export const PACK_ARTIFACT_ROOT_ALLOWED_EXACT_PATHS: string[] = [
   "open-sse/utils/setupPolyfill.ts",
   "package.json",
   "scripts/build/assembleStandalone.mjs",
-  "scripts/build/standaloneSidecarCopy.mjs",
-  "scripts/build/tlsClientAssetCopy.mjs",
   "scripts/build/backendOnlyPages.mjs",
   "scripts/build/build-tproxy-native.mjs",
   "scripts/build/build-next-isolated.mjs",
   "scripts/check/check-supported-node-runtime.ts",
   "scripts/build/native-binary-compat.mjs",
+  "scripts/build/wreqJsNative.mjs",
   "scripts/build/postinstall.mjs",
   "scripts/build/postinstallSupport.mjs",
   "scripts/build/colocateOptionals.mjs",
-  // #7802: imported by scripts/build/postinstall.mjs to repair tls-client-node's
-  // native binary (chatgpt-web/claude-web/perplexity-web/grok-web/notion-web/lmarena).
-  "scripts/build/fixTlsClientNodeBinary.mjs",
   // #8859: imported by scripts/build/postinstall.mjs to repair playwright-core's
   // browser resolution on Termux/Android (no glibc, no bundled browsers).
   "scripts/build/fixPlaywrightAndroid.mjs",
@@ -195,6 +172,9 @@ export const PACK_ARTIFACT_ROOT_ALLOWED_EXACT_PATHS: string[] = [
 
 export const PACK_ARTIFACT_ROOT_ALLOWED_PATH_PREFIXES: string[] = [
   "@omniroute/opencode-plugin/",
+  // #12870 shipped the v2 plugin beside its v1 sibling but never widened this
+  // allowlist, so every packed file under it read as an unexpected artifact.
+  "@omniroute/opencode-plugin-v2/",
   "@omniroute/opencode-provider/",
   "bin/cli/",
   // Broad open-sse + src source dirs added to package.json "files" in v3.8.21
@@ -211,11 +191,9 @@ export const PACK_ARTIFACT_ROOT_ALLOWED_PATH_PREFIXES: string[] = [
 ];
 
 export const PACK_ARTIFACT_REQUIRED_PATHS: string[] = [
-  "dist/LICENSE",
-  "dist/THIRD_PARTY_NOTICES.md",
-  "dist/open-sse/config/tlsClientNativeManifest.json",
   "dist/open-sse/services/compression/engines/rtk/filters/generic-output.json",
   "dist/src/lib/usage/callLogArtifactWorker.js",
+  "dist/src/lib/db/healthCheckWorker.js",
   "dist/open-sse/vendor/codex-chatgpt-web/adapters/chatgpt-web/mcp-server.js",
   "dist/open-sse/services/compression/rules/en/filler.json",
   "dist/server.js",
@@ -225,15 +203,14 @@ export const PACK_ARTIFACT_REQUIRED_PATHS: string[] = [
   "dist/main-server-timeouts.mjs",
   // server-ws.mjs import (sd_notify helper) — enforced by the closure test.
   "dist/systemd-notify.mjs",
+  "dist/httpClientAbortGuard.mjs",
   "dist/http-method-guard.cjs",
-  ...TLS_CLIENT_RUNTIME_SEED_PATHS.map((seedPath) => `dist/${seedPath}`),
   // #5452: regression guard — make check:pack-artifact fail loudly if the TLS
   // opt-in sidecar (imported by dist/server-ws.mjs) ever vanishes from the tarball.
   "dist/tls-options.mjs",
   // #7065: regression guard for the HEAD response guard (dist/server-ws.mjs import).
   "dist/head-response-guard.cjs",
   "dist/webdav-handler.mjs",
-  "open-sse/config/tlsClientNativeManifest.json",
   "bin/cli/program.mjs",
   // Direct imports of bin/omniroute.mjs — bin/cli/ is only an allowlist PREFIX, so a
   // file vanishing from the tarball never fails the unexpected-paths check; only these
@@ -244,6 +221,8 @@ export const PACK_ARTIFACT_REQUIRED_PATHS: string[] = [
   "bin/cli/utils/parseEnvValue.mjs",
   "bin/cli/utils/storageKeyProvision.mjs",
   "bin/cli/utils/versionFastPath.mjs",
+  // #11437 import — `describeVolatileEnvWarning`, called on every CLI boot.
+  "bin/cli/utils/volatileEnvPath.mjs",
   "bin/mcp-server.mjs",
   // #9281: stdout/stderr console guard preloaded via `node --import` by
   // bin/mcp-server.mjs before the MCP entry's module graph evaluates — without it
@@ -257,16 +236,20 @@ export const PACK_ARTIFACT_REQUIRED_PATHS: string[] = [
   // or the CLI fails to boot — list them REQUIRED so a regression is loud.
   "bin/aliasResolver.mjs",
   "bin/aliasResolverHook.mjs",
-  "THIRD_PARTY_NOTICES.md",
+  // Locale aliases consumed by bin/cli/i18n.mjs at runtime. config/ is not an allowlist
+  // PREFIX, so a vanished file would never fail the unexpected-paths check — list it
+  // REQUIRED so the tarball can never silently lose it again (#7065 class).
+  "config/i18n.json",
+  "config/release/wreq-js-native-manifest.json",
+  "config/release/wreq-js-rust-license-inventory.json",
+  "config/release/wreq-js-rust-notices.md",
   "package.json",
   "scripts/build/native-binary-compat.mjs",
   "scripts/build/postinstall.mjs",
   "scripts/build/postinstallSupport.mjs",
   "scripts/build/colocateOptionals.mjs",
-  "scripts/build/fixTlsClientNodeBinary.mjs",
   "scripts/build/runtime-env.mjs",
-  "scripts/build/standaloneSidecarCopy.mjs",
-  "scripts/build/tlsClientAssetCopy.mjs",
+  "scripts/build/wreqJsNative.mjs",
   // #10382: runtime imports of bin/cli/commands/packs.mjs (optional packs CLI) —
   // listed REQUIRED so their absence from the tarball fails loudly.
   "scripts/packs/optionalPackInstaller.mjs",

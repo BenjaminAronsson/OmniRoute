@@ -1,4 +1,4 @@
-const SOURCE_EXT = ["ts", "tsx", "js", "jsx", "mjs", "cjs"] as const;
+const SOURCE_EXT = ["ts", "tsx", "js", "jsx", "mjs", "cjs", "mts", "cts"] as const;
 const NATIVE_EXT = ["node", "so", "dylib", "dll"] as const;
 const LEADING_PATH_PUNCTUATION = "'\"`([{<";
 const TRAILING_PATH_PUNCTUATION = "'\"`)]}>.,;:!?";
@@ -55,6 +55,13 @@ const POSIX_FILESYSTEM_ROOTS = [
   "/var",
   "/workspace",
 ] as const;
+const WINDOWS_ROOT_RELATIVE_ROOTS = new Set([
+  "program files",
+  "programdata",
+  "temp",
+  "users",
+  "windows",
+]);
 
 function isWindowsAbsolutePathAt(value: string, start: number): boolean {
   const remaining = value.length - start;
@@ -78,6 +85,27 @@ function isWindowsAbsolutePath(value: string): boolean {
   return isWindowsAbsolutePathAt(value, 0);
 }
 
+function isWindowsRootRelativePathAt(value: string, start: number): boolean {
+  if (
+    value.charCodeAt(start) !== 0x5c ||
+    value.charCodeAt(start + 1) === 0x5c ||
+    isWhitespace(value[start + 1])
+  ) {
+    return false;
+  }
+
+  const tokenEnd = findTokenEnd(value, start);
+  let firstSeparator = start + 1;
+  while (firstSeparator < tokenEnd && value.charCodeAt(firstSeparator) !== 0x5c) {
+    firstSeparator++;
+  }
+  const root = value.slice(start + 1, firstSeparator).toLowerCase();
+  if (WINDOWS_ROOT_RELATIVE_ROOTS.has(root)) return true;
+  return (
+    firstSeparator < tokenEnd - 1 || tokenContainsPathExtensionEvidence(value, start + 1, tokenEnd)
+  );
+}
+
 function hasAbsoluteFileUriAt(value: string, start: number): boolean {
   const prefixEnd = start + FILE_URI_PREFIX.length;
   return (
@@ -95,6 +123,7 @@ function isSyntacticallyAbsolutePathAt(value: string, start: number): boolean {
   return (
     value.charCodeAt(start) === 0x2f ||
     isWindowsAbsolutePathAt(value, start) ||
+    isWindowsRootRelativePathAt(value, start) ||
     hasAbsoluteFileUriAt(value, start)
   );
 }
@@ -170,24 +199,13 @@ function isKnownPosixFilesystemPath(value: string): boolean {
   return isKnownPosixFilesystemPathAt(value, 0);
 }
 
-function isUnambiguousPosixFilesystemPathAt(value: string, start: number): boolean {
-  if (!isKnownPosixFilesystemPathAt(value, start)) return false;
-  // `/app` is also a common application route and is shielded only when an
-  // explicit Route/HTTP context proves that interpretation.
-  return !matchesPosixFilesystemRootAt(value, start, "/app");
-}
-
-function isUnambiguousPosixFilesystemPath(value: string): boolean {
-  return isUnambiguousPosixFilesystemPathAt(value, 0);
-}
-
 function looksLikeAbsolutePath(token: string): boolean {
   // POSIX: common filesystem roots, with or without a source extension.
   // Windows: drive-letter, UNC, or extended-length absolute paths.
   // Source-file paths rooted elsewhere remain covered by SOURCE_EXT below.
   if (token.length < 4 || token.length > 2048) return false;
   const isPosix = token.charCodeAt(0) === 0x2f;
-  const isWindows = isWindowsAbsolutePath(token);
+  const isWindows = isWindowsAbsolutePath(token) || isWindowsRootRelativePathAt(token, 0);
   if (!isPosix && !isWindows) return false;
   if (isWindows) return true;
   if (isKnownPosixFilesystemPath(token)) return true;
@@ -217,9 +235,9 @@ function redactAbsolutePathToken(token: string, followsRouteContext: boolean): s
   if (
     !isFileUri &&
     !isWindowsAbsolutePath(pathCandidate) &&
+    !isWindowsRootRelativePathAt(pathCandidate, 0) &&
     pathCandidate.charCodeAt(0) === 0x2f &&
-    followsRouteContext &&
-    !isUnambiguousPosixFilesystemPath(pathCandidate)
+    followsRouteContext
   ) {
     return token;
   }
@@ -263,8 +281,7 @@ function redactQuotedAbsolutePaths(value: string): string {
     const isShieldedRoute =
       value.charCodeAt(candidateStart) === 0x2f &&
       !isWindowsAbsolutePathAt(value, candidateStart) &&
-      hasRouteContextBefore(value, index) &&
-      !isUnambiguousPosixFilesystemPathAt(value, candidateStart);
+      hasRouteContextBefore(value, index);
     // Route/API contexts use their first closing quote so a later quoted
     // filesystem path is still scanned independently. Filesystem candidates
     // take the last matching quote on the line: POSIX filenames may themselves
@@ -410,8 +427,7 @@ function remainderContainsFilesystemSeparator(value: string, start: number): boo
       separatorIndex < tokenEnd &&
       value.charCodeAt(separatorIndex) === 0x2f &&
       !isWindowsAbsolutePathAt(value, separatorIndex) &&
-      (isRouteContextToken(previousToken) || hasRouteContextBefore(value, contextIndex)) &&
-      !isUnambiguousPosixFilesystemPathAt(value, separatorIndex);
+      (isRouteContextToken(previousToken) || hasRouteContextBefore(value, contextIndex));
     if (!isHttpUrl && separatorIndex < tokenEnd && !isShieldedRoute) return true;
     previousToken = value.slice(tokenStart, tokenEnd);
     tokenStart = tokenEnd;
@@ -448,8 +464,8 @@ function findUnquotedPathEnd(
   let hasFilesystemEvidence = false;
   let hasUnresolvedFragments = false;
 
-  const resolveEndpoint = (): number => {
-    if (hasUnresolvedFragments) {
+  const resolveEndpoint = (ignoreAmbiguity = false): number => {
+    if (hasUnresolvedFragments && !ignoreAmbiguity) {
       return failClosedAmbiguity || hasFilesystemEvidence ? value.length : -1;
     }
     if (resolvedExtensionEnd >= 0) return resolvedExtensionEnd;
@@ -490,7 +506,7 @@ function findUnquotedPathEnd(
       tokenStart,
       tokenEnd
     );
-    if (!isFirstToken && containsSeparator) {
+    if (containsSeparator) {
       lastPathTokenEnd = trimmedTokenEnd;
       hasFilesystemEvidence = true;
       hasUnresolvedFragments = false;
@@ -513,8 +529,16 @@ function findUnquotedPathEnd(
     let nextTokenStart = tokenEnd;
     while (nextTokenStart < value.length && isWhitespace(value[nextTokenStart])) nextTokenStart++;
     if (nextTokenStart >= value.length) return resolveEndpoint();
+    // A redaction marker ends the span: whatever follows was already made safe
+    // by the credential pass, and swallowing it would erase that evidence.
+    if (startsRedactedToken(value, nextTokenStart)) return resolveEndpoint(true);
     if (isSyntacticallyAbsolutePathAt(value, nextTokenStart)) {
-      const endpoint = resolveEndpoint();
+      // A route-shielded upcoming span (e.g. "POST /v1/foo") is never
+      // filesystem-sensitive by design — see hasRouteContextBefore. Its mere
+      // presence must not force ambiguous prose in between (like "Use POST")
+      // to fail closed and swallow past it into the shielded route and
+      // beyond; resolve with whatever evidence was already gathered instead.
+      const endpoint = resolveEndpoint(hasRouteContextBefore(value, nextTokenStart));
       if (endpoint >= 0) return endpoint;
       return acceptEndpointBeforeAnotherAbsolute ? lastPathTokenEnd : -1;
     }
@@ -540,7 +564,10 @@ function isUnquotedPosixSpanCandidateAt(value: string, start: number): boolean {
   for (let index = start; index < tokenEnd; index++) {
     if (value.charCodeAt(index) === 0x2f) slashCount++;
   }
-  return slashCount >= 2;
+  // Any boundary-delimited absolute POSIX token is filesystem-sensitive by
+  // default. Explicit Route/HTTP context is shielded by the caller before this
+  // candidate check, so `/vault` is redacted while `Route /vault` is retained.
+  return slashCount >= 1 && token.length > 1;
 }
 
 function redactUnquotedAbsolutePathSpans(value: string): string {
@@ -566,17 +593,16 @@ function redactUnquotedAbsolutePathSpans(value: string): string {
       value.charCodeAt(index) === 0x2f && value.charCodeAt(index + 1) === 0x2f;
     const startsHttpUrl =
       startsForwardSlashUnc && previous === ":" && hasHttpUrlSchemeBefore(value, index);
-    const isWindowsPath = !followsQuote && isWindowsAbsolutePathAt(value, index) && !startsHttpUrl;
+    const isWindowsPath =
+      !followsQuote &&
+      (isWindowsAbsolutePathAt(value, index) || isWindowsRootRelativePathAt(value, index)) &&
+      !startsHttpUrl;
     const isFileUriPath = !followsQuote && hasAbsoluteFileUriAt(value, index);
-    const isUnambiguousPosixFilesystemPathCandidate = isUnambiguousPosixFilesystemPathAt(
-      value,
-      index
-    );
     const isPosixPath =
       !followsQuote &&
       value.charCodeAt(index) === 0x2f &&
       value.charCodeAt(index + 1) !== 0x2f &&
-      (!hasRouteContextBefore(value, index) || isUnambiguousPosixFilesystemPathCandidate) &&
+      !hasRouteContextBefore(value, index) &&
       isUnquotedPosixSpanCandidateAt(value, index);
     const hasBoundary = hasCommonBoundary || (isWindowsPath && previous === ":");
     if (!hasBoundary || (!isWindowsPath && !isFileUriPath && !isPosixPath)) {
@@ -640,31 +666,35 @@ function serializedLineSeparatorLengthAt(value: string, start: number): number {
 
 function looksLikeRelativeStackLocation(token: string): boolean {
   if (token.length < 6 || token.length > 2048) return false;
-  const lowerToken = token.toLowerCase();
-  if (lowerToken.startsWith("http://") || lowerToken.startsWith("https://")) return false;
 
   const lastForwardSlash = token.lastIndexOf("/");
   const lastBackslash = token.lastIndexOf("\\");
   const lastSeparator = Math.max(lastForwardSlash, lastBackslash);
-  if (lastSeparator < 0 || lastSeparator === token.length - 1) return false;
+  if (lastSeparator === token.length - 1) return false;
 
-  const dot = token.lastIndexOf(".");
-  if (dot <= lastSeparator || dot === token.length - 1) return false;
-  const lineSeparator = token.indexOf(":", dot + 1);
-  if (lineSeparator < 0) return false;
-  const extension = token.slice(dot + 1, lineSeparator).toLowerCase();
+  const columnSeparator = token.lastIndexOf(":");
+  const lineSeparator = token.lastIndexOf(":", columnSeparator - 1);
+  if (lineSeparator < 0 || !hasNumericLineColumnSuffix(token, lineSeparator)) return false;
+  const queryIndex = token.indexOf("?", lastSeparator + 1);
+  const fragmentIndex = token.indexOf("#", lastSeparator + 1);
+  const metadataIndexes = [queryIndex, fragmentIndex].filter(
+    (index) => index >= 0 && index < lineSeparator
+  );
+  const extensionEnd = metadataIndexes.length > 0 ? Math.min(...metadataIndexes) : lineSeparator;
+  const dot = token.lastIndexOf(".", extensionEnd - 1);
+  if (dot <= lastSeparator || dot === extensionEnd - 1) return false;
+  const extension = token.slice(dot + 1, extensionEnd).toLowerCase();
   if (!(SOURCE_EXT as readonly string[]).includes(extension)) return false;
+  return true;
+}
 
-  let index = lineSeparator + 1;
-  if (!isAsciiDigit(token.charCodeAt(index))) return false;
-  while (index < token.length && isAsciiDigit(token.charCodeAt(index))) index++;
-  if (index === token.length) return true;
-  if (token.charCodeAt(index) !== 0x3a) return false;
-
-  index++;
-  if (!isAsciiDigit(token.charCodeAt(index))) return false;
-  while (index < token.length && isAsciiDigit(token.charCodeAt(index))) index++;
-  return index === token.length;
+function looksLikeUrlStackLocation(token: string): boolean {
+  if (token.length < 12 || token.length > 2048) return false;
+  const lower = token.toLowerCase();
+  if (!lower.startsWith("http://") && !lower.startsWith("https://")) return false;
+  const columnSeparator = token.lastIndexOf(":");
+  const lineSeparator = token.lastIndexOf(":", columnSeparator - 1);
+  return lineSeparator > 0 && hasNumericLineColumnSuffix(token, lineSeparator);
 }
 
 function hasNumericLineColumnSuffix(value: string, separator: number): boolean {
@@ -708,6 +738,7 @@ function isRecognizedStackPathAt(value: string, start: number): boolean {
   return (
     looksLikeAbsolutePath(token) ||
     looksLikeRelativeStackLocation(token) ||
+    looksLikeUrlStackLocation(token) ||
     looksLikeNodeStackLocation(token) ||
     looksLikeEvalStackLocation(token)
   );
@@ -757,6 +788,13 @@ function looksLikeStackFrameAt(value: string, atIndex: number, allowDirectPath: 
   );
 }
 
+function looksLikeAtSignStackFrameAt(value: string, frameStart: number): boolean {
+  const tokenEnd = trimPathSpanEnd(value, frameStart, findTokenEnd(value, frameStart));
+  const atSign = value.indexOf("@", frameStart);
+  if (atSign <= frameStart || atSign >= tokenEnd || atSign - frameStart > 256) return false;
+  return isStackFrameLabel(value, frameStart, atSign) && isRecognizedStackPathAt(value, atSign + 1);
+}
+
 function findSerializedStackFrameStart(value: string): number {
   for (let index = 0; index < value.length; index++) {
     const separatorLength = serializedLineSeparatorLengthAt(value, index);
@@ -768,7 +806,10 @@ function findSerializedStackFrameStart(value: string): number {
       if (adjacentSeparatorLength === 0) break;
       frameStart += adjacentSeparatorLength;
     }
-    if (looksLikeStackFrameAt(value, frameStart, true)) {
+    if (
+      looksLikeStackFrameAt(value, frameStart, true) ||
+      looksLikeAtSignStackFrameAt(value, frameStart)
+    ) {
       let separatorStart = index;
       while (separatorStart > 0 && value.charCodeAt(separatorStart - 1) === 0x5c) {
         separatorStart--;
@@ -788,7 +829,59 @@ function findInlineStackFrameStart(value: string): number {
   return -1;
 }
 
-/** Strip physical, serialized, and unambiguously inline JavaScript stack-frame tails. */
+function findInlineAtSignStackFrameStart(value: string): number {
+  let frameStart = 0;
+  while (frameStart < value.length) {
+    if (looksLikeAtSignStackFrameAt(value, frameStart)) {
+      return frameStart > 0 && isWhitespace(value[frameStart - 1]) ? frameStart - 1 : frameStart;
+    }
+    const tokenEnd = findTokenEnd(value, frameStart);
+    frameStart = tokenEnd;
+    while (frameStart < value.length && isWhitespace(value[frameStart])) frameStart++;
+  }
+  return -1;
+}
+
+function physicalLineSeparatorLengthAt(value: string, start: number): number {
+  const code = value.charCodeAt(start);
+  if (!isPhysicalLineSeparator(code)) return 0;
+  return code === 0x0d && value.charCodeAt(start + 1) === 0x0a ? 2 : 1;
+}
+
+function findPhysicalStackFrameStart(value: string): number {
+  for (let index = 0; index < value.length; index++) {
+    const separatorLength = physicalLineSeparatorLengthAt(value, index);
+    if (separatorLength === 0) continue;
+    let frameStart = index + separatorLength;
+    while (frameStart < value.length && isWhitespace(value[frameStart])) frameStart++;
+    if (
+      looksLikeStackFrameAt(value, frameStart, true) ||
+      looksLikeAtSignStackFrameAt(value, frameStart)
+    ) {
+      return index;
+    }
+    index += separatorLength - 1;
+  }
+  return -1;
+}
+
+/** Strip only recognized physical, serialized, and inline JavaScript stack-frame tails. */
+export function stripRecognizedErrorStackTail(value: string): string {
+  const candidates = [
+    findPhysicalStackFrameStart(value),
+    findSerializedStackFrameStart(value),
+    findInlineStackFrameStart(value),
+    findInlineAtSignStackFrameStart(value),
+  ].filter((candidate) => candidate >= 0);
+  if (candidates.length === 0) return value;
+  return value.slice(0, Math.min(...candidates));
+}
+
+/**
+ * Public exception messages remain fail-closed at the first physical line.
+ * Provider passthroughs that require multiline capability wording use the
+ * narrower recognized-frame helper above instead.
+ */
 export function stripErrorStackTail(value: string): string {
   let firstLineEnd = value.length;
   for (let index = 0; index < value.length; index++) {
@@ -797,17 +890,7 @@ export function stripErrorStackTail(value: string): string {
       break;
     }
   }
-
-  const firstLine = value.slice(0, firstLineEnd);
-  const serializedFrameStart = findSerializedStackFrameStart(firstLine);
-  const inlineFrameStart = findInlineStackFrameStart(firstLine);
-  const frameStart =
-    serializedFrameStart < 0
-      ? inlineFrameStart
-      : inlineFrameStart < 0
-        ? serializedFrameStart
-        : Math.min(serializedFrameStart, inlineFrameStart);
-  return frameStart < 0 ? firstLine : firstLine.slice(0, frameStart);
+  return stripRecognizedErrorStackTail(value.slice(0, firstLineEnd));
 }
 
 /**
@@ -815,6 +898,22 @@ export function stripErrorStackTail(value: string): string {
  * API routes, and punctuation around determinable endpoints. Unequivocal
  * filesystem prefixes fail closed when an unquoted endpoint is ambiguous.
  */
+/**
+ * `[REDACTED]` is the marker an earlier sanitizer pass already wrote over a
+ * credential. It is never part of a filesystem path, and a path span that grows
+ * across it costs the operator the one piece of evidence that pass left behind:
+ * "TLS request failed at /srv/…/client.ts:44:9 access_token=[REDACTED]"
+ * collapsed to a bare "<path>", hiding *which* credential leaked.
+ */
+const REDACTION_MARKER = "[REDACTED]";
+
+/** True when the token starting at `index` carries a redaction marker. */
+function startsRedactedToken(value: string, index: number): boolean {
+  let end = index;
+  while (end < value.length && !isWhitespace(value[end])) end++;
+  return value.slice(index, end).includes(REDACTION_MARKER);
+}
+
 export function redactErrorPaths(value: string): string {
   const quotedPathsRedacted = redactQuotedAbsolutePaths(value);
   const pathSpansRedacted = redactUnquotedAbsolutePathSpans(quotedPathsRedacted);

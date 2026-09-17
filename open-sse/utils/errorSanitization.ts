@@ -1,14 +1,20 @@
-import { redactErrorPaths, stripErrorStackTail } from "./errorPathRedaction.ts";
+import {
+  redactErrorPaths,
+  stripErrorStackTail,
+  stripRecognizedErrorStackTail,
+} from "./errorPathRedaction.ts";
+import { CREDENTIAL_PATTERNS } from "./credentialPatterns.ts";
 
 // Length cap protects against pathological inputs even before tokenization.
 const MAX_ERROR_LEN = 4096;
+const MAX_ERROR_SCAN_HEADROOM = 512;
 const MAX_SECURITY_ESCAPE_LAYERS = 3;
 const STRONG_CREDENTIAL_TOKEN_SOURCE =
   "(?:eyJ[A-Za-z0-9_-]{5,}\\.[A-Za-z0-9_-]{8,}\\.[A-Za-z0-9_-]{8,}|" +
   "github_pat_[A-Za-z0-9_]{20,}|ghp_[A-Za-z0-9]{20,}|glpat-[A-Za-z0-9_-]{20,}|" +
   "xox[a-z]-[A-Za-z0-9-]{10,}|(?:AKIA|ASIA)[A-Z0-9]{16}|" +
   "(?<![A-Za-z0-9])sk[-_][A-Za-z0-9._~+/=-]{8,}|" +
-  "[A-Za-z0-9]{3,}sk[-_][A-Za-z0-9._~+/=-]{8,})";
+  "(?<![A-Za-z0-9])[A-Za-z0-9]{3,}sk[-_][A-Za-z0-9._~+/=-]{8,})";
 const STRONG_CREDENTIAL_TOKEN = new RegExp(STRONG_CREDENTIAL_TOKEN_SOURCE, "i");
 const STRONG_CREDENTIAL_TOKEN_GLOBAL = new RegExp(STRONG_CREDENTIAL_TOKEN_SOURCE, "gi");
 
@@ -116,6 +122,10 @@ function isPrintableAscii(code: number | null): code is number {
   return code !== null && code >= 0x20 && code <= 0x7e;
 }
 
+function isSecurityWhitespaceCode(code: number | null): boolean {
+  return code === 0x08 || code === 0x09 || code === 0x0a || code === 0x0c || code === 0x0d;
+}
+
 function isEscapeTokenBoundary(code: number): boolean {
   return !isAsciiAlphaNumericCode(code) && code !== 0x2e && code !== 0x5f && code !== 0x2d;
 }
@@ -143,7 +153,11 @@ function shouldPreserveUnicodeUncEvidence(
   return afterEscape < tokenEnd;
 }
 
-function decodeSecurityEscapesOnce(value: string, decodeQuotes: boolean): string {
+function decodeSecurityEscapesOnce(
+  value: string,
+  decodeQuotes: boolean,
+  maxLength: number
+): string {
   const output: string[] = [];
   let changed = false;
 
@@ -165,6 +179,12 @@ function decodeSecurityEscapesOnce(value: string, decodeQuotes: boolean): string
     if (escaped === "u" || escaped === "U") {
       const decoded = unicodeEscapeCodeAt(value, runEnd - 1);
       const isQuote = decoded === 0x22 || decoded === 0x27;
+      if (isSecurityWhitespaceCode(decoded)) {
+        output.push(" ");
+        index = runEnd + 4;
+        changed = true;
+        continue;
+      }
       if (
         isPrintableAscii(decoded) &&
         (decodeQuotes || !isQuote) &&
@@ -180,6 +200,19 @@ function decodeSecurityEscapesOnce(value: string, decodeQuotes: boolean): string
       continue;
     }
 
+    if (
+      escaped === "b" ||
+      escaped === "f" ||
+      escaped === "n" ||
+      escaped === "r" ||
+      escaped === "t"
+    ) {
+      output.push(" ");
+      index = runEnd;
+      changed = true;
+      continue;
+    }
+
     if (escaped === "/" || (decodeQuotes && (escaped === '"' || escaped === "'"))) {
       output.push(escaped);
       index = runEnd;
@@ -191,7 +224,7 @@ function decodeSecurityEscapesOnce(value: string, decodeQuotes: boolean): string
     index = runEnd - 1;
   }
 
-  return changed ? output.join("").slice(0, MAX_ERROR_LEN) : value;
+  return changed ? output.join("").slice(0, maxLength) : value;
 }
 
 function hasResidualSecurityEscape(value: string): boolean {
@@ -200,22 +233,35 @@ function hasResidualSecurityEscape(value: string): boolean {
     while (index < value.length && value.charCodeAt(index) === 0x5c) index++;
     if (index >= value.length) return false;
     const escaped = value[index];
+    if (
+      escaped === "b" ||
+      escaped === "f" ||
+      escaped === "n" ||
+      escaped === "r" ||
+      escaped === "t"
+    ) {
+      return true;
+    }
     if (escaped === "/" || escaped === '"' || escaped === "'") return true;
     if (escaped === "u" || escaped === "U") {
       const decoded = unicodeEscapeCodeAt(value, index - 1);
-      if (isPrintableAscii(decoded)) return true;
+      if (isPrintableAscii(decoded) || isSecurityWhitespaceCode(decoded)) return true;
     }
   }
   return false;
 }
 
 /** Decode bounded security ASCII/JSON escapes while never materializing arbitrary Unicode. */
-function normalizeSecurityEscapes(value: string, decodeQuotes: boolean): string {
-  let normalized = value.slice(0, MAX_ERROR_LEN);
+function normalizeSecurityEscapes(
+  value: string,
+  decodeQuotes: boolean,
+  maxLength = MAX_ERROR_LEN
+): string {
+  let normalized = value.slice(0, maxLength);
   for (let layer = 0; layer < MAX_SECURITY_ESCAPE_LAYERS; layer++) {
-    const decoded = decodeSecurityEscapesOnce(normalized, decodeQuotes);
+    const decoded = decodeSecurityEscapesOnce(normalized, decodeQuotes, maxLength);
     if (decoded === normalized) break;
-    normalized = decoded.slice(0, MAX_ERROR_LEN);
+    normalized = decoded.slice(0, maxLength);
   }
   return normalized;
 }
@@ -227,6 +273,11 @@ function isCredentialLabelBoundary(code: number): boolean {
 function matchCredentialAssignmentAt(value: string, start: number): CredentialAssignment | null {
   const keyQuote = value[start] === '"' || value[start] === "'" ? value[start] : "";
   const labelStart = start + (keyQuote ? 1 : 0);
+  const cliFlag =
+    !keyQuote &&
+    labelStart >= 2 &&
+    value.slice(labelStart - 2, labelStart) === "--" &&
+    (labelStart === 2 || isCredentialLabelBoundary(value.charCodeAt(labelStart - 3)));
 
   for (const [label, failClosed] of CREDENTIAL_LABELS) {
     const labelEnd = labelStart + label.length;
@@ -248,10 +299,14 @@ function matchCredentialAssignmentAt(value: string, start: number): CredentialAs
     } else if (value[index] === '"' || value[index] === "'") {
       index++;
     }
+    const separatorStart = index;
     while (/\s/.test(value[index])) index++;
-    if (value[index] !== ":" && value[index] !== "=") continue;
-    index++;
-    while (/\s/.test(value[index])) index++;
+    if (value[index] === ":" || value[index] === "=") {
+      index++;
+      while (/\s/.test(value[index])) index++;
+    } else if (!(cliFlag && index > separatorStart)) {
+      continue;
+    }
     return { valueStart: index, failClosed };
   }
   return null;
@@ -340,7 +395,7 @@ function redactPrivateKeyPemBlocks(value: string): string {
     const headerEnd = upperValue.indexOf("-----", labelStart);
     if (headerEnd < 0) break;
     const label = upperValue.slice(labelStart, headerEnd).trim();
-    if (!/^(?:[A-Z0-9]+ )*PRIVATE KEY$/.test(label)) {
+    if (!/^(?:[A-Z0-9]+ )*PRIVATE KEY(?: BLOCK)?$/.test(label)) {
       searchStart = headerEnd + 5;
       continue;
     }
@@ -452,11 +507,142 @@ function redactBase64DataUrls(value: string): string {
   return parts.join("");
 }
 
+const HTTP_URL_RE = /https?:\/\//gi;
+const URL_QUERY_PARAM_RE = /([?&])([^=&#]+)=([^&#]*)/g;
+
+function isUrlTerminator(char: string): boolean {
+  return (
+    /\s/.test(char) ||
+    char === '"' ||
+    char === "'" ||
+    char === "`" ||
+    char === "<" ||
+    char === ">" ||
+    char === ")" ||
+    char === "]" ||
+    char === "}" ||
+    char === "," ||
+    char === ";"
+  );
+}
+
+function normalizeUrlQueryKey(key: string): string {
+  let decoded = key.replace(/\+/g, " ");
+  try {
+    decoded = decodeURIComponent(decoded);
+  } catch {
+    // Malformed percent escapes stay visible to the conservative ASCII fold.
+  }
+  return decoded.replace(/[^A-Za-z0-9]/g, "").toLowerCase();
+}
+
+function isSensitiveUrlQueryKey(key: string): boolean {
+  const normalized = normalizeUrlQueryKey(key);
+  return (
+    normalized === "sig" ||
+    normalized === "signature" ||
+    normalized === "key" ||
+    normalized === "apikey" ||
+    normalized === "token" ||
+    normalized === "accesstoken" ||
+    normalized === "refreshtoken" ||
+    normalized === "credential" ||
+    normalized === "password" ||
+    normalized === "secret" ||
+    normalized === "awsaccesskeyid" ||
+    normalized === "googleaccessid" ||
+    normalized === "xamzcredential" ||
+    normalized === "xamzsignature" ||
+    normalized === "xamzsecuritytoken" ||
+    normalized === "xgoogcredential" ||
+    normalized === "xgoogsignature"
+  );
+}
+
+function redactUrlSegment(segment: string): string {
+  const schemeEnd = segment.indexOf("//") + 2;
+  let authorityEnd = segment.length;
+  for (const delimiter of ["/", "?", "#"]) {
+    const candidate = segment.indexOf(delimiter, schemeEnd);
+    if (candidate >= 0) authorityEnd = Math.min(authorityEnd, candidate);
+  }
+
+  let redacted = segment;
+  const userInfoEnd = segment.lastIndexOf("@", authorityEnd);
+  if (userInfoEnd >= schemeEnd) {
+    redacted = `${segment.slice(0, schemeEnd)}[REDACTED]@${segment.slice(userInfoEnd + 1)}`;
+  }
+
+  URL_QUERY_PARAM_RE.lastIndex = 0;
+  return redacted.replace(URL_QUERY_PARAM_RE, (match, separator: string, key: string) =>
+    isSensitiveUrlQueryKey(key) ? `${separator}redacted=[REDACTED]` : match
+  );
+}
+
+function redactSensitiveUrlCredentials(value: string): string {
+  HTTP_URL_RE.lastIndex = 0;
+  const parts: string[] = [];
+  let copyStart = 0;
+  let match = HTTP_URL_RE.exec(value);
+  while (match) {
+    const start = match.index;
+    let end = HTTP_URL_RE.lastIndex;
+    while (end < value.length && !isUrlTerminator(value[end])) end++;
+    const segment = value.slice(start, end);
+    const redacted = redactUrlSegment(segment);
+    if (redacted !== segment) {
+      parts.push(value.slice(copyStart, start), redacted);
+      copyStart = end;
+    }
+    HTTP_URL_RE.lastIndex = Math.max(end, HTTP_URL_RE.lastIndex);
+    match = HTTP_URL_RE.exec(value);
+  }
+  if (parts.length === 0) return value;
+  parts.push(value.slice(copyStart));
+  return parts.join("");
+}
+
+function redactKnownCredentialPatterns(value: string): string {
+  let redacted = value;
+  for (const pattern of CREDENTIAL_PATTERNS) {
+    if (pattern.name === "auth_header") continue;
+    pattern.regex.lastIndex = 0;
+    redacted = redacted.replace(pattern.regex, "[REDACTED]");
+  }
+  return redacted;
+}
+
 export function redactSensitiveErrorText(value: string): string {
-  const commonCredentialsRedacted = redactBase64DataUrls(redactPrivateKeyPemBlocks(value))
+  const normalized = normalizeSecurityEscapes(
+    value,
+    false,
+    MAX_ERROR_LEN + MAX_ERROR_SCAN_HEADROOM
+  );
+  const catalogRedacted = redactKnownCredentialPatterns(redactSensitiveUrlCredentials(normalized));
+  const commonCredentialsRedacted = redactBase64DataUrls(redactPrivateKeyPemBlocks(catalogRedacted))
     .replace(/\b(Bearer|Basic)\s+[A-Za-z0-9._~+/=-]+/gi, "$1 [REDACTED]")
     .replace(STRONG_CREDENTIAL_TOKEN_GLOBAL, "[REDACTED]");
   return redactLabeledCredentialAssignments(commonCredentialsRedacted);
+}
+
+export function containsSensitiveErrorCredential(value: string): boolean {
+  const normalized = normalizeSecurityEscapes(
+    value,
+    false,
+    MAX_ERROR_LEN + MAX_ERROR_SCAN_HEADROOM
+  );
+  const directRedacted = redactKnownCredentialPatterns(redactSensitiveUrlCredentials(normalized))
+    .replace(/\b(Bearer|Basic)\s+[A-Za-z0-9._~+/=-]+/gi, "$1 [REDACTED]")
+    .replace(STRONG_CREDENTIAL_TOKEN_GLOBAL, "[REDACTED]");
+  if (directRedacted !== normalized) return true;
+  if (
+    /(?:^|\s)--(?:api[-_]?key|token|password|secret)\s+(?:"[^"]*"|'[^']*'|\S+)/i.test(normalized)
+  ) {
+    return true;
+  }
+  return /(?:api[_-]?key|access[_-]?token|refresh[_-]?token|authorization|cookie|secret)["']?\s*[:=]\s*["']?[^"'\\,\s}]{6,}/i.test(
+    normalized
+  );
 }
 
 function coerceErrorText(value: unknown): string {
@@ -470,21 +656,62 @@ function coerceErrorText(value: unknown): string {
   }
 }
 
+function truncateSanitizedErrorText(value: string): string {
+  if (value.length <= MAX_ERROR_LEN) return value;
+  const markerStart = value.lastIndexOf("[REDACTED", MAX_ERROR_LEN);
+  const markerEnd = markerStart >= 0 ? value.indexOf("]", markerStart) : -1;
+  if (
+    markerStart >= 0 &&
+    markerStart < MAX_ERROR_LEN &&
+    markerEnd >= MAX_ERROR_LEN &&
+    markerEnd - markerStart <= 128
+  ) {
+    const marker = value.slice(markerStart, markerEnd + 1);
+    return `${value.slice(0, MAX_ERROR_LEN - marker.length)}${marker}`;
+  }
+  return value.slice(0, MAX_ERROR_LEN);
+}
+
 /**
  * Strip stack-trace tails, credentials, and absolute source paths from a
  * client-visible error message.
  */
-export function sanitizeErrorMessage(message: unknown): string {
+function sanitizeErrorMessageWithStackPolicy(
+  message: unknown,
+  stripStackTail: (value: string) => string
+): string {
   let str = coerceErrorText(message);
-  if (str.length > MAX_ERROR_LEN) str = str.slice(0, MAX_ERROR_LEN);
+  if (str.length > MAX_ERROR_LEN + MAX_ERROR_SCAN_HEADROOM) {
+    str = str.slice(0, MAX_ERROR_LEN + MAX_ERROR_SCAN_HEADROOM);
+  }
   // Preserve quote provenance until hidden labels/delimiters have been
   // exposed and redacted, then decode safe quote escapes in the clean text.
+  // Raw URI credentials must be projected before the path tokenizer consumes
+  // the URI tail; Windows path evidence still stays intact until after this
+  // credential-only pass and is redacted before escape normalization.
+  // Labeled assignments (access_token=…, api_key=…) are projected here too, for
+  // the same reason as raw URI credentials: the path tokenizer would otherwise
+  // absorb "…/client.ts:44:9 access_token=secret" whole and the public message
+  // would lose the credential marker along with the path.
+  str = redactLabeledCredentialAssignments(
+    redactKnownCredentialPatterns(redactSensitiveUrlCredentials(stripStackTail(str)))
+  );
+  str = redactErrorPaths(str);
   str = redactSensitiveErrorText(str);
+  str = truncateSanitizedErrorText(str);
   str = normalizeSecurityEscapes(str, false);
-  str = redactSensitiveErrorText(redactErrorPaths(stripErrorStackTail(str)));
+  str = redactSensitiveErrorText(redactErrorPaths(stripStackTail(str)));
   str = normalizeSecurityEscapes(str, true);
-  str = redactSensitiveErrorText(redactErrorPaths(stripErrorStackTail(str)));
-  return hasResidualSecurityEscape(str) ? "[REDACTED]" : str;
+  str = redactSensitiveErrorText(redactErrorPaths(stripStackTail(str)));
+  return hasResidualSecurityEscape(str) ? "[REDACTED]" : str.trimEnd();
+}
+
+export function sanitizeErrorMessage(message: unknown): string {
+  return sanitizeErrorMessageWithStackPolicy(message, stripErrorStackTail);
+}
+
+function sanitizePassthroughErrorMessage(message: unknown): string {
+  return sanitizeErrorMessageWithStackPolicy(message, stripRecognizedErrorStackTail);
 }
 
 const BLOCKED_KEYS =
@@ -494,6 +721,96 @@ const BLOCKED_CREDENTIAL_ALIAS_KEYS =
 const PROTOTYPE_CONTROL_KEYS = new Set(["__proto__", "constructor", "prototype"]);
 const MAX_DEPTH = 4;
 const MAX_UPSTREAM_KEY_LEN = 256;
+type UpstreamClassificationKey = "code" | "reason" | "status" | "type";
+const SAFE_UPSTREAM_STATUS_IDENTIFIERS = new Set([
+  "ABORTED",
+  "ALREADY_EXISTS",
+  "CANCELLED",
+  "DATA_LOSS",
+  "DEADLINE_EXCEEDED",
+  "FAILED_PRECONDITION",
+  "INTERNAL",
+  "INVALID_ARGUMENT",
+  "NOT_FOUND",
+  "OK",
+  "OUT_OF_RANGE",
+  "PERMISSION_DENIED",
+  "RESOURCE_EXHAUSTED",
+  "UNAUTHENTICATED",
+  "UNAVAILABLE",
+  "UNIMPLEMENTED",
+  "UNKNOWN",
+]);
+const SAFE_UPSTREAM_ERROR_IDENTIFIERS = new Set([
+  "api_error",
+  "auth_error",
+  "authentication_error",
+  "bad_gateway",
+  "bad_request",
+  "billing_error",
+  "context_length_exceeded",
+  "error",
+  "gateway_timeout",
+  "insufficient_quota",
+  "invalid_api_key",
+  "invalid_request",
+  "invalid_request_error",
+  "model_not_found",
+  "not_found",
+  "payment_required",
+  "permission_error",
+  "provider_error",
+  "quota_exhausted",
+  "rate_limit_error",
+  "rate_limit_exceeded",
+  "server_error",
+  "upstream_error",
+  "upstream_timeout",
+]);
+
+function describeOpaqueBinaryDetail(value: ArrayBuffer | ArrayBufferView): string {
+  return `[binary ${value.byteLength} bytes]`;
+}
+
+function normalizeUpstreamClassificationKey(key: string): UpstreamClassificationKey | null {
+  const normalized = key.replace(/[-_]/g, "").toLowerCase();
+  if (normalized === "code" || normalized === "errorcode") return "code";
+  if (normalized === "reason" || normalized === "errorreason") return "reason";
+  if (
+    normalized === "status" ||
+    normalized === "statuscode" ||
+    normalized === "errorstatus" ||
+    normalized === "errorstatuscode"
+  ) {
+    return "status";
+  }
+  if (normalized === "type" || normalized === "errortype" || normalized === "subtype") {
+    return "type";
+  }
+  return null;
+}
+
+function projectUpstreamErrorIdentifier(key: UpstreamClassificationKey, value: unknown): unknown {
+  if (typeof value === "number") {
+    if (!Number.isInteger(value)) return undefined;
+    if (key === "code" && value >= 0 && value <= 16) return value;
+    return (key === "code" || key === "status") && value >= 100 && value <= 599 ? value : undefined;
+  }
+  if (typeof value !== "string") return undefined;
+  if (key === "status" && SAFE_UPSTREAM_STATUS_IDENTIFIERS.has(value.toUpperCase())) {
+    return value;
+  }
+  if (
+    /^[1-5]\d{2}$/.test(value) ||
+    /^HTTP_[1-5]\d{2}$/i.test(value) ||
+    SAFE_UPSTREAM_ERROR_IDENTIFIERS.has(value.toLowerCase())
+  ) {
+    return value;
+  }
+  if (key === "type") return "upstream_error";
+  if (key === "code") return "";
+  return undefined;
+}
 
 function isSafeUpstreamDetailKey(key: string): boolean {
   if (
@@ -513,21 +830,72 @@ function isSafeUpstreamDetailKey(key: string): boolean {
  * Unsafe keys are dropped rather than renamed so sanitized-key collisions
  * cannot restore a secret under a public placeholder.
  */
-export function sanitizeUpstreamDetails(value: unknown, depth = 0): unknown {
+function sanitizeUpstreamDetailsInternal(
+  value: unknown,
+  depth: number,
+  preserveSafeMultiline: boolean,
+  projectClassification: boolean
+): unknown {
   if (depth > MAX_DEPTH) return "[truncated]";
   if (value === null || value === undefined) return null;
-  if (typeof value === "string") return sanitizeErrorMessage(value);
-  if (typeof value === "number" || typeof value === "boolean") return value;
-  if (Array.isArray(value)) {
-    return value.slice(0, 32).map((v) => sanitizeUpstreamDetails(v, depth + 1));
+  if (typeof value === "string") {
+    return preserveSafeMultiline
+      ? sanitizePassthroughErrorMessage(value)
+      : sanitizeErrorMessage(value);
   }
+  if (typeof value === "number" || typeof value === "boolean") return value;
   if (typeof value === "object") {
-    const out = Object.create(null) as Record<string, unknown>;
-    for (const [key, entryValue] of Object.entries(value as Record<string, unknown>)) {
-      if (!isSafeUpstreamDetailKey(key)) continue;
-      out[key] = sanitizeUpstreamDetails(entryValue, depth + 1);
+    try {
+      if (value instanceof ArrayBuffer || ArrayBuffer.isView(value)) {
+        return describeOpaqueBinaryDetail(value);
+      }
+      if (Array.isArray(value)) {
+        return value
+          .slice(0, 32)
+          .map((entry) =>
+            sanitizeUpstreamDetailsInternal(
+              entry,
+              depth + 1,
+              preserveSafeMultiline,
+              projectClassification
+            )
+          );
+      }
+      const out = Object.create(null) as Record<string, unknown>;
+      for (const [key, entryValue] of Object.entries(value as Record<string, unknown>)) {
+        if (!isSafeUpstreamDetailKey(key)) continue;
+        const normalizedKey = key.toLowerCase();
+        const classificationKey = normalizeUpstreamClassificationKey(normalizedKey);
+        if (projectClassification && classificationKey) {
+          const projected = projectUpstreamErrorIdentifier(classificationKey, entryValue);
+          if (projected !== undefined) out[key] = projected;
+          continue;
+        }
+        const childProjectsClassification =
+          normalizedKey === "error" ||
+          normalizedKey === "errors" ||
+          normalizedKey === "warning" ||
+          normalizedKey === "warnings";
+        out[key] = sanitizeUpstreamDetailsInternal(
+          entryValue,
+          depth + 1,
+          preserveSafeMultiline,
+          childProjectsClassification
+        );
+      }
+      return out;
+    } catch {
+      return null;
     }
-    return out;
   }
   return null;
+}
+
+export function sanitizeUpstreamDetails(value: unknown, depth = 0): unknown {
+  return sanitizeUpstreamDetailsInternal(value, depth, false, depth === 0);
+}
+
+/** Provider-only projection that preserves safe multiline capability wording. */
+export function sanitizePassthroughUpstreamDetails(value: unknown, depth = 0): unknown {
+  return sanitizeUpstreamDetailsInternal(value, depth, true, depth === 0);
 }

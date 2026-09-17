@@ -17,6 +17,7 @@ import { prepareToolMessages } from "../translator/webTools.ts";
 import { buildToolModeResponse } from "./chatgptWebTools.ts";
 import { projectPublicErrorIdentifier, sanitizeErrorMessage } from "../utils/error.ts";
 import { buildSessionCookieHeader, mergeRefreshedCookie } from "../utils/nextAuthCookie.ts";
+import { formatTranslatedStreamError } from "../utils/streamErrorFormat.ts";
 import {
   PPLX_SSE_ENDPOINT,
   PPLX_USER_AGENT,
@@ -28,17 +29,12 @@ import {
   buildPplxRequestBody,
   buildQuery,
   extractContent,
-  PPLX_ADVANCED_QUOTA_DEFAULT_RESET_SECONDS,
   sseChunk,
-  type ContentChunk,
 } from "./perplexity-web/protocol.ts";
 
-// ─── Session continuity ─────────────────────────────────────────────────────
-
-const SESSION_MAX_AGE_MS = 3600_000;
-const SESSION_MAX_ENTRIES = 200;
 const PPLX_PUBLIC_UPSTREAM_ERROR = "Perplexity upstream error";
 
+/** Project an unknown upstream failure onto a stable, public-safe message (Hard Rule #12). */
 function sanitizePerplexityUpstreamError(message: unknown): string {
   const sanitized = sanitizeErrorMessage(message);
   return sanitized.trim() && !/^(?:[A-Za-z_$][\w$]*)?Error:\s*$/.test(sanitized)
@@ -46,20 +42,19 @@ function sanitizePerplexityUpstreamError(message: unknown): string {
     : PPLX_PUBLIC_UPSTREAM_ERROR;
 }
 
-function isTlsClientUnavailableError(error: unknown): error is TlsClientUnavailableError {
-  try {
-    return error instanceof TlsClientUnavailableError;
-  } catch {
-    // A rejected Proxy may throw while instanceof walks its prototype chain.
-    return false;
-  }
-}
-
+/** Project a provider-controlled error code onto the bounded public identifier vocabulary. */
 export function toPublicPerplexityErrorCode(errorCode: unknown, isQuota: boolean): string {
   if (isQuota) return "quota_exhausted";
   if (typeof errorCode !== "string" || errorCode.length > 64) return "PPLX_ERROR";
   return projectPublicErrorIdentifier(errorCode, "PPLX_ERROR");
 }
+
+// ─── Session continuity ─────────────────────────────────────────────────────
+
+const SESSION_MAX_AGE_MS = 3600_000;
+const SESSION_MAX_ENTRIES = 200;
+const PPLX_STREAM_ERROR_MESSAGE = "Perplexity upstream stream failed";
+const PPLX_STREAM_ERROR_CODE = "PPLX_STREAM_ERROR";
 
 interface SessionEntry {
   backendUuid: string;
@@ -117,179 +112,163 @@ function sessionStore(
   }
 }
 
-const PPLX_STREAM_PREFLIGHT_MAX_CHUNKS = 32;
-const PPLX_STREAM_PREFLIGHT_TIMEOUT_MS = 250;
-const PPLX_STREAM_PREFLIGHT_TIMED_OUT = Symbol("pplx-stream-preflight-timeout");
-
-async function waitForPreflightChunk(
-  pending: Promise<IteratorResult<ContentChunk>>,
-  timeoutMs: number
-): Promise<IteratorResult<ContentChunk> | typeof PPLX_STREAM_PREFLIGHT_TIMED_OUT> {
-  let timer: ReturnType<typeof setTimeout> | undefined;
-  try {
-    return await Promise.race([
-      pending,
-      new Promise<typeof PPLX_STREAM_PREFLIGHT_TIMED_OUT>((resolve) => {
-        timer = setTimeout(() => resolve(PPLX_STREAM_PREFLIGHT_TIMED_OUT), timeoutMs);
-      }),
-    ]);
-  } finally {
-    if (timer) clearTimeout(timer);
-  }
-}
-
-async function* replayContentChunks(
-  buffered: ContentChunk[],
-  pending: Promise<IteratorResult<ContentChunk>> | null,
-  remaining: AsyncGenerator<ContentChunk>
-): AsyncGenerator<ContentChunk> {
-  try {
-    yield* buffered;
-    if (pending) {
-      const nextChunk = await pending;
-      if (!nextChunk.done) yield nextChunk.value;
-    }
-    yield* remaining;
-  } finally {
-    // Releasing the iterator unlocks the upstream reader; cleanup cannot replace the SSE outcome.
-    await remaining.return(undefined).catch(() => {});
-  }
-}
-
-interface ContentPreflightResult {
-  quotaError: ContentChunk | null;
-  contentChunks: AsyncIterable<ContentChunk> | null;
-}
-
-async function preflightContentChunks(
-  source: AsyncGenerator<ContentChunk>
-): Promise<ContentPreflightResult> {
-  const buffered: ContentChunk[] = [];
-  const deadline = Date.now() + PPLX_STREAM_PREFLIGHT_TIMEOUT_MS;
-
-  for (let index = 0; index < PPLX_STREAM_PREFLIGHT_MAX_CHUNKS; index += 1) {
-    const remainingMs = deadline - Date.now();
-    if (remainingMs <= 0) {
-      return { quotaError: null, contentChunks: replayContentChunks(buffered, null, source) };
-    }
-
-    const pending = source.next();
-    const nextChunk = await waitForPreflightChunk(pending, remainingMs);
-    if (nextChunk === PPLX_STREAM_PREFLIGHT_TIMED_OUT) {
-      return { quotaError: null, contentChunks: replayContentChunks(buffered, pending, source) };
-    }
-    if (nextChunk.done) {
-      return { quotaError: null, contentChunks: replayContentChunks(buffered, null, source) };
-    }
-
-    const chunk = nextChunk.value;
-    buffered.push(chunk);
-    if (chunk.error && isPerplexityQuotaError(chunk)) {
-      // Closing the primed generator releases its reader; cleanup must not mask the quota response.
-      await source.return(undefined).catch(() => {});
-      return { quotaError: chunk, contentChunks: null };
-    }
-    if (chunk.error || chunk.delta || chunk.answer || chunk.done) {
-      return { quotaError: null, contentChunks: replayContentChunks(buffered, null, source) };
-    }
-  }
-
-  // Once either bound is exhausted, preserve the original SSE 200 behavior for later errors.
-  return { quotaError: null, contentChunks: replayContentChunks(buffered, null, source) };
-}
-
-async function* throwContentError(error: unknown): AsyncGenerator<ContentChunk> {
-  throw error;
-}
-
 function buildStreamingResponse(
-  contentChunks: AsyncIterable<ContentChunk>,
+  eventStream: ReadableStream<Uint8Array>,
   model: string,
   cid: string,
   created: number,
   history: Array<{ role: string; content: string }>,
   currentMsg: string,
-  onCancel?: (reason: unknown) => void
-): Response {
+  signal?: AbortSignal | null
+): ReadableStream<Uint8Array> {
   const encoder = new TextEncoder();
-  const contentIterator = contentChunks[Symbol.asyncIterator]();
-  const ownedChunks = { [Symbol.asyncIterator]: () => contentIterator };
-  let cancelled = false;
+  const streamAbortController = new AbortController();
+  const forwardInputAbort = () =>
+    streamAbortController.abort(signal?.reason ?? "perplexity_request_aborted");
+  if (signal?.aborted) forwardInputAbort();
+  else signal?.addEventListener("abort", forwardInputAbort, { once: true });
+  let inputAbortListenerAttached = Boolean(signal && !signal.aborted);
+  const removeInputAbortListener = () => {
+    if (!inputAbortListenerAttached) return;
+    inputAbortListenerAttached = false;
+    signal?.removeEventListener("abort", forwardInputAbort);
+  };
+  const abortEventStream = (reason: unknown) => {
+    removeInputAbortListener();
+    if (!streamAbortController.signal.aborted) streamAbortController.abort(reason);
+  };
+  const contentIterator = extractContent(eventStream, streamAbortController.signal)[
+    Symbol.asyncIterator
+  ]();
+  let fullAnswer = "";
+  let respBackendUuid: string | null = null;
+  let roleEmitted = false;
+  let finished = false;
+  let pendingFailure: (Error & { statusCode: number }) | null = null;
 
-  const pump = async (controller: ReadableStreamDefaultController<Uint8Array>) => {
-    try {
-      // Initial role chunk
-      controller.enqueue(
-        encoder.encode(
-          sseChunk({
-            id: cid,
-            object: "chat.completion.chunk",
-            created,
-            model,
-            system_fingerprint: null,
-            choices: [
-              { index: 0, delta: { role: "assistant" }, finish_reason: null, logprobs: null },
-            ],
-          })
-        )
-      );
+  const enqueuePreContentFailure = (controller: ReadableStreamDefaultController<Uint8Array>) => {
+    controller.enqueue(
+      encoder.encode(
+        formatTranslatedStreamError({
+          status: 502,
+          message: PPLX_STREAM_ERROR_MESSAGE,
+          type: "upstream_error",
+          code: PPLX_STREAM_ERROR_CODE,
+        })
+      )
+    );
+  };
 
-      let fullAnswer = "";
-      let respBackendUuid: string | null = null;
+  const takeAssistantRoleChunk = (): string => {
+    if (roleEmitted) return "";
+    roleEmitted = true;
+    return sseChunk({
+      id: cid,
+      object: "chat.completion.chunk",
+      created,
+      model,
+      system_fingerprint: null,
+      choices: [
+        {
+          index: 0,
+          delta: { role: "assistant" },
+          finish_reason: null,
+          logprobs: null,
+        },
+      ],
+    });
+  };
 
-      for await (const chunk of ownedChunks) {
+  const completeStream = (controller: ReadableStreamDefaultController<Uint8Array>) => {
+    if (finished) return;
+    finished = true;
+    controller.enqueue(
+      encoder.encode(
+        sseChunk({
+          id: cid,
+          object: "chat.completion.chunk",
+          created,
+          model,
+          system_fingerprint: null,
+          choices: [{ index: 0, delta: {}, finish_reason: "stop", logprobs: null }],
+        })
+      )
+    );
+    controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+    sessionStore(history, currentMsg, cleanResponse(fullAnswer), respBackendUuid);
+    removeInputAbortListener();
+    controller.close();
+  };
+
+  const failStream = (controller: ReadableStreamDefaultController<Uint8Array>) => {
+    if (roleEmitted) {
+      pendingFailure = Object.assign(new Error(PPLX_STREAM_ERROR_MESSAGE), {
+        statusCode: 502,
+      });
+      finished = true;
+      controller.close();
+      return;
+    }
+    finished = true;
+    enqueuePreContentFailure(controller);
+    controller.close();
+  };
+
+  const providerStream = new ReadableStream<Uint8Array>({
+    async pull(controller) {
+      if (finished) return;
+
+      try {
+        const next = await contentIterator.next();
+        if (streamAbortController.signal.aborted) {
+          finished = true;
+          controller.close();
+          return;
+        }
+        if (next.done === true) {
+          completeStream(controller);
+          return;
+        }
+
+        const chunk = next.value;
         if (chunk.backendUuid) respBackendUuid = chunk.backendUuid;
 
         if (chunk.error) {
-          const publicError = sanitizePerplexityUpstreamError(chunk.error);
-          controller.enqueue(
-            encoder.encode(
-              sseChunk({
-                id: cid,
-                object: "chat.completion.chunk",
-                created,
-                model,
-                system_fingerprint: null,
-                choices: [
-                  {
-                    index: 0,
-                    delta: { content: `[Error: ${publicError}]` },
-                    finish_reason: null,
-                    logprobs: null,
-                  },
-                ],
-              })
-            )
-          );
-          break;
+          failStream(controller);
+          removeInputAbortListener();
+          void contentIterator.return?.(undefined).catch(() => undefined);
+          return;
         }
 
         if (chunk.thinking) {
           controller.enqueue(
             encoder.encode(
-              sseChunk({
-                id: cid,
-                object: "chat.completion.chunk",
-                created,
-                model,
-                system_fingerprint: null,
-                choices: [
-                  {
-                    index: 0,
-                    delta: { reasoning_content: chunk.thinking + "\n" },
-                    finish_reason: null,
-                    logprobs: null,
-                  },
-                ],
-              })
+              takeAssistantRoleChunk() +
+                sseChunk({
+                  id: cid,
+                  object: "chat.completion.chunk",
+                  created,
+                  model,
+                  system_fingerprint: null,
+                  choices: [
+                    {
+                      index: 0,
+                      delta: { reasoning_content: chunk.thinking + "\n" },
+                      finish_reason: null,
+                      logprobs: null,
+                    },
+                  ],
+                })
             )
           );
-          continue;
+          return;
         }
 
         if (chunk.done) {
           fullAnswer = chunk.answer || fullAnswer;
-          break;
+          completeStream(controller);
+          await contentIterator.return?.(undefined);
+          return;
         }
 
         let dt = chunk.delta || "";
@@ -298,128 +277,68 @@ function buildStreamingResponse(
           if (dt) {
             controller.enqueue(
               encoder.encode(
-                sseChunk({
-                  id: cid,
-                  object: "chat.completion.chunk",
-                  created,
-                  model,
-                  system_fingerprint: null,
-                  choices: [
-                    { index: 0, delta: { content: dt }, finish_reason: null, logprobs: null },
-                  ],
-                })
+                takeAssistantRoleChunk() +
+                  sseChunk({
+                    id: cid,
+                    object: "chat.completion.chunk",
+                    created,
+                    model,
+                    system_fingerprint: null,
+                    choices: [
+                      { index: 0, delta: { content: dt }, finish_reason: null, logprobs: null },
+                    ],
+                  })
               )
             );
           }
         }
         if (chunk.answer) fullAnswer = chunk.answer;
-      }
-      if (cancelled) return;
-
-      // Stop chunk
-      controller.enqueue(
-        encoder.encode(
-          sseChunk({
-            id: cid,
-            object: "chat.completion.chunk",
-            created,
-            model,
-            system_fingerprint: null,
-            choices: [{ index: 0, delta: {}, finish_reason: "stop", logprobs: null }],
-          })
-        )
-      );
-      controller.enqueue(encoder.encode("data: [DONE]\n\n"));
-
-      sessionStore(history, currentMsg, cleanResponse(fullAnswer), respBackendUuid);
-    } catch (err) {
-      if (cancelled) return;
-      controller.enqueue(
-        encoder.encode(
-          sseChunk({
-            id: cid,
-            object: "chat.completion.chunk",
-            created,
-            model,
-            system_fingerprint: null,
-            choices: [
-              {
-                index: 0,
-                delta: {
-                  content: `[Stream error: ${sanitizePerplexityUpstreamError(err)}]`,
-                },
-                finish_reason: "stop",
-                logprobs: null,
-              },
-            ],
-          })
-        )
-      );
-      controller.enqueue(encoder.encode("data: [DONE]\n\n"));
-    } finally {
-      try {
-        controller.close();
       } catch {
-        // Consumer cancellation or an already-closed stream must not replace the terminal outcome.
+        failStream(controller);
+        removeInputAbortListener();
+        void contentIterator.return?.(undefined).catch(() => undefined);
       }
-    }
-  };
-
-  const stream = new ReadableStream(
-    {
-      start(controller) {
-        // The pump must not own start(): cancellation is unavailable until start() settles.
-        void pump(controller);
-      },
-      async cancel(reason) {
-        cancelled = true;
-        onCancel?.(reason);
-        try {
-          await contentIterator.return?.(undefined);
-        } catch {
-          // Upstream cleanup cannot replace the caller's already-selected cancellation outcome.
-        }
-      },
     },
-    { highWaterMark: 16384 }
-  );
-  return new Response(stream, {
-    status: 200,
-    headers: {
-      "Content-Type": "text/event-stream",
-      "Cache-Control": "no-cache",
-      "X-Accel-Buffering": "no",
+
+    cancel(reason) {
+      finished = true;
+      abortEventStream(reason);
+      void contentIterator.return?.(undefined).catch(() => undefined);
     },
   });
-}
 
-function buildUpstreamErrorResponse(chunk: ContentChunk): Response {
-  // Quota exhaustion → 429 + reset_seconds so OmniRoute marks rate_limited_until
-  // and VibeProxy limit badges / rotation skip parse the same shape as model_cooldown.
-  const isQuota = isPerplexityQuotaError(chunk);
-  const resetSeconds =
-    typeof chunk.resetSeconds === "number" && chunk.resetSeconds > 0
-      ? chunk.resetSeconds
-      : isQuota
-        ? PPLX_ADVANCED_QUOTA_DEFAULT_RESET_SECONDS
-        : undefined;
-  const error: Record<string, unknown> = {
-    message: sanitizePerplexityUpstreamError(chunk.error),
-    type: isQuota ? "quota_exhausted" : "upstream_error",
-    code: toPublicPerplexityErrorCode(chunk.errorCode, isQuota),
-  };
-  if (resetSeconds !== undefined) error.reset_seconds = resetSeconds;
-  const headers: Record<string, string> = { "Content-Type": "application/json" };
-  if (resetSeconds !== undefined) headers["Retry-After"] = String(resetSeconds);
-  return new Response(JSON.stringify({ error }), { status: isQuota ? 429 : 502, headers });
-}
+  // Erroring the provider stream immediately would discard output buffered by the readiness
+  // handoff. Drain each provider chunk through a backpressure-aware reader, then reject only the
+  // read after the last legitimate chunk. The outer pipeline converts that fixed public error to
+  // the client's canonical terminal frame and records the stream failure.
+  const providerReader = providerStream.getReader();
+  let cancelled = false;
+  return new ReadableStream<Uint8Array>({
+    async pull(controller) {
+      try {
+        const next = await providerReader.read();
+        if (cancelled) return;
+        if (next.done === false) {
+          controller.enqueue(next.value);
+          return;
+        }
+        if (pendingFailure) {
+          controller.error(pendingFailure);
+          return;
+        }
+        controller.close();
+      } catch (error) {
+        if (!cancelled) controller.error(error);
+      }
+    },
 
-function isPerplexityQuotaError(chunk: ContentChunk): boolean {
-  return (
-    chunk.errorCode === "quota_exhausted" ||
-    /quota exhausted/i.test(chunk.error || "") ||
-    (typeof chunk.resetSeconds === "number" && chunk.resetSeconds > 0)
-  );
+    cancel(reason) {
+      if (cancelled) return;
+      cancelled = true;
+      abortEventStream(reason);
+      void providerReader.cancel(reason).catch(() => undefined);
+    },
+  });
 }
 
 async function buildNonStreamingResponse(
@@ -438,7 +357,28 @@ async function buildNonStreamingResponse(
   for await (const chunk of extractContent(eventStream, signal)) {
     if (chunk.backendUuid) respBackendUuid = chunk.backendUuid;
     if (chunk.error) {
-      return buildUpstreamErrorResponse(chunk);
+      // Quota exhaustion → 429 + reset_seconds so OmniRoute marks rate_limited_until
+      // and VibeProxy limit badges / rotation skip parse the same shape as model_cooldown.
+      const isQuota =
+        chunk.errorCode === "quota_exhausted" ||
+        /quota exhausted/i.test(chunk.error) ||
+        (typeof chunk.resetSeconds === "number" && chunk.resetSeconds > 0);
+      const status = isQuota ? 429 : 502;
+      const code = toPublicPerplexityErrorCode(chunk.errorCode, isQuota);
+      const type = isQuota ? "quota_exhausted" : "upstream_error";
+      const errBody: Record<string, unknown> = {
+        message: sanitizePerplexityUpstreamError(chunk.error),
+        type,
+        code,
+      };
+      if (typeof chunk.resetSeconds === "number" && chunk.resetSeconds > 0) {
+        errBody.reset_seconds = chunk.resetSeconds;
+      }
+      const respHeaders: Record<string, string> = { "Content-Type": "application/json" };
+      if (typeof chunk.resetSeconds === "number" && chunk.resetSeconds > 0) {
+        respHeaders["Retry-After"] = String(chunk.resetSeconds);
+      }
+      return new Response(JSON.stringify({ error: errBody }), { status, headers: respHeaders });
     }
     if (chunk.thinking) {
       thinkingParts.push(chunk.thinking);
@@ -493,8 +433,10 @@ async function persistRotatedSessionCookie(
       await onCredentialsRefreshed({ ...credentials, apiKey: refreshed });
     }
   } catch (err) {
-    const publicError = sanitizePerplexityUpstreamError(err);
-    log?.warn?.("PPLX-WEB", `Failed to persist refreshed cookie: ${publicError}`);
+    log?.warn?.(
+      "PPLX-WEB",
+      `Failed to persist refreshed cookie: ${err instanceof Error ? err.message : String(err)}`
+    );
   }
 }
 
@@ -557,7 +499,7 @@ export class PerplexityWebExecutor extends BaseExecutor {
     const parsed = parseOpenAIMessages(effectiveMessages);
     const followUpUuid = sessionLookup(parsed.history);
     if (followUpUuid) {
-      log?.info?.("PPLX-WEB", "Continuing existing session");
+      log?.info?.("PPLX-WEB", `Session continue: ${followUpUuid.slice(0, 12)}...`);
     }
 
     const query = buildQuery(parsed, followUpUuid);
@@ -624,15 +566,14 @@ export class PerplexityWebExecutor extends BaseExecutor {
         streamEofSymbol: PPLX_STREAM_EOF_SYMBOL,
       });
     } catch (err) {
-      const isTlsUnavail = isTlsClientUnavailableError(err);
-      const publicError = sanitizePerplexityUpstreamError(err);
-      log?.error?.("PPLX-WEB", `Fetch failed: ${publicError}`);
+      const isTlsUnavail = err instanceof TlsClientUnavailableError;
+      log?.error?.("PPLX-WEB", `Fetch failed: ${err instanceof Error ? err.message : String(err)}`);
       const errResp = new Response(
         JSON.stringify({
           error: {
             message: isTlsUnavail
-              ? `Perplexity TLS client unavailable: ${publicError}`
-              : `Perplexity connection failed: ${publicError}`,
+              ? `Perplexity TLS client unavailable: ${sanitizeErrorMessage((err as Error).message)}`
+              : `Perplexity connection failed: ${sanitizeErrorMessage(err instanceof Error ? err.message : String(err))}`,
             type: "upstream_error",
           },
         }),
@@ -648,7 +589,7 @@ export class PerplexityWebExecutor extends BaseExecutor {
         if (isCloudflareChallenge(response.text)) {
           errMsg =
             "Cloudflare blocked the request — Perplexity's edge rejected this server's TLS fingerprint " +
-            "(common on VPS/datacenter IPs). Ensure tls-client-node is installed with its native binary, " +
+            "(common on VPS/datacenter IPs). Verify the wreq-js 3.2 native binding, " +
             "or route perplexity-web through a residential proxy.";
           log?.error?.("PPLX-WEB", "Cloudflare challenge detected — TLS bypass failed");
         } else {
@@ -710,7 +651,7 @@ export class PerplexityWebExecutor extends BaseExecutor {
     }
 
     // Surface any rotated session-token back to the caller so the DB credential
-    // is refreshed — mirrors chatgpt-web.ts exchangeSession + onCredentialsRefreshed.
+    // is refreshed — mirrors the shared web-session refresh contract.
     if (cookieBlob) {
       await persistRotatedSessionCookie(
         cookieBlob,
@@ -727,7 +668,7 @@ export class PerplexityWebExecutor extends BaseExecutor {
 
     // Tool mode buffers the full completion (no live token streaming) and
     // converts <tool> text into real tool_calls — even when the caller asked
-    // for a streaming response — mirroring chatgpt-web's toolMode (#5240,
+    // for a streaming response — mirroring the shared tool-mode contract (#5240,
     // #5927). Without this, streaming requests (the default for agentic
     // coding clients) never emitted a tool_calls SSE delta.
     let finalResponse: Response;
@@ -748,36 +689,23 @@ export class PerplexityWebExecutor extends BaseExecutor {
         idSeed: "pplx",
       });
     } else if (stream) {
-      const contentAbortController = new AbortController();
-      const contentSignal = signal
-        ? AbortSignal.any([signal, contentAbortController.signal])
-        : contentAbortController.signal;
-      const contentChunks = extractContent(response.body, contentSignal);
-      try {
-        const preflight = await preflightContentChunks(contentChunks);
-        if (preflight.quotaError) {
-          finalResponse = buildUpstreamErrorResponse(preflight.quotaError);
-        } else {
-          finalResponse = buildStreamingResponse(
-            preflight.contentChunks as AsyncIterable<ContentChunk>,
-            model,
-            cid,
-            created,
-            parsed.history,
-            parsed.currentMsg,
-            (reason) => contentAbortController.abort(reason)
-          );
-        }
-      } catch (err) {
-        finalResponse = buildStreamingResponse(
-          throwContentError(err),
-          model,
-          cid,
-          created,
-          parsed.history,
-          parsed.currentMsg
-        );
-      }
+      const sseStream = buildStreamingResponse(
+        response.body,
+        model,
+        cid,
+        created,
+        parsed.history,
+        parsed.currentMsg,
+        signal
+      );
+      finalResponse = new Response(sseStream, {
+        status: 200,
+        headers: {
+          "Content-Type": "text/event-stream",
+          "Cache-Control": "no-cache",
+          "X-Accel-Buffering": "no",
+        },
+      });
     } else {
       finalResponse = await buildNonStreamingResponse(
         response.body,

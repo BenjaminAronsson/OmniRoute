@@ -75,6 +75,23 @@ test("createStreamingErrorResult attaches optional code and type", async () => {
   assert.equal(json.error.type, "rate_limit_error");
 });
 
+test("createStreamingErrorResult sanitizes code and type at the SSE boundary", async () => {
+  const result = createStreamingErrorResult(
+    502,
+    "upstream failed",
+    "sk-live-secret-value",
+    "server_error\nX-Leak: yes"
+  );
+  const body = await result.response.text();
+  const json = JSON.parse(body.slice("data: ".length, body.indexOf("\n\n"))) as {
+    error: { code: string; type: string };
+  };
+
+  assert.equal(json.error.code, "bad_gateway");
+  assert.equal(json.error.type, "server_error");
+  assert.doesNotMatch(body, /sk-live-secret-value|X-Leak/);
+});
+
 test("createStreamingErrorResult sanitizes message, code, and type at the SSE boundary", async () => {
   const secret = "STREAM_RESULT_SECRET";
   const result = createStreamingErrorResult(
@@ -135,4 +152,27 @@ test("getUpstreamErrorIdentifier returns a non-empty string code or undefined", 
   const safeAbort = createSafeAbortError();
   assert.equal(safeAbort.name, "AbortError");
   assert.equal(safeAbort.message, "Request aborted");
+});
+
+test("non-streaming runNonStreamingProviderLeg is inside a try that maps semaphore errors", async () => {
+  const fs = await import("node:fs");
+  const src = fs.readFileSync("open-sse/handlers/chatCore.ts", "utf8");
+  // `let`, not `const`, since 6077b9dd (#12867) made the finalization step reassign
+  // legResult. The guard is about the try/catch that wraps the call, not the keyword.
+  const idx = src.search(/(?:const|let) legResult = await runNonStreamingProviderLeg/);
+  assert.ok(idx >= 0, "non-streaming branch must exist");
+  const start = src.lastIndexOf("if (!stream)", idx);
+  const end = src.indexOf("// Streaming response", idx);
+  assert.ok(start >= 0 && end > start, "non-stream block bounds");
+  const block = src.slice(start, end);
+  assert.match(
+    block,
+    /try\s*\{[\s\S]*runNonStreamingProviderLeg/,
+    "non-stream leg must sit in a try so SEMAPHORE_TIMEOUT cannot escape handleChatCore"
+  );
+  assert.match(
+    block,
+    /isSemaphoreCapacityError/,
+    "same catch that maps stream semaphore errors must cover the non-stream leg"
+  );
 });

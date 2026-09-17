@@ -4,6 +4,7 @@ import {
   replaceSyncedAvailableModelsForConnection,
   type SyncedAvailableModel,
 } from "@/lib/db/models";
+import type { VertexModelMetadataProvenance } from "@/lib/providerModels/vertexModelMetadata";
 import { CANONICAL_EFFORT_VALUES } from "@/shared/reasoning/effortStandardization";
 import { isObsoleteKiroModelAlias } from "@omniroute/open-sse/services/kiroModels.ts";
 import { filterSelectableModels } from "@omniroute/open-sse/services/modelLifecycle.ts";
@@ -102,7 +103,7 @@ const thinkingLevelsSchema = z.object({ thinking: z.object({ levels: z.unknown()
 // (`src/shared/reasoning/effortStandardization.ts`). Values already in
 // `CANONICAL_EFFORT_VALUES`, and any unrecognized provider-native tier (e.g.
 // Codex's own "ultra"), pass through unchanged — only known synonyms are mapped.
-const EFFORT_SYNONYMS: Record<string, string> = { max: "xhigh" };
+const EFFORT_SYNONYMS: Record<string, string> = { extra: "xhigh" };
 
 // CrofAI's live `/v1/models` exposes a boolean reasoning capability rather than
 // the supported tiers. Keep this provider-specific fallback explicit so the same
@@ -306,15 +307,19 @@ export function normalizeDiscoveredModels(
 
     const topProvider = asRecord(record.top_provider);
 
-    // OpenRouter (and similar passthrough catalogs) report the context window as
-    // `context_length` / `top_provider.context_length`, not `inputTokenLimit`.
-    // Fall back across those names so synced models carry a real window instead
-    // of the provider default (128K). Explicit `inputTokenLimit` still wins. #3202
-    const inputTokenLimit = firstPositiveNumber(
-      record.inputTokenLimit,
+    // Keep the total context window distinct from an explicit maximum-input limit. Existing
+    // providers historically stored context_length as inputTokenLimit, so retain that compatibility
+    // outside Vertex while persisting the separate contextWindow field for new consumers.
+    const contextWindow = firstPositiveNumber(
       record.context_length,
       record.contextLength,
+      record.contextWindow,
       topProvider.context_length
+    );
+    const isVertexProvider = providerId === "vertex" || providerId === "vertex-partner";
+    const inputTokenLimit = firstPositiveNumber(
+      record.inputTokenLimit,
+      ...(isVertexProvider ? [] : [contextWindow])
     );
     const outputTokenLimit = firstPositiveNumber(
       record.outputTokenLimit,
@@ -346,7 +351,14 @@ export function normalizeDiscoveredModels(
       ...(supportedThinkingEfforts !== undefined ? { supportedThinkingEfforts } : {}),
       ...(defaultThinkingEffort !== undefined ? { defaultThinkingEffort } : {}),
       ...(typeof inputTokenLimit === "number" ? { inputTokenLimit } : {}),
+      ...(isVertexProvider && typeof contextWindow === "number" ? { contextWindow } : {}),
       ...(typeof outputTokenLimit === "number" ? { outputTokenLimit } : {}),
+      // The narrowed `object` is not assignable to VertexModelMetadataProvenance; the
+      // read path (src/lib/db/models/synced.ts) casts the same field the same way, so
+      // keep both sides of the round-trip identical rather than only one of them typed.
+      ...(record.metadataProvenance && typeof record.metadataProvenance === "object"
+        ? { metadataProvenance: record.metadataProvenance as VertexModelMetadataProvenance }
+        : {}),
       ...(typeof record.description === "string" ? { description: record.description } : {}),
       ...(typeof record.supportsThinking === "boolean"
         ? { supportsThinking: record.supportsThinking }

@@ -22,7 +22,7 @@
  * chunk — safer than assuming unverified incremental-delta semantics.
  *
  * Auth: Cookie-based (token_v2 [+ optional space_id, notion_browser_id, user_id])
- * Method: Browser-TLS impersonation via tls-client-node (Chrome JA3). Plain
+ * Method: Browser-TLS impersonation via pinned wreq-js (Chrome JA3/JA4). Plain
  * Node/undici fetch is rejected by Notion's edge with in-band
  * `temporarily-unavailable` (HTTP 200, empty assistant text) — curl/Schannel
  * and Chrome work with the same cookie + body. See services/notionTlsClient.ts.
@@ -62,7 +62,7 @@ import {
   buildNotionTranscript,
   type NotionAgentOptions,
 } from "../services/notionTranscriptBuilder.ts";
-import { tlsFetchNotion, TlsClientUnavailableError } from "../services/notionTlsClient.ts";
+import { tlsFetchNotion } from "../services/notionTlsClient.ts";
 
 // Re-exported for unit tests that destructure `mod.<name>` on this module.
 export {
@@ -313,15 +313,6 @@ function clientFacingModelId(model: unknown): string {
   return clientFacingModel;
 }
 
-function isTlsClientUnavailableError(error: unknown): error is TlsClientUnavailableError {
-  try {
-    return error instanceof TlsClientUnavailableError;
-  } catch {
-    // A rejected Proxy may throw while instanceof walks its prototype chain.
-    return false;
-  }
-}
-
 function sanitizeNotionTransportError(error: unknown): string {
   let candidate = error;
   try {
@@ -523,38 +514,17 @@ async function sendNotionInferenceRequest(opts: {
     status = tlsRes.status;
     rawText = tlsRes.text ?? "";
   } catch (err) {
-    if (isTlsClientUnavailableError(err)) {
-      // Fall back to plain fetch only when the native TLS sidecar is missing —
-      // better a degraded path than a hard crash on platforms without the binary.
-      try {
-        const upstream = await fetch(NOTION_URL, {
-          method: "POST",
-          headers: reqHeaders,
-          body: JSON.stringify(reqBody),
-          signal: signal ?? undefined,
-        });
-        status = upstream.status;
-        rawText = await upstream.text().catch(() => "");
-      } catch (fallbackErr) {
-        return {
-          errorResult: makeErrorResult(
-            502,
-            `Notion fetch failed: ${sanitizeNotionTransportError(fallbackErr)}`,
-            reqBody,
-            NOTION_URL
-          ),
-        };
-      }
-    } else {
-      return {
-        errorResult: makeErrorResult(
-          502,
-          `Notion fetch failed: ${sanitizeNotionTransportError(err)}`,
-          reqBody,
-          NOTION_URL
-        ),
-      };
-    }
+    // Fail closed: plain fetch would bypass the resolved proxy and Notion rejects
+    // undici's fingerprint anyway. A missing native binding is a packaging error,
+    // not permission to leak a direct request.
+    return {
+      errorResult: makeErrorResult(
+        502,
+        `Notion fetch failed: ${sanitizeNotionTransportError(err)}`,
+        reqBody,
+        NOTION_URL
+      ),
+    };
   }
 
   if (status === 401 || status === 403) {

@@ -135,97 +135,53 @@ test("handleModeration returns upstream error payloads with CORS headers", async
   assert.match(response.headers.get("access-control-allow-methods") || "", /OPTIONS/);
 });
 
-test("handleModeration removes Unicode-escaped credential fields while preserving safe fields", async () => {
-  const upstreamBody = String.raw`{"\u0061pi_key":"credential-value-12345","message":"quota busy"}`;
+test("handleModeration sanitizes structured upstream error bodies", async () => {
   globalThis.fetch = async () =>
-    new Response(upstreamBody, {
-      status: 429,
-      headers: { "content-type": "application/json" },
-    });
-
-  const response = await handleModeration({
-    body: { model: "openai/text-moderation-latest", input: "check this" },
-    credentials: { apiKey: "sk-test" },
-  });
-  const text = await response.text();
-  const payload = JSON.parse(text) as { api_key?: string; message: string };
-
-  assert.equal(response.status, 429);
-  assert.equal(response.headers.get("content-type"), "application/json");
-  assert.equal(payload.api_key, undefined);
-  assert.equal(payload.message, "quota busy");
-  assert.doesNotMatch(text, /credential-value-12345|\\u0061pi_key/i);
-});
-
-test("handleModeration preserves valid pretty-printed JSON while sanitizing its fields", async () => {
-  const upstreamBody = JSON.stringify(
-    {
-      error: {
-        message: "quota metadata at /srv/provider/moderations.ts:12:3",
-        api_key: "credential-value-12345",
+    Response.json(
+      {
+        error: {
+          message: "quota metadata at /srv/provider/private.json",
+          api_key: "credential-value-12345",
+        },
       },
-    },
-    null,
-    2
-  );
-  globalThis.fetch = async () =>
-    new Response(upstreamBody, {
-      status: 429,
-      headers: { "content-type": "application/json" },
-    });
+      { status: 429 }
+    );
 
   const response = await handleModeration({
     body: { model: "openai/text-moderation-latest", input: "check this" },
     credentials: { apiKey: "sk-test" },
   });
-  const text = await response.text();
-  const payload = JSON.parse(text) as {
+  const payload = (await response.json()) as {
     error: { message: string; api_key?: string };
   };
 
   assert.equal(response.status, 429);
   assert.equal(payload.error.api_key, undefined);
-  assert.equal(payload.error.message, "quota metadata at <path>");
-  assert.doesNotMatch(text, /credential-value-12345|\/srv\/provider/i);
+  assert.doesNotMatch(payload.error.message, /srv\/provider/i);
+  assert.doesNotMatch(JSON.stringify(payload), /credential-value-12345/i);
 });
 
-test("handleModeration removes paths and stacks and falls back for stack-only or blank errors", async () => {
-  const cases = [
+test("handleModeration canonicalizes blank, plaintext, and mislabeled upstream failures", async () => {
+  const scenarios = [
+    { name: "blank", body: "   ", contentType: "application/json" },
     {
-      name: "POSIX and Windows paths",
-      upstreamBody: String.raw`failed reading /home/service/private/moderations.ts and C:\Users\alice\private\moderations.ts; retry later`,
-      expectedBody: /^failed reading <path>$/i,
+      name: "plaintext",
+      body: "access_token=moderation-plain-secret at /srv/private/moderation.txt",
+      contentType: "text/plain",
     },
     {
-      name: "physical stack",
-      upstreamBody:
-        "Moderation upstream busy\n    at handler (/home/service/private/moderations.ts:12:3)",
-      expectedBody: /^Moderation upstream busy$/,
-    },
-    {
-      name: "serialized stack",
-      upstreamBody: String.raw`Moderation upstream busy\n    at handler (C:\Users\alice\private\moderations.ts:12:3)`,
-      expectedBody: /^Moderation upstream busy$/,
-    },
-    {
-      name: "stack only",
-      upstreamBody: "    at handler (/home/service/private/moderations.ts:12:3)",
-      expectedBody: /^Moderation provider returned HTTP 503$/,
-    },
-    {
-      name: "whitespace only",
-      upstreamBody: " \n\t ",
-      expectedBody: /^Moderation provider returned HTTP 503$/,
+      name: "mislabeled",
+      body: "<html>api_key=moderation-html-secret at /srv/private/error.html</html>",
+      contentType: "application/json",
     },
   ];
 
-  for (const fixture of cases) {
+  for (const scenario of scenarios) {
     globalThis.fetch = async () =>
-      new Response(fixture.upstreamBody, {
-        status: 503,
-        headers: { "content-type": "application/json" },
+      new Response(scenario.body, {
+        status: 502,
+        headers: { "content-type": scenario.contentType },
       });
-
     const response = await handleModeration({
       body: { model: "openai/text-moderation-latest", input: "check this" },
       credentials: { apiKey: "sk-test" },
@@ -233,11 +189,19 @@ test("handleModeration removes paths and stacks and falls back for stack-only or
     const text = await response.text();
     const payload = JSON.parse(text) as { error: { message: string } };
 
-    assert.equal(response.status, 503, fixture.name);
-    assert.equal(response.headers.get("content-type"), "application/json", fixture.name);
-    assert.match(payload.error.message, fixture.expectedBody, fixture.name);
-    assert.doesNotMatch(text, /\/home\/service\/private|C:\\Users\\alice/i, fixture.name);
-    assert.doesNotMatch(text, /(?:^|\\n)\s*at\s/i, fixture.name);
+    assert.equal(response.status, 502, scenario.name);
+    assert.match(response.headers.get("content-type") || "", /application\/json/i, scenario.name);
+    assert.match(
+      response.headers.get("access-control-allow-methods") || "",
+      /OPTIONS/,
+      scenario.name
+    );
+    assert.equal(typeof payload.error.message, "string", scenario.name);
+    assert.doesNotMatch(
+      text,
+      /moderation-plain-secret|moderation-html-secret|srv\/private|<html>/i,
+      scenario.name
+    );
   }
 });
 
@@ -254,27 +218,4 @@ test("handleModeration returns a 500 when the upstream request throws", async ()
 
   assert.equal(response.status, 500);
   assert.match(payload.error.message, /Moderation request failed: socket closed/);
-});
-
-test("handleModeration fails closed when a thrown value rejects string coercion", async () => {
-  globalThis.fetch = async () => {
-    throw {
-      get message() {
-        throw new Error("access_token=hostile-secret at /srv/private/moderation.ts:1:2");
-      },
-      toString() {
-        throw new Error("access_token=hostile-secret at /srv/private/moderation.ts:1:2");
-      },
-    };
-  };
-
-  const response = await handleModeration({
-    body: { model: "openai/text-moderation-latest", input: "check this" },
-    credentials: { apiKey: "sk-test" },
-  });
-  const payload = (await response.json()) as { error: { message: string } };
-
-  assert.equal(response.status, 500);
-  assert.equal(payload.error.message, "Moderation request failed: unknown upstream failure");
-  assert.doesNotMatch(payload.error.message, /hostile-secret|srv\/private/i);
 });

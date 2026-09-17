@@ -1,4 +1,4 @@
-import { buildErrorBody, sanitizeErrorMessage, sanitizeUpstreamDetails } from "./error.ts";
+import { buildErrorBody, sanitizeUpstreamDetails } from "./error.ts";
 
 interface SanitizedUpstreamErrorResponseOptions {
   status: number;
@@ -36,11 +36,10 @@ export function buildSanitizedUpstreamErrorResponse({
     }
   }
 
-  const safeMessage =
-    sanitizeErrorMessage(`Upstream error: ${trimmedBody}`)
-      .replace(/^Upstream error:\s*/, "")
-      .trim() || fallbackMessage;
-  return new Response(JSON.stringify(buildErrorBody(status, safeMessage)), {
+  // Non-JSON is an opaque upstream body. Do not echo even sanitized fragments:
+  // provider HTML/plaintext can contain credentials or implementation details
+  // outside the patterns the canonical sanitizer knows about.
+  return new Response(JSON.stringify(buildErrorBody(status, fallbackMessage)), {
     status,
     headers: { ...headers, "Content-Type": "application/json" },
   });

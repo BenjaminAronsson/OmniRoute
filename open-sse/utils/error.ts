@@ -1,7 +1,6 @@
 import { CORS_HEADERS } from "./cors.ts";
 import { unwrapClinepassEnvelope } from "./clinepassEnvelope.ts";
 import {
-  containsStrongCredentialToken,
   redactSensitiveErrorText,
   sanitizeErrorMessage,
   sanitizeUpstreamDetails,
@@ -10,6 +9,7 @@ import { getDefaultErrorMessage, getErrorInfo } from "../config/errorConfig.ts";
 import { normalizePayloadForLog } from "@/lib/logPayloads";
 import type { ModelCooldownErrorPayload } from "@/types";
 import { buildPassthroughErrorResponse } from "./upstreamErrorPassthrough.ts";
+import { isFeatureFlagEnabled } from "@/shared/utils/featureFlags";
 
 export { redactSensitiveErrorText, sanitizeErrorMessage, sanitizeUpstreamDetails };
 
@@ -19,6 +19,7 @@ interface ErrorResponseBody {
     message: string;
     type?: string;
     code?: string;
+    reason?: string;
   };
   upstream_details?: Record<string, unknown> | null; // sanitized upstream provider body
 }
@@ -27,113 +28,327 @@ interface ErrorResponseBody {
 export type ErrorBodyClassification = {
   type?: string;
   code?: string;
+  reason?: string;
 };
 
 const PUBLIC_ERROR_IDENTIFIER = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/;
-const SAFE_PUBLIC_CREDENTIAL_ERROR_IDENTIFIERS = new Set([
+const SAFE_PUBLIC_ERROR_IDENTIFIERS = new Set([
+  "abort",
+  "aborted",
+  "account_semaphore_capacity",
+  "acp_cancelled",
+  "acp_early_exit",
+  "acp_error",
+  "acp_output_too_large",
   "acp_session_mismatch",
-  "access_token_missing",
-  "access_token_required",
-  "api_key_invalid",
-  "authorization_code",
-  "authorization_code_pkce",
-  "authorization_endpoint",
-  "authorization_failed",
-  "authorization_pending",
-  "bearer_error",
-  "bearer_expired",
-  "bearer_invalid",
-  "bearer_required",
-  "client_secret_missing",
-  "codex_credentials_unavailable",
-  "codex_access_token_missing",
-  "codex_oauth_token_missing",
-  "expired_token",
-  "cursor_session_stale",
-  "github_access_token_invalid",
-  "github_token_expired",
+  "acp_timeout",
+  "admission_aborted",
+  "admission_deadline",
+  "admission_lane_evicted",
+  "admission_oversized",
+  "admission_queue_full",
+  "admission_shutdown",
+  "admission_unavailable",
+  "all_accounts_inactive",
+  "all_targets_skipped",
+  "antigravity_pre_response_timeout",
+  "api_error",
+  "auth_error",
+  "authentication_error",
+  "authentication_required",
+  "bad_gateway",
+  "bad_request",
+  "bedrock_stream_error",
+  "billing_error",
+  "blackbox_auth_required",
+  "blackbox_rate_limit",
+  "blackbox_subscription_required",
+  "body_exceeds_budget",
+  "browser_stream_inconsistent",
+  "capability_mismatch",
+  "cf_mitigated_challenge",
+  "chat_admission_busy",
+  "chat_history_too_large",
+  "chatgpt_session_expired",
+  "chatgpt_submission_ambiguous",
+  "chatgpt_submitted_turn_failed",
+  "chatgpt_subscription_unavailable",
+  "chatgpt_web_codex_error",
+  "chatgpt_web_codex_turn_failed",
+  "claude_web_protocol_error",
+  "cli_not_found",
+  "client_cancelled",
+  "client_closed_request",
+  "client_disconnected",
+  "cloudflare_challenge",
+  "cloudflare_or_bot",
+  "codex_app_server_turn_failed",
+  "codex_app_server_unconfigured",
+  "codex_scope_cooldown",
+  "codex_tool_timeout",
+  "combo_target_timeout",
+  "combo_timeout",
+  "compaction_control_unavailable",
+  "compaction_handoff_failed",
+  "compaction_source_unavailable",
+  "connection_cooldown",
+  "connection_error",
+  "connection_not_allowed",
+  "connection_terminal_status",
+  "connection_unavailable",
+  "connector_error",
+  "connector_not_found",
+  "context_length_exceeded",
+  "context_window",
+  "devin_agentic_error",
+  "devin_cli_error",
+  "devin_desktop_error",
+  "devin_internal_tool_execution",
+  "direct_response_start_timeout",
+  "duplicate_tool_use_id",
+  "eai_again",
+  "econnrefused",
+  "econnreset",
+  "empty_acp_output",
+  "empty_content",
+  "empty_messages",
+  "empty_response",
+  "error",
+  "etimedout",
+  "executor_contract_violation",
+  "executor_error",
+  "extract_failed",
+  "feature_disabled",
+  "file_too_large",
+  "gateway_timeout",
+  "gcp_project_required",
+  "gemini_tpm_exhausted",
+  "grok_error",
+  "heap_pressure",
+  "huggingchat_generation_error",
+  "incompatible_reasoning_effort",
+  "inspector_error",
+  "insufficient_quota",
+  "internal_server_error",
+  "invalid_acp_frame",
+  "invalid_acp_upstream",
   "invalid_api_key",
-  "invalid_password",
-  "invalid_token",
-  "invalid_token_response",
+  "invalid_authentication",
+  "invalid_connection_id",
+  "invalid_grant",
+  "invalid_json",
+  "invalid_kiro_tool_call",
+  "invalid_output_schema",
+  "invalid_previous_response_binding",
+  "invalid_provider",
+  "invalid_request",
+  "invalid_request_body",
+  "invalid_request_error",
+  "invalid_tool_arguments",
+  "invalid_tool_choice",
+  "invalid_tool_json",
+  "invalid_tool_name",
+  "invalid_tools",
+  "invalid_trailer",
+  "lease_action_invalid",
   "lease_api_key_invalid",
+  "lease_authentication_required",
   "lease_authorization_mismatch",
-  "missing_access_token",
-  "missing_api_key",
+  "lease_capacity_unavailable",
+  "lease_connection_mismatch",
+  "lease_content_type_required",
+  "lease_context_invalid",
+  "lease_context_required",
+  "lease_eligibility_unavailable",
+  "lease_error",
+  "lease_fence_stale",
+  "lease_key_configuration_invalid",
+  "lease_key_policy_invalid",
+  "lease_model_invalid",
+  "lease_no_eligible_connection",
+  "lease_required",
+  "lease_scope_required",
+  "lease_service_unavailable",
+  "lease_unsupported_route",
+  "lease_unsupported_transport",
+  "lmarena_error",
+  "lmarena_stream_error",
+  "message_limit",
+  "meta_ai_empty_response",
+  "meta_ai_mode_switch_failed",
+  "meta_ai_warmup_failed",
+  "meta_ai_ws_error",
   "missing_authorization",
   "missing_cookie",
-  "missing_id_token",
-  "missing_refresh_token",
   "missing_credentials",
+  "missing_credits",
+  "missing_project_id",
   "missing_session_id",
+  "missing_tool_name",
+  "missing_tool_use_id",
+  "mixed_tool_narrative",
+  "model_cooldown",
+  "model_excluded",
+  "model_lockout",
+  "model_not_found",
+  "model_not_supported",
+  "model_shutdown",
+  "multipart_protocol_violation",
+  "multiple_tool_requests",
+  "native_codex_pinned_model_unavailable",
+  "network_error",
+  "no_active_connection",
+  "no_free_eligible_connection",
+  "no_local_login",
   "no_refresh_token",
-  "no_access_token",
-  "no_credentials",
-  "oauth_invalid_token",
-  "password_mismatch",
-  "password_required",
-  "provider_bearer_error",
-  "provider_token_expired",
-  "refresh_token_invalid",
-  "refresh_token_invalidated",
-  "refresh_token_reused",
+  "not_found",
+  "oauth_missing_project_id",
+  "origin_rejected",
+  "orphan_tool_result",
+  "payload_too_large",
+  "payment_required",
+  "peer_hop_limit_exceeded",
+  "peer_loop_detected",
+  "permission_denied",
+  "permission_error",
+  "pplx_error",
+  "premium_model_requires_key",
+  "previous_response_not_found",
+  "prompt_attachment_integrity",
+  "provider_circuit_half_open",
+  "provider_circuit_open",
+  "provider_deprecated",
+  "provider_error",
+  "provider_retired",
+  "provider_unavailable",
+  "proxy_family_unavailable",
+  "proxy_request_failed",
+  "proxy_unavailable",
+  "proxy_unreachable",
+  "quota_exhausted",
+  "quota_not_allocated",
+  "quota_only",
+  "rate_limit_error",
+  "rate_limit_exceeded",
+  "rate_limit_execution_timeout",
+  "rate_limit_longer_reached",
+  "rate_limit_queue_full",
+  "rate_limit_queue_timeout",
+  "rate_limit_queue_wedged",
+  "rate_limit_reached",
+  "rate_limited",
+  "reached_limit",
+  "read_failed",
+  "relay_timeout",
+  "request_failed",
+  "resource_exhausted",
+  "resource_pressure",
   "risk_session_stale",
+  "semaphore_queue_full",
+  "semaphore_timeout",
+  "server_error",
+  "server_is_overloaded",
+  "service_not_running",
+  "service_unavailable",
   "session_expired",
   "session_pool_exhausted",
-  "token_expired",
-  "token_health_check",
-  "token_limit_exceeded",
-  "token_refresh_failed",
-  "token_refresh_transient",
-  "token_required",
+  "spawn_failed",
+  "storage_encryption_stale",
+  "stream_disconnected",
+  "stream_early_eof",
+  "stream_error",
+  "stream_idle_timeout",
+  "stream_pipeline_error",
+  "stream_readiness_timeout",
+  "stream_terminated",
+  "stream_timeout",
+  "structure_limit",
+  "structured_output",
+  "structured_output_validation_failed",
+  "subscription_required",
+  "timeout",
+  "timeout_error",
+  "tls_circuit_open",
+  "tls_client_unavailable",
+  "tls_fingerprint_failed",
   "tls_session_capacity",
-  "token_type",
-  "token_usage",
+  "token_limit_exceeded",
+  "token_required",
+  "tool_calling_not_supported",
+  "tools",
+  "uc_auth_error",
+  "uc_generation_failed",
+  "uc_message_limit_exceeded",
+  "uc_paywall_exceeded",
+  "uc_rate_limit_exceeded",
+  "uc_timeout",
+  "uc_upstream_error",
+  "unauthorized",
+  "unavailable",
+  "und_err_body_timeout",
+  "und_err_connect_timeout",
+  "und_err_headers_timeout",
+  "und_err_socket",
+  "undeclared_historical_tool",
+  "unexecuted_tool_intent",
+  "unexpected_acp_response",
+  "unknown_devin_model",
+  "unknown_route",
+  "unknown_tool",
+  "unsafe_devin_home",
+  "unsupported_acp_version",
+  "unsupported_content_block",
+  "unsupported_control_for_provider",
+  "unsupported_endpoint",
+  "unsupported_feature",
+  "unsupported_image_block",
+  "unsupported_media_type",
+  "unsupported_role",
+  "unsupported_runtime",
+  "unsupported_system_block",
+  "unverified_codex_client",
+  "upgrade_required",
+  "upstream_access_denied",
+  "upstream_auth_error",
+  "upstream_empty_response",
+  "upstream_error",
+  "upstream_protocol_error",
+  "upstream_response_error",
+  "upstream_response_failed",
+  "upstream_server_error",
+  "upstream_timeout",
+  "upstream_websocket_connect_failed",
+  "upstream_websocket_error",
+  "usage_limit_reached",
+  "video_artifact_content_type_invalid",
+  "video_artifact_download_failed",
+  "video_artifact_not_ready",
+  "video_artifact_signature_invalid",
+  "video_artifact_too_large",
+  "video_artifact_unavailable",
+  "video_artifact_url_blocked",
+  "video_artifact_url_invalid",
+  "vision",
+  "wreq_unavailable",
+  "writes_disabled",
+  "zai_stream_error",
 ]);
-const SAFE_PUBLIC_CREDENTIAL_LEXICAL_IDENTIFIERS = new Set([
-  "passwordless",
-  "passwordless_auth_required",
-  "passwordless_error",
-  "tokenization_error",
-  "tokenizer_error",
-]);
-const PUBLIC_ERROR_CREDENTIAL_MARKERS = [
-  "accesstoken",
-  "refreshtoken",
-  "apikey",
-  "privatekey",
-  "sessionkey",
-  "encryptionkey",
-  "secretkey",
-  "signingkey",
-  "sessionid",
-  "cfclearance",
-  "credential",
-  "authorization",
-  "password",
-  "secret",
-  "bearer",
-  "cookie",
-  "token",
-  "session",
-  "ssorw",
-  "sso",
-] as const;
 
 function isSafePublicErrorIdentifier(value: string): boolean {
   if (!PUBLIC_ERROR_IDENTIFIER.test(value)) return false;
-  const lowerValue = value.toLowerCase();
-  if (SAFE_PUBLIC_CREDENTIAL_ERROR_IDENTIFIERS.has(lowerValue)) return true;
-  if (SAFE_PUBLIC_CREDENTIAL_LEXICAL_IDENTIFIERS.has(lowerValue)) return true;
-  if (containsStrongCredentialToken(value)) return false;
-  const compactValue = lowerValue.replace(/[._-]+/g, "");
-  return !PUBLIC_ERROR_CREDENTIAL_MARKERS.some((marker) => compactValue.includes(marker));
+  if (/^[1-5]\d{2}$/.test(value)) return true;
+  if (/^HTTP_[1-5]\d{2}$/i.test(value)) return true;
+  return SAFE_PUBLIC_ERROR_IDENTIFIERS.has(value.toLowerCase());
 }
 
 /** Project an internal classification onto the bounded client-visible identifier vocabulary. */
 export function projectPublicErrorIdentifier(value: unknown, fallback: unknown): string {
   const safeFallback =
-    typeof fallback === "string" && isSafePublicErrorIdentifier(fallback) ? fallback : "error";
+    fallback === ""
+      ? ""
+      : typeof fallback === "string" && isSafePublicErrorIdentifier(fallback)
+        ? fallback
+        : "error";
   if (typeof value !== "string") return safeFallback;
   return isSafePublicErrorIdentifier(value) ? value : safeFallback;
 }
@@ -154,12 +369,17 @@ export function buildErrorBody(
 ): ErrorResponseBody {
   const errorInfo = getErrorInfo(statusCode);
   const safeMessage = sanitizeErrorMessage(message) || getDefaultErrorMessage(statusCode);
+  const safeReason =
+    typeof classification?.reason === "string" && isSafePublicErrorIdentifier(classification.reason)
+      ? classification.reason
+      : undefined;
 
   const body: ErrorResponseBody = {
     error: {
       message: safeMessage,
       type: projectPublicErrorIdentifier(classification?.type, errorInfo.type),
       code: projectPublicErrorIdentifier(classification?.code, errorInfo.code),
+      reason: safeReason,
     },
   };
 
@@ -208,7 +428,7 @@ export interface ComboRecoveryHint {
   action: ComboRecoveryAction;
   /** Seconds the client should wait before retrying. Only meaningful when action="wait". */
   retry_after_seconds?: number;
-  /** Human-readable next step — included verbatim in the error body for non-MCP clients. */
+  /** Human-readable next step — sanitized and length-capped for non-MCP clients. */
   next_step: string;
 }
 
@@ -216,6 +436,11 @@ export interface ComboExclusion {
   provider: string;
   model?: string;
   reason: string;
+}
+/** #12659: one skip reason's targets, surfaced on an ALL_TARGETS_SKIPPED body. */
+export interface ComboSkippedTargetGroup {
+  reason: string;
+  targets: string[];
 }
 export interface ComboDiagnostics {
   poolSize: number;
@@ -225,18 +450,40 @@ export interface ComboDiagnostics {
   terminalReason: string;
   /** Optional next-step hint — populated when the dispatcher can recommend a recovery action. */
   recovery?: ComboRecoveryHint;
+  /**
+   * #12659: per-target skip reasons (e.g. `persisted_cooldown`) recorded on the
+   * decision trace but not captured by `excluded` (which only sources from
+   * exhaustedProviders/exhaustedConnections). Optional — populated only when
+   * the caller has a decision trace to summarize.
+   */
+  skippedTargets?: ComboSkippedTargetGroup[];
 }
 
 function clampDiagStr(v: unknown, max = 128): string {
   return typeof v === "string" ? sanitizeErrorMessage(v).slice(0, max) : "";
 }
 
+const RECOVERY_ROUTE_PLACEHOLDERS = [
+  ["/dashboard/providers", "OMNIROUTE_SAFE_DASHBOARD_PROVIDERS_ROUTE"],
+] as const;
+
+function clampRecoveryStr(value: unknown, max: number): string {
+  if (typeof value !== "string") return "";
+  let projected = value;
+  for (const [route, placeholder] of RECOVERY_ROUTE_PLACEHOLDERS) {
+    projected = projected.replaceAll(route, placeholder);
+  }
+  projected = sanitizeErrorMessage(projected);
+  for (const [route, placeholder] of RECOVERY_ROUTE_PLACEHOLDERS) {
+    projected = projected.replaceAll(placeholder, route);
+  }
+  return projected.slice(0, max);
+}
+
 /**
  * HTTP header values must exclude controls and remain ByteString-compatible
  * (undici throws a TypeError otherwise — see #6612). Replace every codepoint
- * outside printable ASCII (0x20-0x7e) with "?" so construction never throws. Only used for the
- * literal header value; the JSON body keeps the sanitized readable text via
- * `sanitizeComboDiagnostics`.
+ * outside printable ASCII with "?" so header construction never throws.
  */
 function toHeaderSafeAscii(v: string): string {
   let out = "";
@@ -267,7 +514,7 @@ export function sanitizeRecoveryHint(
   if (!action || !RECOVERY_ACTIONS.has(action)) return undefined;
   // Reject empty OR whitespace-only next_step — the value must render usefully as a
   // header and as a body field. A whitespace-only string would print as a blank hint.
-  const next_step = clampDiagStr(r.next_step, 200).trim();
+  const next_step = clampRecoveryStr(r.next_step, 200).trim();
   if (!next_step) return undefined;
   const hint: ComboRecoveryHint = { action, next_step };
   if (typeof r.retry_after_seconds === "number" && Number.isFinite(r.retry_after_seconds)) {
@@ -297,6 +544,12 @@ export function sanitizeComboDiagnostics(d: ComboDiagnostics): ComboDiagnostics 
     terminalReason: clampDiagStr(d?.terminalReason, 200),
   };
   if (recovery) out.recovery = recovery;
+  if (Array.isArray(d?.skippedTargets) && d.skippedTargets.length > 0) {
+    out.skippedTargets = d.skippedTargets.slice(0, 32).map((g) => ({
+      reason: clampDiagStr(g?.reason, 64),
+      targets: (g?.targets ?? []).slice(0, 32).map((t) => clampDiagStr(t, 96)),
+    }));
+  }
   return out;
 }
 
@@ -366,13 +619,22 @@ export function errorResponseWithComboDiagnostics(
  * @param {string} message - Error message
  * @returns {Response} HTTP Response object
  */
-export function errorResponse(statusCode: number, message: string): Response {
-  return new Response(JSON.stringify(buildErrorBody(statusCode, sanitizeErrorMessage(message))), {
-    status: statusCode,
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
+export function errorResponse(
+  statusCode: number,
+  message: string,
+  classification?: ErrorBodyClassification
+): Response {
+  return new Response(
+    JSON.stringify(
+      buildErrorBody(statusCode, sanitizeErrorMessage(message), undefined, classification)
+    ),
+    {
+      status: statusCode,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
 }
 
 /**
@@ -411,6 +673,41 @@ function normalizeRetryAfterSeconds(retryAfter?: string | number | Date | null):
   }
 
   return 1;
+}
+
+/**
+ * #13672 — opt-in RETRY_AFTER_PROVENANCE_ENABLED (default off). Fails closed to
+ * the legacy Retry-After contract when the flag store cannot be read.
+ */
+export function isRetryAfterProvenanceEnabled(): boolean {
+  try {
+    return isFeatureFlagEnabled("RETRY_AFTER_PROVENANCE_ENABLED");
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Seconds until a concrete FUTURE retry time, or null when there is none: absent,
+ * non-positive or invalid values, numeric strings, and dates that already elapsed.
+ * Unlike normalizeRetryAfterSeconds it never invents a 1s wait; when it returns a
+ * number, that number equals normalizeRetryAfterSeconds for the same input.
+ */
+export function resolveRetryAfterHintSeconds(
+  retryAfter?: string | number | Date | null
+): number | null {
+  if (typeof retryAfter === "number") {
+    if (!Number.isFinite(retryAfter) || retryAfter <= 0) return null;
+    if (retryAfter < 1_000_000_000) return Math.max(Math.ceil(retryAfter), 1);
+  } else if (typeof retryAfter === "string") {
+    if (retryAfter.trim() === "" || !Number.isNaN(Number(retryAfter))) return null;
+  } else if (!(retryAfter instanceof Date)) {
+    return null;
+  }
+  const now = Date.now();
+  const retryTimeMs = new Date(retryAfter).getTime();
+  if (!Number.isFinite(retryTimeMs) || retryTimeMs <= now) return null;
+  return Math.max(Math.ceil((retryTimeMs - now) / 1000), 1);
 }
 
 const MAX_PUBLIC_CONTEXT_LABEL_LENGTH = 256;
@@ -472,6 +769,49 @@ export function parseAntigravityRetryTime(message: unknown): number | null {
   return totalMs > 0 ? totalMs : null;
 }
 
+const MAX_PROSE_RETRY_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Retry delay in ms from upstream error prose (Antigravity "reset after 2h7m23s",
+ * generic "retry after 30s"), capped at 24h; null when the text carries no hint.
+ */
+export function parseProseRetryDelayMs(text: unknown): number | null {
+  if (typeof text !== "string" || text === "") return null;
+  const antigravityMs = parseAntigravityRetryTime(text);
+  if (antigravityMs) return Math.min(antigravityMs, MAX_PROSE_RETRY_MS);
+  const m = /retry\s+after\s+(\d{1,9})\s*s/i.exec(text);
+  const ms = m ? Number.parseInt(m[1], 10) * 1000 : 0;
+  return ms > 0 ? Math.min(ms, MAX_PROSE_RETRY_MS) : null;
+}
+
+/**
+ * Combo drain paths: ISO retry time read from the prose of an upstream error body,
+ * JSON or plain text. Null when RETRY_AFTER_PROVENANCE_ENABLED is off (legacy:
+ * only structured retry fields are read) or when the text carries no hint.
+ */
+export function readProseRetryAfter(text: unknown): string | null {
+  if (!isRetryAfterProvenanceEnabled()) return null;
+  const ms = parseProseRetryDelayMs(text);
+  return ms ? new Date(Date.now() + ms).toISOString() : null;
+}
+
+/**
+ * Combo drain paths: the upstream error body could not be read for a retry hint.
+ * A non-JSON body (an HTML 502 page, plain text) is ordinary, so it logs at debug;
+ * a failed clone means the body was already consumed and logs at warn.
+ */
+export function logRetryHintUnreadable(
+  log: { warn: (...args: unknown[]) => void; debug?: (...args: unknown[]) => void },
+  tag: string,
+  model: string,
+  status: number | undefined,
+  reason: "unparseable body" | "clone failed"
+): void {
+  const message = `Retry hint unreadable for ${model} (${reason})`;
+  if (reason === "clone failed") log.warn(tag, message, { status });
+  else log.debug?.(tag, message, { status });
+}
+
 /**
  * Parse upstream provider error response
  * @param {Response} response - Fetch response from provider
@@ -479,7 +819,7 @@ export function parseAntigravityRetryTime(message: unknown): number | null {
  * @returns {Promise<{statusCode: number, message: string, retryAfterMs: number|null, responseBody: unknown}>}
  */
 export async function parseUpstreamError(response: Response, provider: string | null = null) {
-  let message: unknown = "";
+  let message = "";
   let retryAfterMs: number | null = null;
   let responseBody: unknown = null;
   let errorCode: unknown = undefined;
@@ -499,9 +839,15 @@ export async function parseUpstreamError(response: Response, provider: string | 
       // stack) — still routed through sanitizeErrorMessage/buildErrorBody by
       // every consumer below (Rule #12).
       const { error: clinepassEnvError } = unwrapClinepassEnvelope(json, provider);
-      message = clinepassEnvError
+      const extractedMessage = clinepassEnvError
         ? clinepassEnvError.message
-        : json.error?.message || json.message || json.error || text;
+        : json.error?.message ||
+          json.message ||
+          (typeof json.error === "string" ? json.error : null);
+      message =
+        typeof extractedMessage === "string"
+          ? extractedMessage
+          : `Upstream error: ${response.status}`;
       errorCode = json.error?.code || json.code;
       errorType = json.error?.type || json.type;
     } catch {
@@ -512,7 +858,7 @@ export async function parseUpstreamError(response: Response, provider: string | 
     responseBody = { _rawText: message };
   }
 
-  const messageStr = typeof message === "string" ? message : JSON.stringify(message);
+  const messageStr = message;
 
   const retryAfterHeader = response.headers?.get?.("retry-after");
   if (retryAfterHeader && !retryAfterMs) {
@@ -625,9 +971,8 @@ export function createErrorResult(
     result.retryAfterMs = retryAfterMs;
   }
 
-  // Opt-in relay of the upstream wording/shape needed by Claude Code auto-recovery,
-  // after canonical recursive sanitization (see upstreamErrorPassthrough.ts).
-  // Only swaps `result.response`;
+  // Opt-in relay of the recursively sanitized upstream JSON shape (Claude Code
+  // auto-recover contract — see upstreamErrorPassthrough.ts). Only swaps `result.response`;
   // `result.error`/`rawMessage`/`errorType`/`errorCode` stay untouched so
   // server-side classification (checkFallbackError, combo retry logic, etc.)
   // never sees a different value depending on this flag.
@@ -659,15 +1004,23 @@ export function unavailableResponse(
   retryAfter?: string | number | Date | null,
   retryAfterHuman?: string
 ) {
-  const retryAfterSec = normalizeRetryAfterSeconds(retryAfter);
+  // #13672 (opt-in): only a concrete future retry time earns a Retry-After header, and the
+  // body says whether one existed. Off: legacy header, always present and clamped to >= 1s.
+  const provenance = isRetryAfterProvenanceEnabled();
+  const retryAfterSec = provenance
+    ? resolveRetryAfterHintSeconds(retryAfter)
+    : normalizeRetryAfterSeconds(retryAfter);
   const safeMessage = sanitizeErrorMessage(message) || getDefaultErrorMessage(statusCode);
   const safeRetryAfterHuman = retryAfterHuman ? sanitizeErrorMessage(retryAfterHuman) : "";
   const msg = safeRetryAfterHuman ? `${safeMessage} (${safeRetryAfterHuman})` : safeMessage;
-  return new Response(JSON.stringify({ error: { message: msg } }), {
+  const error = provenance
+    ? { message: msg, retry_after_provenance: retryAfterSec === null ? "none" : "signal" }
+    : { message: msg };
+  return new Response(JSON.stringify({ error }), {
     status: statusCode,
     headers: {
       "Content-Type": "application/json",
-      "Retry-After": String(retryAfterSec),
+      ...(retryAfterSec === null ? {} : { "Retry-After": String(retryAfterSec) }),
     },
   });
 }
@@ -781,7 +1134,8 @@ export function makeExecutorErrorResult(
   status: number,
   message: string,
   body: unknown,
-  url: string
+  url: string,
+  extraResponseHeaders?: Record<string, string>
 ) {
   return {
     response: new Response(
@@ -792,7 +1146,10 @@ export function makeExecutorErrorResult(
           code: `HTTP_${status}`,
         },
       }),
-      { status, headers: { "Content-Type": "application/json" } }
+      {
+        status,
+        headers: { "Content-Type": "application/json", ...extraResponseHeaders },
+      }
     ),
     url,
     headers: {} as Record<string, string>,

@@ -1,43 +1,14 @@
-// Web-cookie provider key validators (part A): deepseek-web, qwen-web, grok-web, chatgpt-web,
+// Web-cookie provider key validators (part A): deepseek-web, kimi-web, grok-web,
 // perplexity-web, blackbox-web. Extracted from validation.ts (god-file decomposition) — top-level
-// functions with no dispatcher-state captures; behavior is regression-tested in this module.
-import { sanitizeErrorMessage, sanitizeUpstreamDetails } from "@omniroute/open-sse/utils/error.ts";
-import {
-  buildGrokCookieHeader,
-  buildQwenCookieHeader,
-  extractCookieValue,
-  extractKimiAccessToken,
-  extractQwenToken,
-  normalizeSessionCookieHeader,
-} from "@/lib/providers/webCookieAuth";
+// functions with no dispatcher-state captures; behavior is byte-identical to the original inline defs.
 import { applyCustomUserAgent } from "./headers";
 import { toValidationErrorResult, validationRead, validationWrite } from "./transport";
-
-interface ErrorInstanceClassifier {
-  [Symbol.hasInstance](value: unknown): boolean;
-}
-
-function isErrorInstance(error: unknown, classifier: ErrorInstanceClassifier): boolean {
-  try {
-    return classifier[Symbol.hasInstance](error);
-  } catch {
-    // A rejected Proxy may throw while the classifier walks its prototype chain.
-    return false;
-  }
-}
-
-function sanitizeValidationThrownError(error: unknown): string {
-  let candidate = error;
-  try {
-    if (isErrorInstance(error, Error)) {
-      const message = (error as { message?: unknown }).message;
-      if (typeof message === "string") candidate = message;
-    }
-  } catch {
-    // Keep the unknown value for the canonical fail-closed sanitizer.
-  }
-  return sanitizeErrorMessage(candidate);
-}
+import {
+  buildGrokCookieHeader,
+  extractCookieValue,
+  extractKimiAccessToken,
+  normalizeSessionCookieHeader,
+} from "@/lib/providers/webCookieAuth";
 
 // kimi-web uses the international (west-facing) `www.kimi.ai` Connect-RPC API by
 // default. `www.kimi.com` is the China-region endpoint — it serves China users but
@@ -52,7 +23,7 @@ export async function validateKimiWebProvider({ apiKey }: any) {
   if (!rawCred) {
     return {
       valid: false,
-      error: "Missing Kimi access_token from www.kimi.com localStorage",
+      error: "Missing Kimi access_token from www.kimi.ai localStorage",
     };
   }
 
@@ -61,17 +32,17 @@ export async function validateKimiWebProvider({ apiKey }: any) {
     return {
       valid: false,
       error:
-        "Could not find a Kimi access_token. Re-login at https://www.kimi.com and copy it from localStorage.",
+        "Could not find a Kimi access_token. Re-login at https://www.kimi.ai and copy it from localStorage.",
     };
   }
 
   try {
-    const resp = await fetch("https://www.kimi.com/api/user", {
+    const resp = await fetch("https://www.kimi.ai/api/user", {
       headers: {
         Accept: "application/json, text/plain, */*",
         Authorization: `Bearer ${accessToken}`,
-        Origin: "https://www.kimi.com",
-        Referer: "https://www.kimi.com/",
+        Origin: "https://www.kimi.ai",
+        Referer: "https://www.kimi.ai/",
         "User-Agent":
           "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36",
       },
@@ -81,7 +52,7 @@ export async function validateKimiWebProvider({ apiKey }: any) {
       return {
         valid: false,
         error:
-          "Kimi session is invalid or expired — re-login at https://www.kimi.com and paste a fresh access_token",
+          "Kimi session is invalid or expired — re-login at https://www.kimi.ai and paste a fresh access_token",
       };
     }
     if (!resp.ok) {
@@ -95,7 +66,7 @@ export async function validateKimiWebProvider({ apiKey }: any) {
         return {
           valid: false,
           error:
-            "Kimi session token is invalid or expired — re-login at https://www.kimi.com and paste a fresh access_token",
+            "Kimi session token is invalid or expired — re-login at https://www.kimi.ai and paste a fresh access_token",
         };
       }
     } catch {
@@ -170,125 +141,11 @@ export async function validateDeepSeekWebProvider({ apiKey }: any) {
     if (!bizData?.token) {
       return {
         valid: false,
-        error: `DeepSeek did not return an access token: ${sanitizeErrorMessage(json?.msg) || "unknown error"}`,
+        error: `DeepSeek did not return an access token: ${json?.msg || "unknown error"}`,
       };
     }
     return { valid: true, error: null };
   } catch (error: any) {
-    return toValidationErrorResult(error);
-  }
-}
-
-// qwen-web has no `modelsUrl` in its registry entry, so the generic OpenAI-compatible
-// validator used to derive a probe URL of `https://chat.qwen.ai/api/v2/models/` (via
-// addModelsSuffix) — a non-existent path that answers with a 307 redirect, which the
-// outbound guard blocked and the route then mislabeled as an SSRF block (#3288/#3758).
-//
-// History of the session probe:
-//   - Originally `GET /api/v2/user` (Chat2API-derived). Upstream retired the path
-//     in mid-2026: it now returns `{"success":false,"data":{"code":"not found"}}`
-//     regardless of credentials, so the body-shape check (#3958) always fails.
-//   - Current probe: `GET /api/v1/auths/` (note the trailing slash — without it
-//     the path returns 401). This is the endpoint Qwen's own SPA hits right after
-//     login to fetch the user profile. It returns the user object directly at the
-//     top level: `{ id, email, name, role, ... }`.
-//
-// The validator mirrors the executor's anti-bot headers + cookie-jar replay and uses
-// plain fetch (like the other web-cookie validators) so it never hits the
-// addModelsSuffix/redirect path.
-export async function validateQwenWebProvider({ apiKey }: any) {
-  const rawCred = String(apiKey ?? "").trim();
-  if (!rawCred) {
-    return {
-      valid: false,
-      error:
-        "Missing Qwen session — paste the full chat.qwen.ai Cookie header (must include token, cna and ssxmod_itna)",
-    };
-  }
-
-  const token = extractQwenToken(rawCred);
-  const cookieHeader = buildQwenCookieHeader(rawCred);
-  if (!token && !cookieHeader) {
-    return {
-      valid: false,
-      error: "Could not find a Qwen token/cookie in the pasted value",
-    };
-  }
-
-  try {
-    const headers: Record<string, string> = {
-      Accept: "*/*",
-      "User-Agent":
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36",
-      Origin: "https://chat.qwen.ai",
-      Referer: "https://chat.qwen.ai/",
-      source: "web",
-      "bx-v": "2.5.36",
-      // The Qwen SPA's `version` header is required by the v2 chat completion
-      // endpoint; the validator sends it too so the probe matches a real
-      // browser request as closely as possible. (The session probe endpoint
-      // doesn't enforce it, but consistency with the executor avoids surprises
-      // if Qwen ever tightens its WAF rules.)
-      version: "0.2.66",
-    };
-    if (token) headers["Authorization"] = `Bearer ${token}`;
-    if (cookieHeader) headers["Cookie"] = cookieHeader;
-
-    // The trailing slash is significant: `/api/v1/auths` (no slash) answers 401,
-    // `/api/v1/auths/` returns the user profile.
-    const resp = await fetch("https://chat.qwen.ai/api/v1/auths/", { headers });
-    const contentType = resp.headers.get("content-type") || "";
-
-    if (resp.status === 401 || resp.status === 403) {
-      return {
-        valid: false,
-        error:
-          "Qwen session is invalid or expired — re-login at https://chat.qwen.ai and paste a fresh full Cookie header",
-      };
-    }
-    // Alibaba's WAF / retired-v1 gateway answers with an HTML challenge page (or 504)
-    // instead of JSON. A bearer token alone is no longer enough for the v2 endpoint.
-    if (contentType.includes("text/html") || resp.status === 504) {
-      return {
-        valid: false,
-        error:
-          "Qwen blocked the request with its anti-bot WAF. Re-login at https://chat.qwen.ai and paste a fresh full Cookie header (must include cna, ssxmod_itna and token) — a bearer token alone is not accepted.",
-      };
-    }
-    if (!resp.ok) {
-      return { valid: false, error: `Qwen returned HTTP ${resp.status}` };
-    }
-
-    // Parse JSON response and verify we have a real user object.
-    // /api/v1/auths/ returns the user at the top level: {id, email, name, role, ...}.
-    // We require `id` to be a non-empty string AND look like a real identifier
-    // (uuid-ish or otherwise ≥8 chars) to avoid false-positives from upstream
-    // error envelopes that happen to ship a top-level `id: "not_found"` style
-    // field. Keep the legacy nested checks (data.user, user) for robustness in
-    // case the upstream shape changes again.
-    try {
-      const data = await resp.json();
-      const hasTopLevelUser =
-        typeof data?.id === "string" && data.id.length >= 8 && typeof data?.email === "string";
-      const hasNestedUser =
-        (typeof data?.user?.id === "string" && data.user.id.length > 0) ||
-        (typeof data?.data?.user?.id === "string" && data.data.user.id.length > 0);
-      if (!hasTopLevelUser && !hasNestedUser) {
-        return {
-          valid: false,
-          error:
-            "Qwen session token is invalid or expired — re-login at https://chat.qwen.ai and paste a fresh full Cookie header",
-        };
-      }
-    } catch {
-      return {
-        valid: false,
-        error: "Qwen returned invalid JSON response",
-      };
-    }
-
-    return { valid: true, error: null };
-  } catch (error) {
     return toValidationErrorResult(error);
   }
 }
@@ -332,68 +189,6 @@ const GROK_IP_REPUTATION_GUIDANCE =
   "auth failure. cf_clearance is pinned to the IP + TLS fingerprint + User-Agent that earned " +
   "it and cannot be replayed from a different machine/IP. Retry from a residential IP or " +
   "configure a proxy for grok-web.";
-const GROK_VALIDATION_RAW_DETAIL_BUDGET = 64 * 1024;
-const GROK_REJECTED_DETAIL_DISPLAY_BUDGET = 160;
-const GROK_GENERIC_DETAIL_DISPLAY_BUDGET = 240;
-
-function decodeGrokValidationUnicodeEscapes(value: string): string {
-  let decoded = value;
-  for (let pass = 0; pass < 2; pass += 1) {
-    const next = decoded
-      .replace(/\\u([0-9a-f]{4})/gi, (_match, codeUnit: string) =>
-        String.fromCharCode(Number.parseInt(codeUnit, 16))
-      )
-      .replace(/\\\//g, "/");
-    if (next === decoded) break;
-    decoded = next;
-  }
-  return decoded;
-}
-
-function normalizeGrokValidationString(value: string): string {
-  return decodeGrokValidationUnicodeEscapes(value)
-    .replace(/\\r\\n|\\n|\\r/g, "\n")
-    .replace(/[\u2028\u2029]/g, "\n")
-    .replace(/\r\n?/g, "\n");
-}
-
-function normalizeGrokValidationJsonValue(value: unknown): unknown {
-  if (typeof value === "string") return normalizeGrokValidationString(value);
-  if (!value || typeof value !== "object" || Array.isArray(value)) return value;
-
-  return Object.fromEntries(
-    Object.entries(value as Record<string, unknown>).map(([key, nestedValue]) => [
-      normalizeGrokValidationString(key),
-      nestedValue,
-    ])
-  );
-}
-
-function sanitizeGrokValidationErrorDetail(errorDetail: string): string {
-  if (!errorDetail) return "";
-
-  try {
-    const parsed = JSON.parse(errorDetail, (_key, value: unknown) =>
-      normalizeGrokValidationJsonValue(value)
-    );
-    const sanitized = sanitizeUpstreamDetails(parsed);
-    return sanitized === null ? "" : (JSON.stringify(sanitized) ?? "");
-  } catch {
-    // Invalid or truncated upstream JSON still needs the bounded text sanitizer fallback.
-    return sanitizeErrorMessage(normalizeGrokValidationString(errorDetail));
-  }
-}
-
-function isGrokAntiBotBlockWithinBudget(errorDetail: string, wasTruncated: boolean): boolean {
-  if (!wasTruncated) return isGrokAntiBotBlock(errorDetail);
-
-  const text = errorDetail.trimStart();
-  if (/anti-bot|forbidden|access denied|blocked|rate.?limit/i.test(text)) return true;
-  // A JSON-shaped body may be incomplete only because our defensive parse budget
-  // cut it. Do not turn that bounded-read condition into a false IP-reputation verdict.
-  if (text.startsWith("{") || text.startsWith("[")) return false;
-  return isGrokAntiBotBlock(text);
-}
 
 export async function validateGrokWebProvider({ apiKey, providerSpecificData = {} }: any) {
   try {
@@ -477,25 +272,22 @@ export async function validateGrokWebProvider({ apiKey, providerSpecificData = {
         }),
         timeoutMs: 15_000,
       });
-    } catch (err: unknown) {
-      if (isErrorInstance(err, TlsClientUnavailableError)) {
+    } catch (err: any) {
+      if (err instanceof TlsClientUnavailableError) {
         return {
           valid: false,
-          error: `TLS impersonation client unavailable: ${sanitizeValidationThrownError(err)}`,
+          error: `TLS impersonation client unavailable: ${err.message}`,
         };
       }
       throw err;
     }
 
     let errorDetail = "";
-    let errorDetailWasTruncated = false;
     try {
-      const rawErrorDetail = response.text || "";
-      errorDetailWasTruncated = rawErrorDetail.length > GROK_VALIDATION_RAW_DETAIL_BUDGET;
-      errorDetail = rawErrorDetail.slice(0, GROK_VALIDATION_RAW_DETAIL_BUDGET);
+      errorDetail = (response.text || "").slice(0, 240);
     } catch {}
 
-    // Detect Cloudflare challenge pages even with a 200 status from tls-client-node
+    // Detect Cloudflare challenge pages even when the browser transport reports status 200.
     if (isCloudflareChallenge(errorDetail)) {
       return {
         valid: false,
@@ -548,10 +340,7 @@ export async function validateGrokWebProvider({ apiKey, providerSpecificData = {
       //    not code-fixable: the datacenter/VPS IP is flagged. A Cloudflare
       //    challenge body, Grok's "anti-bot rules" rejection, or a bare/non-JSON
       //    forbidden body (no structured upstream `error.message`) all map here.
-      if (
-        isCloudflareChallenge(errorDetail) ||
-        isGrokAntiBotBlockWithinBudget(errorDetail, errorDetailWasTruncated)
-      ) {
+      if (isCloudflareChallenge(errorDetail) || isGrokAntiBotBlock(errorDetail)) {
         return {
           valid: false,
           error: `Grok returned 403 (anti-bot/Cloudflare block). ${GROK_IP_REPUTATION_GUIDANCE}`,
@@ -559,13 +348,9 @@ export async function validateGrokWebProvider({ apiKey, providerSpecificData = {
       }
       // 3. Structured upstream error (e.g. probe model renamed) → surface the body
       //    so the user/maintainer sees the real cause instead of a wrong verdict.
-      const safeErrorDetail = sanitizeGrokValidationErrorDetail(errorDetail).slice(
-        0,
-        GROK_REJECTED_DETAIL_DISPLAY_BUDGET
-      );
       return {
         valid: false,
-        error: `Grok rejected validation (403)${safeErrorDetail ? `: ${safeErrorDetail}` : ""}`,
+        error: `Grok rejected validation (403)${errorDetail ? `: ${errorDetail.slice(0, 160)}` : ""}`,
       };
     }
 
@@ -577,125 +362,10 @@ export async function validateGrokWebProvider({ apiKey, providerSpecificData = {
       return { valid: false, error: `Grok unavailable (${response.status})` };
     }
 
-    const safeErrorDetail = sanitizeGrokValidationErrorDetail(errorDetail).slice(
-      0,
-      GROK_GENERIC_DETAIL_DISPLAY_BUDGET
-    );
     return {
       valid: false,
-      error: `Grok validation failed (${response.status})${safeErrorDetail ? `: ${safeErrorDetail}` : ""}`,
+      error: `Grok validation failed (${response.status})${errorDetail ? `: ${errorDetail}` : ""}`,
     };
-  } catch (error: any) {
-    return toValidationErrorResult(error);
-  }
-}
-
-export async function validateChatGptWebProvider({ apiKey, providerSpecificData = {} }: any) {
-  try {
-    // Accept bare value, unchunked cookie, chunked (.0/.1) cookies, or full
-    // "Cookie: ..." DevTools line. Pass through verbatim once recognised.
-    let cookieHeader = String(apiKey || "").trim();
-    if (/^cookie\s*:\s*/i.test(cookieHeader)) {
-      cookieHeader = cookieHeader.replace(/^cookie\s*:\s*/i, "");
-    }
-    if (!/__Secure-next-auth\.session-token(?:\.\d+)?\s*=/.test(cookieHeader)) {
-      cookieHeader = `__Secure-next-auth.session-token=${cookieHeader}`;
-    }
-
-    // Use the TLS-impersonating client — Cloudflare on chatgpt.com pins
-    // cf_clearance to JA3/JA4 + HTTP/2 SETTINGS, so plain Node fetch always
-    // gets cf-mitigated: challenge regardless of cookies.
-    const { tlsFetchChatGpt, TlsClientUnavailableError } =
-      await import("@omniroute/open-sse/services/chatgptTlsClient.ts");
-
-    let response;
-    try {
-      response = await tlsFetchChatGpt("https://chatgpt.com/api/auth/session", {
-        method: "GET",
-        headers: applyCustomUserAgent(
-          {
-            Accept: "application/json",
-            "Accept-Language": "en-US,en;q=0.9",
-            "Cache-Control": "no-cache",
-            Cookie: cookieHeader,
-            Origin: "https://chatgpt.com",
-            Pragma: "no-cache",
-            Referer: "https://chatgpt.com/",
-            "Sec-Fetch-Dest": "empty",
-            "Sec-Fetch-Mode": "cors",
-            "Sec-Fetch-Site": "same-origin",
-            "User-Agent":
-              "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:152.0) Gecko/20100101 Firefox/152.0",
-          },
-          providerSpecificData
-        ),
-        timeoutMs: 30_000,
-      });
-    } catch (err: unknown) {
-      if (isErrorInstance(err, TlsClientUnavailableError)) {
-        return {
-          valid: false,
-          error: `${sanitizeValidationThrownError(err)} (chatgpt-web requires this — without it, Cloudflare blocks every request)`,
-        };
-      }
-      throw err;
-    }
-
-    const contentType = response.headers.get("content-type") || "";
-    const cfRay = response.headers.get("cf-ray");
-    const cfMitigated = response.headers.get("cf-mitigated");
-
-    if (response.status === 401 || response.status === 403) {
-      const bodyText = response.text || "";
-      if (cfMitigated || /just a moment|cloudflare|cf-chl|attention required/i.test(bodyText)) {
-        return {
-          valid: false,
-          error:
-            "Cloudflare blocked the validator — open chatgpt.com in your browser, then copy the FULL Cookie line from DevTools (Network → request → Cookie) including cf_clearance, __cf_bm, _cfuvid, and the session-token chunks.",
-        };
-      }
-      return {
-        valid: false,
-        error:
-          "Invalid ChatGPT session cookie — re-paste __Secure-next-auth.session-token from chatgpt.com DevTools → Cookies",
-      };
-    }
-
-    if (response.status >= 500) {
-      return { valid: false, error: `ChatGPT unavailable (${response.status})` };
-    }
-
-    if (response.status >= 400) {
-      return { valid: false, error: `Validation failed: ${response.status}` };
-    }
-
-    if (!contentType.includes("json")) {
-      const safeContentType = sanitizeErrorMessage(contentType) || "no content-type";
-      const safeCfRay = cfRay ? sanitizeErrorMessage(cfRay) : "";
-      const safeResponseMetadata = `${safeContentType}${safeCfRay ? `, cf-ray=${safeCfRay}` : ""}`;
-      return {
-        valid: false,
-        error: `ChatGPT returned non-JSON (${safeResponseMetadata}) — paste the FULL Cookie line including cf_clearance, __cf_bm, _cfuvid alongside the session-token chunks.`,
-      };
-    }
-
-    let data: any = {};
-    try {
-      data = JSON.parse(response.text || "{}");
-    } catch {
-      return {
-        valid: false,
-        error:
-          "ChatGPT session response was not JSON — paste the FULL Cookie line including cf_clearance and __cf_bm.",
-      };
-    }
-    if (!data?.accessToken) {
-      return {
-        valid: false,
-        error: "ChatGPT session expired — log into chatgpt.com and copy a fresh cookie",
-      };
-    }
-    return { valid: true, error: null };
   } catch (error: any) {
     return toValidationErrorResult(error);
   }
@@ -769,11 +439,11 @@ export async function validatePerplexityWebProvider({ apiKey, providerSpecificDa
         }),
         timeoutMs: 30_000,
       });
-    } catch (err: unknown) {
-      if (isErrorInstance(err, TlsClientUnavailableError)) {
+    } catch (err) {
+      if (err instanceof TlsClientUnavailableError) {
         return {
           valid: false,
-          error: `${sanitizeValidationThrownError(err)} perplexity-web requires it — without it Cloudflare blocks every request.`,
+          error: `${err.message} perplexity-web requires it — without it Cloudflare blocks every request.`,
         };
       }
       throw err;
@@ -785,7 +455,7 @@ export async function validatePerplexityWebProvider({ apiKey, providerSpecificDa
           valid: false,
           error:
             "Cloudflare is blocking connections from this server's IP (TLS fingerprint rejected). " +
-            "The session cookie may still be valid — install tls-client-node's native binary or route " +
+            "The session cookie may still be valid — verify the wreq-js 3.2 native binding or route " +
             "perplexity-web through a residential proxy.",
         };
       }

@@ -412,6 +412,42 @@ describe("NotionWebExecutor — upstream translation (mocked TLS fetch)", () => 
     }
   });
 
+  it("fails closed without plain fetch when the binding is unavailable behind a proxy", async () => {
+    const executor = new mod.NotionWebExecutor();
+    const previousHttpsProxy = process.env.HTTPS_PROXY;
+    const previousFetch = globalThis.fetch;
+    let resolvedProxyUrl: string | undefined;
+    let plainFetchCalls = 0;
+    process.env.HTTPS_PROXY = "http://account-proxy.test:8080";
+    __setTlsFetchOverrideForTesting(async (_url, options) => {
+      resolvedProxyUrl = options.proxyUrl;
+      throw new TlsClientUnavailableError("native binding unavailable");
+    });
+    globalThis.fetch = (async () => {
+      plainFetchCalls += 1;
+      return new Response("plain fallback must not run", { status: 200 });
+    }) as typeof fetch;
+
+    try {
+      const result = await executor.execute({
+        model: "notion-ai",
+        body: { messages: [{ role: "user", content: "hi" }] },
+        stream: false,
+        credentials: { apiKey: COOKIE_WITH_SPACE },
+        signal: null,
+      } as never);
+
+      assert.equal(result.response.status, 502);
+      assert.equal(resolvedProxyUrl, "http://account-proxy.test:8080");
+      assert.equal(plainFetchCalls, 0, "plain fetch would bypass the resolved proxy");
+    } finally {
+      __setTlsFetchOverrideForTesting(null);
+      globalThis.fetch = previousFetch;
+      if (previousHttpsProxy === undefined) delete process.env.HTTPS_PROXY;
+      else process.env.HTTPS_PROXY = previousHttpsProxy;
+    }
+  });
+
   it("sanitizes credentials, private paths, and stack frames from TLS transport errors", async () => {
     const executor = new mod.NotionWebExecutor();
     const restore = installNotionTlsMock(async () => {
@@ -470,83 +506,6 @@ describe("NotionWebExecutor — upstream translation (mocked TLS fetch)", () => 
       assert.match(responseText, /Notion fetch failed: unknown error/);
       assert.doesNotMatch(responseText, /prototype-secret|coercion-secret|\/srv\/private/);
     } finally {
-      restoreTls();
-    }
-  });
-
-  it("sanitizes fallback fetch errors when the native TLS client is unavailable", async () => {
-    const executor = new mod.NotionWebExecutor();
-    const originalFetch = globalThis.fetch;
-    let fallbackCalls = 0;
-    const restoreTls = installNotionTlsMock(async () => {
-      throw new TlsClientUnavailableError("native TLS client unavailable");
-    });
-    globalThis.fetch = (async () => {
-      fallbackCalls += 1;
-      throw new Error(
-        "Fallback transport failed; access token: notion-fallback-secret while reading " +
-          "/opt/private/notion/fallback.ts:18:3\n    at fetchFallback " +
-          "(/opt/private/notion/fallback.ts:18:3)"
-      );
-    }) as typeof globalThis.fetch;
-
-    try {
-      const result = await executor.execute({
-        model: "notion-ai",
-        body: { messages: [{ role: "user", content: "hi" }] },
-        stream: false,
-        credentials: { apiKey: COOKIE_WITH_SPACE },
-        signal: null,
-      } as never);
-
-      assert.ok(fallbackCalls >= 1, "plain fetch must be attempted after TLS unavailability");
-      assert.equal(result.response.status, 502);
-      assert.equal(result.url, "https://app.notion.com/api/v3/runInferenceTranscript");
-      assert.equal(
-        (result.transformedBody as { spaceId?: string }).spaceId,
-        "space-1",
-        "the executor must preserve the upstream request body on fallback failure"
-      );
-      const errBody = (await result.response.json()) as {
-        error: { message: string; type: string; code: string };
-      };
-      assert.match(errBody.error.message, /Notion fetch failed: Fallback transport failed/);
-      assert.equal(errBody.error.type, "upstream_error");
-      assert.equal(errBody.error.code, "HTTP_502");
-      assert.ok(!errBody.error.message.includes("notion-fallback-secret"));
-      assert.ok(!errBody.error.message.includes("/opt/private"));
-      assert.ok(!errBody.error.message.includes("at fetchFallback"));
-    } finally {
-      globalThis.fetch = originalFetch;
-      restoreTls();
-    }
-  });
-
-  it("fails closed when the fallback fetch rejects with a hostile prototype", async () => {
-    const executor = new mod.NotionWebExecutor();
-    const originalFetch = globalThis.fetch;
-    const restoreTls = installNotionTlsMock(async () => {
-      throw new TlsClientUnavailableError("native TLS client unavailable");
-    });
-    globalThis.fetch = (async () => {
-      throw hostilePrototypeFailure("notion-fallback-proxy");
-    }) as typeof globalThis.fetch;
-
-    try {
-      const result = await executor.execute({
-        model: "notion-ai",
-        body: { messages: [{ role: "user", content: "hi" }] },
-        stream: false,
-        credentials: { apiKey: COOKIE_WITH_SPACE },
-        signal: null,
-      } as never);
-
-      assert.equal(result.response.status, 502);
-      const responseText = await result.response.text();
-      assert.match(responseText, /Notion fetch failed: unknown error/);
-      assert.doesNotMatch(responseText, /prototype-secret|coercion-secret|\/srv\/private/);
-    } finally {
-      globalThis.fetch = originalFetch;
       restoreTls();
     }
   });

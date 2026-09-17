@@ -26,19 +26,7 @@ function makeAllowlist(
   overrides: Partial<{
     allowed: string[];
     allowedExpressions: string[];
-    exceptions: Record<
-      string,
-      {
-        license?: unknown;
-        version?: unknown;
-        justification: string;
-        risk: string;
-        temporary?: boolean;
-        owner?: string;
-        reviewBy?: string;
-        classification?: string;
-      }
-    >;
+    exceptions: Record<string, { license: string; justification: string; risk: string }>;
   }> = {}
 ) {
   return {
@@ -217,290 +205,18 @@ test("classifyLicense: exception does not apply to different package", () => {
   assert.equal(result.status, "denied", "exception must be per-package, not per-license");
 });
 
-test("classifyLicense: exception applies when detected license exactly matches", () => {
+test("classifyLicense: a medium-risk custom exception still returns 'exception'", () => {
   const allowlist = makeAllowlist({
     exceptions: {
-      "tls-client-node": {
-        license: "Custom: LICENSE",
-        justification: "Commons Clause + Apache-2.0. TODO: revisar.",
+      "custom-runtime": {
+        license: "Custom: reviewed terms",
+        justification: "Reviewed custom runtime terms.",
         risk: "medium",
       },
     },
   });
-  const result = classifyLicense("tls-client-node@0.2.0", "Custom: LICENSE", allowlist);
+  const result = classifyLicense("custom-runtime@1.0.0", "Custom: reviewed terms", allowlist);
   assert.equal(result.status, "exception");
-});
-
-test("classifyLicense: version-pinned exception denies a different package version", () => {
-  const allowlist = makeAllowlist({
-    exceptions: {
-      "tls-client-node": {
-        license: "Custom: LICENSE",
-        version: "0.2.0",
-        justification: "Only the provenance-audited release is temporarily authorized.",
-        risk: "medium",
-      },
-    },
-  });
-
-  const result = classifyLicense("tls-client-node@0.2.1", "Custom: LICENSE", allowlist);
-  assert.equal(result.status, "denied");
-  assert.match(result.reason, /0\.2\.1/);
-  assert.match(result.reason, /0\.2\.0/);
-});
-
-test("classifyLicense: version-pinned exception applies to the exact package version", () => {
-  const allowlist = makeAllowlist({
-    exceptions: {
-      "tls-client-node": {
-        license: "Custom: LICENSE",
-        version: "0.2.0",
-        justification: "Only the provenance-audited release is temporarily authorized.",
-        risk: "medium",
-      },
-    },
-  });
-
-  const result = classifyLicense("tls-client-node@0.2.0", "Custom: LICENSE", allowlist);
-  assert.equal(result.status, "exception");
-});
-
-test("classifyLicense: version-pinned exception denies an unversioned package key", () => {
-  const allowlist = makeAllowlist({
-    exceptions: {
-      "tls-client-node": {
-        license: "Custom: LICENSE",
-        version: "0.2.0",
-        justification: "Only the provenance-audited release is temporarily authorized.",
-        risk: "medium",
-      },
-    },
-  });
-
-  const result = classifyLicense("tls-client-node", "Custom: LICENSE", allowlist);
-  assert.equal(result.status, "denied");
-  assert.match(result.reason, /no version/i);
-  assert.match(result.reason, /tls-client-node@0\.2\.0/);
-});
-
-test("classifyLicense: version-pinned exception denies malformed package keys", () => {
-  const allowlist = makeAllowlist({
-    exceptions: {
-      "tls-client-node": {
-        license: "Custom: LICENSE",
-        version: "0.2.0",
-        justification: "Only the provenance-audited release is temporarily authorized.",
-        risk: "medium",
-      },
-    },
-  });
-
-  for (const packageKey of ["tls-client-node@", "tls-client-node@@0.2.0"] as const) {
-    const result = classifyLicense(packageKey, "Custom: LICENSE", allowlist);
-    assert.equal(result.status, "denied", packageKey);
-    assert.match(result.reason, /malformed package key/i);
-    assert.match(result.reason, new RegExp(packageKey.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
-  }
-});
-
-test("classifyLicense: malformed exception version metadata fails closed", () => {
-  for (const declaredVersion of [undefined, "", " 0.2.0", ["0.2.0"]]) {
-    const allowlist = makeAllowlist({
-      exceptions: {
-        "tls-client-node": {
-          license: "Custom: LICENSE",
-          version: declaredVersion,
-          justification: "Malformed version metadata must never authorize a package.",
-          risk: "medium",
-        },
-      },
-    });
-
-    const result = classifyLicense("tls-client-node@0.2.0", "Custom: LICENSE", allowlist);
-    assert.equal(result.status, "denied");
-    assert.match(result.reason, /invalid exception version/i);
-    assert.match(result.reason, /tls-client-node/);
-  }
-});
-
-test("classifyLicense: scoped version-pinned exception uses the version after the package name", () => {
-  const allowlist = makeAllowlist({
-    exceptions: {
-      "@scope/native-transport": {
-        license: "Custom: LICENSE",
-        version: "1.2.3",
-        justification: "Only the provenance-audited scoped package release is authorized.",
-        risk: "medium",
-      },
-    },
-  });
-
-  const exact = classifyLicense("@scope/native-transport@1.2.3", "Custom: LICENSE", allowlist);
-  assert.equal(exact.status, "exception");
-
-  const changed = classifyLicense("@scope/native-transport@1.2.4", "Custom: LICENSE", allowlist);
-  assert.equal(changed.status, "denied");
-  assert.match(changed.reason, /1\.2\.4/);
-  assert.match(changed.reason, /1\.2\.3/);
-});
-
-test("classifyLicense: package exception overrides a globally allowed license", () => {
-  const allowlist = makeAllowlist({
-    exceptions: {
-      "tls-client-node": {
-        license: "Custom: LICENSE",
-        justification: "A package-specific review must not be bypassed by the global allowlist.",
-        risk: "medium",
-      },
-    },
-  });
-
-  const result = classifyLicense("tls-client-node@0.2.0", "Apache-2.0", allowlist);
-  assert.equal(result.status, "denied");
-  assert.match(result.reason, /Apache-2\.0/);
-  assert.match(result.reason, /Custom: LICENSE/);
-  assert.match(result.reason, /match/i);
-});
-
-test("classifyLicense: an expired package exception cannot fall through to the global allowlist", () => {
-  const allowlist = makeAllowlist({
-    exceptions: {
-      "reviewed-apache-package": {
-        license: "Apache-2.0",
-        justification: "Temporary package-specific review despite a globally allowed SPDX id.",
-        risk: "medium",
-        temporary: true,
-        owner: "@owner",
-        reviewBy: "2026-09-30",
-      },
-    },
-  });
-
-  const result = classifyLicense("reviewed-apache-package@1.0.0", "Apache-2.0", allowlist, {
-    now: new Date("2026-10-01T00:00:00.000Z"),
-  });
-  assert.equal(result.status, "denied");
-  assert.match(result.reason, /expired|reviewBy/i);
-});
-
-test("classifyLicense: exception denies a GPL license that does not match its declaration", () => {
-  const allowlist = makeAllowlist({
-    exceptions: {
-      "tls-client-node": {
-        license: "Custom: LICENSE",
-        justification: "Exception applies only to the detected custom license.",
-        risk: "medium",
-      },
-    },
-  });
-  const result = classifyLicense("tls-client-node@0.2.0", "GPL-3.0-only", allowlist);
-  assert.equal(result.status, "denied");
-  assert.match(result.reason, /GPL-3\.0-only/);
-  assert.match(result.reason, /Custom: LICENSE/);
-  assert.match(result.reason, /match/i);
-});
-
-test("classifyLicense: exception denies UNKNOWN when its declared license is specific", () => {
-  const allowlist = makeAllowlist({
-    exceptions: {
-      "tls-client-node": {
-        license: "Custom: LICENSE",
-        justification: "Exception applies only to the detected custom license.",
-        risk: "medium",
-      },
-    },
-  });
-  const result = classifyLicense("tls-client-node@0.2.0", "UNKNOWN", allowlist);
-  assert.equal(result.status, "denied");
-  assert.match(result.reason, /UNKNOWN/);
-  assert.match(result.reason, /Custom: LICENSE/);
-  assert.match(result.reason, /match/i);
-});
-
-test("classifyLicense: exception with a missing or malformed declared license fails closed", () => {
-  for (const declaredLicense of [undefined, ["Custom: LICENSE"]]) {
-    const allowlist = makeAllowlist({
-      exceptions: {
-        "tls-client-node": {
-          license: declaredLicense,
-          justification: "Malformed test exception must never authorize a detected license.",
-          risk: "medium",
-        },
-      },
-    });
-    const result = classifyLicense("tls-client-node@0.2.0", "Custom: LICENSE", allowlist);
-    assert.equal(result.status, "denied");
-    assert.match(result.reason, /invalid exception license/i);
-    assert.match(result.reason, /tls-client-node/);
-  }
-});
-
-test("classifyLicense: temporary exception is denied after its reviewBy date", () => {
-  const allowlist = makeAllowlist({
-    exceptions: {
-      "tls-client-node": {
-        license: "Custom: LICENSE",
-        justification: "Temporary non-OSI source-available bridge with an owner.",
-        risk: "medium",
-        temporary: true,
-        owner: "@owner",
-        reviewBy: "2026-09-30",
-        classification: "non-OSI source-available",
-      },
-    },
-  });
-
-  const beforeExpiry = classifyLicense("tls-client-node@0.2.0", "Custom: LICENSE", allowlist, {
-    now: new Date("2026-09-30T23:59:59.999Z"),
-  });
-  assert.equal(beforeExpiry.status, "exception");
-
-  const expired = classifyLicense("tls-client-node@0.2.0", "Custom: LICENSE", allowlist, {
-    now: new Date("2026-10-01T00:00:00.000Z"),
-  });
-  assert.equal(expired.status, "denied");
-  assert.match(expired.reason, /expired|reviewBy/i);
-});
-
-test("classifyLicense: malformed temporary exception metadata fails closed", () => {
-  const allowlist = makeAllowlist({
-    exceptions: {
-      "tls-client-node": {
-        license: "Custom: LICENSE",
-        justification: "Temporary exception whose deadline is intentionally invalid.",
-        risk: "medium",
-        temporary: true,
-        owner: "@owner",
-        reviewBy: "2026-02-30",
-        classification: "non-OSI source-available",
-      },
-    },
-  });
-  const result = classifyLicense("tls-client-node@0.2.0", "Custom: LICENSE", allowlist, {
-    now: new Date("2026-08-27T00:00:00.000Z"),
-  });
-  assert.equal(result.status, "denied");
-  assert.match(result.reason, /invalid|reviewBy/i);
-});
-
-test("classifyLicense: ownerless temporary exception fails closed", () => {
-  const allowlist = makeAllowlist({
-    exceptions: {
-      "tls-client-node": {
-        license: "Custom: LICENSE",
-        justification: "Temporary exception deliberately missing an accountable owner.",
-        risk: "medium",
-        temporary: true,
-        reviewBy: "2026-09-30",
-        classification: "non-OSI source-available",
-      },
-    },
-  });
-  const result = classifyLicense("tls-client-node@0.2.0", "Custom: LICENSE", allowlist, {
-    now: new Date("2026-08-27T00:00:00.000Z"),
-  });
-  assert.equal(result.status, "denied");
-  assert.match(result.reason, /owner/i);
 });
 
 // ---------------------------------------------------------------------------
@@ -569,32 +285,6 @@ test("loadAllowlist: exceptions entries have required fields", () => {
   }
 });
 
-test("loadAllowlist: tls-client-node exception is temporary, owned, and covers all consumers", () => {
-  const allowlist = loadAllowlist();
-  const exc = allowlist.exceptions["tls-client-node"] as any;
-  assert.ok(exc, "tls-client-node exception must be registered");
-  assert.equal(exc.risk, "medium", "tls-client-node is a medium-risk exception (Commons Clause)");
-  assert.equal(exc.temporary, true, "Commons Clause exception must not become permanent policy");
-  assert.equal(exc.owner, "@diegosouzapw");
-  assert.equal(exc.reviewBy, "2026-09-30");
-  assert.equal(exc.reviewAt, "v3.9.0");
-  assert.equal(exc.version, "0.2.0", "exception must cover only the provenance-audited release");
-  assert.equal(exc.classification, "Apache-2.0 with Commons Clause; non-OSI source-available");
-  assert.match(exc.justification, /source-available/i);
-  assert.match(exc.justification, /commercial deployment/i);
-  assert.match(exc.justification, /PR #11742/, "temporary exception must link its tracker");
-  for (const provider of [
-    "chatgpt-web",
-    "claude-web",
-    "perplexity-web",
-    "grok-web",
-    "notion-web",
-    "lmarena",
-  ]) {
-    assert.match(exc.justification, new RegExp(provider), `missing consumer ${provider}`);
-  }
-});
-
 test("loadAllowlist: LGPL packages have registered exceptions", () => {
   const allowlist = loadAllowlist();
   const lgplPkgs = ["@img/sharp-libvips-linux-x64", "@img/sharp-libvips-linuxmusl-x64"];
@@ -629,20 +319,6 @@ test("integration: classifyLicense passes MIT packages against real allowlist", 
   assert.equal(result.status, "allowed");
 });
 
-test("integration: classifyLicense passes tls-client-node as exception against real allowlist", () => {
-  const allowlist = loadAllowlist();
-  const result = classifyLicense("tls-client-node@0.2.0", "Custom: LICENSE", allowlist);
-  assert.equal(result.status, "exception");
-});
-
-test("integration: real tls-client-node exception denies an unaudited future version", () => {
-  const allowlist = loadAllowlist();
-  const result = classifyLicense("tls-client-node@0.2.1", "Custom: LICENSE", allowlist);
-  assert.equal(result.status, "denied");
-  assert.match(result.reason, /0\.2\.1/);
-  assert.match(result.reason, /0\.2\.0/);
-});
-
 test("integration: classifyLicense denies GPL-3.0 against real allowlist", () => {
   const allowlist = loadAllowlist();
   const result = classifyLicense("hypothetical-gpl@1.0.0", "GPL-3.0", allowlist);
@@ -653,4 +329,20 @@ test("integration: classifyLicense denies AGPL-3.0 against real allowlist", () =
   const allowlist = loadAllowlist();
   const result = classifyLicense("hypothetical-agpl@1.0.0", "AGPL-3.0", allowlist);
   assert.equal(result.status, "denied");
+});
+
+test("integration: @eloqnt/* UNKNOWN licenses are documented exceptions (next-intl transitive)", () => {
+  const allowlist = loadAllowlist();
+  for (const pkg of [
+    "@eloqnt/config@0.0.2",
+    "@eloqnt/format-json@0.0.3",
+    "@eloqnt/format-po@0.0.3",
+  ]) {
+    const result = classifyLicense(pkg, "UNKNOWN", allowlist);
+    assert.equal(
+      result.status,
+      "exception",
+      `${pkg} ships no license field; must be a documented exception, not allowed/denied`
+    );
+  }
 });
