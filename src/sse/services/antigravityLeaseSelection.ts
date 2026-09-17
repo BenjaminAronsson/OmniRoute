@@ -25,7 +25,7 @@ export function reserveAntigravityLeaseForSelection(
   connection: { id: string } | null | undefined,
   requestedModel: string | null | undefined,
   options: { reserveAntigravityLease?: boolean; routingRequestId?: string | null }
-): { busy: AntigravityLeaseUnavailable } | { busy?: undefined; lease?: AntigravityLease } {
+): { busy?: AntigravityLeaseUnavailable; lease?: AntigravityLease } {
   if (provider !== "antigravity" || !connection || options.reserveAntigravityLease !== true)
     return {};
   const acquired = tryAcquireAntigravityLease({
