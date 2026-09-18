@@ -1,21 +1,12 @@
-# API_REFERENCE (አማርኛ)
+# API Reference (አማርኛ)
 
 🌐 **Languages:** 🇺🇸 [English](../../../../reference/API_REFERENCE.md) · 🇸🇦 [ar](../../../ar/docs/reference/API_REFERENCE.md) · 🇦🇿 [az](../../../az/docs/reference/API_REFERENCE.md) · 🇧🇬 [bg](../../../bg/docs/reference/API_REFERENCE.md) · 🇧🇩 [bn](../../../bn/docs/reference/API_REFERENCE.md) · 🇨🇿 [cs](../../../cs/docs/reference/API_REFERENCE.md) · 🇩🇰 [da](../../../da/docs/reference/API_REFERENCE.md) · 🇩🇪 [de](../../../de/docs/reference/API_REFERENCE.md) · 🇬🇷 [el](../../../el/docs/reference/API_REFERENCE.md) · 🇪🇸 [es](../../../es/docs/reference/API_REFERENCE.md) · 🇪🇪 [et](../../../et/docs/reference/API_REFERENCE.md) · 🇮🇷 [fa](../../../fa/docs/reference/API_REFERENCE.md) · 🇫🇮 [fi](../../../fi/docs/reference/API_REFERENCE.md) · 🇫🇷 [fr](../../../fr/docs/reference/API_REFERENCE.md) · 🇮🇪 [ga](../../../ga/docs/reference/API_REFERENCE.md) · 🇮🇳 [gu](../../../gu/docs/reference/API_REFERENCE.md) · 🇳🇬 [ha](../../../ha/docs/reference/API_REFERENCE.md) · 🇮🇱 [he](../../../he/docs/reference/API_REFERENCE.md) · 🇮🇳 [hi](../../../hi/docs/reference/API_REFERENCE.md) · 🇭🇷 [hr](../../../hr/docs/reference/API_REFERENCE.md) · 🇭🇺 [hu](../../../hu/docs/reference/API_REFERENCE.md) · 🇦🇲 [hy](../../../hy/docs/reference/API_REFERENCE.md) · 🇮🇩 [id](../../../id/docs/reference/API_REFERENCE.md) · 🇳🇬 [ig](../../../ig/docs/reference/API_REFERENCE.md) · 🇮🇹 [it](../../../it/docs/reference/API_REFERENCE.md) · 🇯🇵 [ja](../../../ja/docs/reference/API_REFERENCE.md) · 🇬🇪 [ka](../../../ka/docs/reference/API_REFERENCE.md) · 🇰🇭 [km](../../../km/docs/reference/API_REFERENCE.md) · 🇮🇳 [kn](../../../kn/docs/reference/API_REFERENCE.md) · 🇰🇷 [ko](../../../ko/docs/reference/API_REFERENCE.md) · 🇱🇹 [lt](../../../lt/docs/reference/API_REFERENCE.md) · 🇱🇻 [lv](../../../lv/docs/reference/API_REFERENCE.md) · 🇮🇳 [ml](../../../ml/docs/reference/API_REFERENCE.md) · 🇮🇳 [mr](../../../mr/docs/reference/API_REFERENCE.md) · 🇲🇾 [ms](../../../ms/docs/reference/API_REFERENCE.md) · 🇲🇹 [mt](../../../mt/docs/reference/API_REFERENCE.md) · 🇲🇲 [my](../../../my/docs/reference/API_REFERENCE.md) · 🇳🇵 [ne](../../../ne/docs/reference/API_REFERENCE.md) · 🇳🇱 [nl](../../../nl/docs/reference/API_REFERENCE.md) · 🇳🇴 [no](../../../no/docs/reference/API_REFERENCE.md) · 🇮🇳 [or](../../../or/docs/reference/API_REFERENCE.md) · 🇮🇳 [pa](../../../pa/docs/reference/API_REFERENCE.md) · 🇵🇭 [phi](../../../phi/docs/reference/API_REFERENCE.md) · 🇵🇱 [pl](../../../pl/docs/reference/API_REFERENCE.md) · 🇵🇹 [pt](../../../pt/docs/reference/API_REFERENCE.md) · 🇧🇷 [pt-BR](../../../pt-BR/docs/reference/API_REFERENCE.md) · 🇷🇴 [ro](../../../ro/docs/reference/API_REFERENCE.md) · 🇷🇺 [ru](../../../ru/docs/reference/API_REFERENCE.md) · 🇱🇰 [si](../../../si/docs/reference/API_REFERENCE.md) · 🇸🇰 [sk](../../../sk/docs/reference/API_REFERENCE.md) · 🇸🇮 [sl](../../../sl/docs/reference/API_REFERENCE.md) · 🇷🇸 [sr](../../../sr/docs/reference/API_REFERENCE.md) · 🇸🇪 [sv](../../../sv/docs/reference/API_REFERENCE.md) · 🇰🇪 [sw](../../../sw/docs/reference/API_REFERENCE.md) · 🇮🇳 [ta](../../../ta/docs/reference/API_REFERENCE.md) · 🇮🇳 [te](../../../te/docs/reference/API_REFERENCE.md) · 🇹🇭 [th](../../../th/docs/reference/API_REFERENCE.md) · 🇹🇷 [tr](../../../tr/docs/reference/API_REFERENCE.md) · 🇺🇦 [uk-UA](../../../uk-UA/docs/reference/API_REFERENCE.md) · 🇵🇰 [ur](../../../ur/docs/reference/API_REFERENCE.md) · 🇺🇿 [uz](../../../uz/docs/reference/API_REFERENCE.md) · 🇻🇳 [vi](../../../vi/docs/reference/API_REFERENCE.md) · 🇳🇬 [yo](../../../yo/docs/reference/API_REFERENCE.md) · 🇨🇳 [zh-CN](../../../zh-CN/docs/reference/API_REFERENCE.md) · 🇹🇼 [zh-TW](../../../zh-TW/docs/reference/API_REFERENCE.md)
 
 ---
 
----
-
-title: "የAPI ማጣቀሻ"
-version: 3.8.51
-lastUpdated: 2026-08-31
----
-
-# የAPI ማጣቀሻ
-
 🌐 **Languages:** 🇺🇸 [English](../../../../reference/API_REFERENCE.md) · 🇸🇦 [ar](../../../ar/docs/reference/API_REFERENCE.md) · 🇦🇿 [az](../../../az/docs/reference/API_REFERENCE.md) · 🇧🇬 [bg](../../../bg/docs/reference/API_REFERENCE.md) · 🇧🇩 [bn](../../../bn/docs/reference/API_REFERENCE.md) · 🇨🇿 [cs](../../../cs/docs/reference/API_REFERENCE.md) · 🇩🇰 [da](../../../da/docs/reference/API_REFERENCE.md) · 🇩🇪 [de](../../../de/docs/reference/API_REFERENCE.md) · 🇬🇷 [el](../../../el/docs/reference/API_REFERENCE.md) · 🇪🇸 [es](../../../es/docs/reference/API_REFERENCE.md) · 🇪🇪 [et](../../../et/docs/reference/API_REFERENCE.md) · 🇮🇷 [fa](../../../fa/docs/reference/API_REFERENCE.md) · 🇫🇮 [fi](../../../fi/docs/reference/API_REFERENCE.md) · 🇫🇷 [fr](../../../fr/docs/reference/API_REFERENCE.md) · 🇮🇪 [ga](../../../ga/docs/reference/API_REFERENCE.md) · 🇮🇳 [gu](../../../gu/docs/reference/API_REFERENCE.md) · 🇳🇬 [ha](../../../ha/docs/reference/API_REFERENCE.md) · 🇮🇱 [he](../../../he/docs/reference/API_REFERENCE.md) · 🇮🇳 [hi](../../../hi/docs/reference/API_REFERENCE.md) · 🇭🇷 [hr](../../../hr/docs/reference/API_REFERENCE.md) · 🇭🇺 [hu](../../../hu/docs/reference/API_REFERENCE.md) · 🇦🇲 [hy](../../../hy/docs/reference/API_REFERENCE.md) · 🇮🇩 [id](../../../id/docs/reference/API_REFERENCE.md) · 🇳🇬 [ig](../../../ig/docs/reference/API_REFERENCE.md) · 🇮🇹 [it](../../../it/docs/reference/API_REFERENCE.md) · 🇯🇵 [ja](../../../ja/docs/reference/API_REFERENCE.md) · 🇬🇪 [ka](../../../ka/docs/reference/API_REFERENCE.md) · 🇰🇭 [km](../../../km/docs/reference/API_REFERENCE.md) · 🇮🇳 [kn](../../../kn/docs/reference/API_REFERENCE.md) · 🇰🇷 [ko](../../../ko/docs/reference/API_REFERENCE.md) · 🇱🇹 [lt](../../../lt/docs/reference/API_REFERENCE.md) · 🇱🇻 [lv](../../../lv/docs/reference/API_REFERENCE.md) · 🇮🇳 [ml](../../../ml/docs/reference/API_REFERENCE.md) · 🇮🇳 [mr](../../../mr/docs/reference/API_REFERENCE.md) · 🇲🇾 [ms](../../../ms/docs/reference/API_REFERENCE.md) · 🇲🇹 [mt](../../../mt/docs/reference/API_REFERENCE.md) · 🇲🇲 [my](../../../my/docs/reference/API_REFERENCE.md) · 🇳🇵 [ne](../../../ne/docs/reference/API_REFERENCE.md) · 🇳🇱 [nl](../../../nl/docs/reference/API_REFERENCE.md) · 🇳🇴 [no](../../../no/docs/reference/API_REFERENCE.md) · 🇮🇳 [or](../../../or/docs/reference/API_REFERENCE.md) · 🇮🇳 [pa](../../../pa/docs/reference/API_REFERENCE.md) · 🇵🇭 [phi](../../../phi/docs/reference/API_REFERENCE.md) · 🇵🇱 [pl](../../../pl/docs/reference/API_REFERENCE.md) · 🇵🇹 [pt](../../../pt/docs/reference/API_REFERENCE.md) · 🇧🇷 [pt-BR](../../../pt-BR/docs/reference/API_REFERENCE.md) · 🇷🇴 [ro](../../../ro/docs/reference/API_REFERENCE.md) · 🇷🇺 [ru](../../../ru/docs/reference/API_REFERENCE.md) · 🇱🇰 [si](../../../si/docs/reference/API_REFERENCE.md) · 🇸🇰 [sk](../../../sk/docs/reference/API_REFERENCE.md) · 🇸🇮 [sl](../../../sl/docs/reference/API_REFERENCE.md) · 🇷🇸 [sr](../../../sr/docs/reference/API_REFERENCE.md) · 🇸🇪 [sv](../../../sv/docs/reference/API_REFERENCE.md) · 🇰🇪 [sw](../../../sw/docs/reference/API_REFERENCE.md) · 🇮🇳 [ta](../../../ta/docs/reference/API_REFERENCE.md) · 🇮🇳 [te](../../../te/docs/reference/API_REFERENCE.md) · 🇹🇭 [th](../../../th/docs/reference/API_REFERENCE.md) · 🇹🇷 [tr](../../../tr/docs/reference/API_REFERENCE.md) · 🇺🇦 [uk-UA](../../../uk-UA/docs/reference/API_REFERENCE.md) · 🇵🇰 [ur](../../../ur/docs/reference/API_REFERENCE.md) · 🇺🇿 [uz](../../../uz/docs/reference/API_REFERENCE.md) · 🇻🇳 [vi](../../../vi/docs/reference/API_REFERENCE.md) · 🇳🇬 [yo](../../../yo/docs/reference/API_REFERENCE.md) · 🇨🇳 [zh-CN](../../../zh-CN/docs/reference/API_REFERENCE.md) · 🇹🇼 [zh-TW](../../../zh-TW/docs/reference/API_REFERENCE.md)
 
-የOmniRoute API ዋና ማጣቀሻ። የይፋውን `/v1` ገጽታ እና በብዛት ጥቅም ላይ የሚውሉትን የአስተዳደር መዳረሻዎች ይሸፍናል፤ በማሽን የሚነበበው [`docs/openapi.yaml`](../openapi.yaml) እና በ`src/app/api/` ሥር ያለው የመስመር ዛፍ የተሟሉ ምንጮች ናቸው።
+የOmniRoute API ዋና ማጣቀሻ። ይህ ይፋዊውን `/v1` ገጽታ እና በብዛት ጥቅም ላይ የሚውሉትን የአስተዳደር መዳረሻዎች ይሸፍናል፤ በማሽን ሊነበብ የሚችለው [`docs/openapi.yaml`](../openapi.yaml) እና በ`src/app/api/` ሥር ያለው የመንገዶች ዛፍ ዝርዝር ምንጮች ናቸው።
 
 ---
 
@@ -522,17 +513,22 @@ POST /v1/providers/{provider}/images/generations
 
 ## Files API
 
-ለባች ግቤት/ውጤት እና በፋይል ዓላማ መሠረት ለሚደረጉ ሰቀላዎች OpenAI-ተኳሃኝ የፋይሎች መዳረሻ።
+ለባች ግብዓት/ውጤት እና በፋይል ዓላማ መሠረት ለሚደረጉ ሰቀላዎች OpenAI-ተኳሃኝ የፋይሎች መገናኛ።
 
 | ዘዴ     | ዱካ                       | መግለጫ                                                                                                      |
 | ------ | ------------------------ | --------------------------------------------------------------------------------------------------------- |
 | POST   | `/v1/files`              | ፋይል ይስቀሉ (ባለብዙ ክፍል፦ `file`፣ `purpose`፣ `expires_after[anchor]`፣ `expires_after[seconds]`) — ከፍተኛው 512 MiB |
 | GET    | `/v1/files`              | ለተረጋገጠው API ቁልፍ ፋይሎችን ይዘርዝሩ                                                                               |
-| GET    | `/v1/files/[id]`         | የፋይል ሜታዳታን ያግኙ                                                                                            |
+| GET    | `/v1/files/[id]`         | የፋይል ዲበ ውሂብን ያግኙ                                                                                          |
 | DELETE | `/v1/files/[id]`         | ፋይል ይሰርዙ                                                                                                  |
 | GET    | `/v1/files/[id]/content` | ጥሬውን የፋይል ይዘት በዥረት መልሰው ይላኩ                                                                               |
 
-**ማረጋገጫ፦** Bearer API ቁልፍ — ፋይሎች በ`getApiKeyRequestScope` አማካኝነት ለእያንዳንዱ API ቁልፍ ተለይተው ይገደባሉ።
+**ማረጋገጫ፦** Bearer API ቁልፍ — ፋይሎች በ`getApiKeyRequestScope` አማካኝነት ለእያንዳንዱ API ቁልፍ ተለይተው ይወሰናሉ። አንድ ቁልፍ
+የራሱን ፋይሎች ብቻ ያያል፣ ያወርዳል እና ይሰርዛል፤ ቁልፍ የሌለው የዳሽቦርድ ክፍለ ጊዜ ሙሉውን
+ኢንስታንስ ያነባል፤ ባለቤት የሌለው ፋይል (ስም-አልባ ወይም በዳሽቦርድ ክፍለ ጊዜ የተሰቀለ) ክፍለ ጊዜ ላልሆኑ ጠሪዎች ሁሉ
+ይከለከላል። `GET /v1/files` ስም-አልባ ጠሪን — እና የቀረበ ነገር ግን
+የማይፈታ ቁልፍን — የሁሉንም ተከራዮች ፋይሎች ከመዘርዘር ይልቅ፣ `REQUIRE_API_KEY=false` በሆነበት ጊዜም እንኳ `401` በመመለስ ውድቅ ያደርጋል
+(GHSA-m3hp-hq9g-fpmv, GHSA-2jm2-mpx8-6523).
 
 ---
 
@@ -542,13 +538,16 @@ POST /v1/providers/{provider}/images/generations
 
 | ዘዴ     | ዱካ                        | መግለጫ                                                                                                 |
 | ------ | ------------------------- | ---------------------------------------------------------------------------------------------------- |
-| POST   | `/v1/batches`             | ባች ይፍጠሩ — የጥያቄው ይዘት በ`v1BatchCreateSchema` ይረጋገጣል (`input_file_id`፣ `endpoint`፣ `completion_window`) |
+| POST   | `/v1/batches`             | ባች ይፍጠሩ — የጥያቄው አካል በ`v1BatchCreateSchema` (`input_file_id`፣ `endpoint`፣ `completion_window`) ይረጋገጣል |
 | GET    | `/v1/batches`             | ባቾችን ይዘርዝሩ                                                                                           |
-| GET    | `/v1/batches/[id]`        | የባች ሁኔታ + `request_counts` ያግኙ                                                                       |
+| GET    | `/v1/batches/[id]`        | የባች ሁኔታን + `request_counts` ያግኙ                                                                      |
 | DELETE | `/v1/batches/[id]`        | የተጠናቀቀ/ያልተሳካ ባች ይሰርዙ                                                                                 |
 | POST   | `/v1/batches/[id]/cancel` | በሂደት ላይ ያለ ባች ይሰርዙ                                                                                   |
 
-**ማረጋገጫ፦** Bearer API ቁልፍ። ባቾች ለእያንዳንዱ API ቁልፍ ተለይተው ይገደባሉ።
+**ማረጋገጫ፦** Bearer API ቁልፍ። እንደ ፋይሎች ተመሳሳይ ባለሦስት አቅጣጫ ደንብ፣ ባቾች በእያንዳንዱ API ቁልፍ ወሰን ውስጥ ይገኛሉ፦
+የራስዎ ቁልፍ ብቻ፣ የዳሽቦርድ ክፍለ ጊዜ በጠቅላላው ኢንስታንስ ላይ፣ እና ባለቤት የሌላቸው መዝገቦች ለሁሉም
+ክፍለ ጊዜ ላልሆኑ ጠሪዎች ይከለከላሉ (ማግኘት፣ መሰረዝ፣ መሰረዝ እና ሲፈጠር የሚደረገው የ`input_file_id` ማረጋገጫ)።
+`GET /v1/batches` `REQUIRE_API_KEY=false` በሆነ ጊዜም ማንነቱ ያልታወቀ ጠሪን በ`401` ውድቅ ያደርጋል።
 
 ---
 
@@ -1149,7 +1148,7 @@ Content-Type: application/json
 }
 ```
 
-> **የስኪማ ማስታወሻዎች** (`setBudgetSchema`)፦ `apiKeyId` ያስፈልጋል፤ ከ`dailyLimitUsd`፣ `weeklyLimitUsd` ወይም `monthlyLimitUsd` ቢያንስ አንዱ ከዜሮ የሚበልጥ መሆን አለበት። አማራጭ መስኮች፦ `warningThreshold` (0–1)፣ `resetInterval` (`daily` | `weekly` | `monthly`)፣ `resetTime` (`HH:MM`)። የቀድሞው `{keyId, limit, period}` ቅርጽ `400 Bad Request`ን ይመልሳል።
+> **የSchema ማስታወሻዎች** (`setBudgetSchema`)፦ `apiKeyId` ያስፈልጋል፤ ከ`dailyLimitUsd`፣ `weeklyLimitUsd` ወይም `monthlyLimitUsd` ቢያንስ አንዱ ከዜሮ መብለጥ አለበት። አማራጭ መስኮች፦ `warningThreshold` (0–1)፣ `resetInterval` (`daily` | `weekly` | `monthly`)፣ `resetTime` (`HH:MM`)። የቀድሞው `{keyId, limit, period}` ቅርጽ `400 Bad Request` ይመልሳል።
 
 ## የቶከን ገደቦች
 
@@ -1609,19 +1608,19 @@ GET /.well-known/agent.json
 
 ## የCLI መሣሪያዎች አስተዳደር
 
-ከOmniRoute ጋር የሚዋሃዱ የCLI መሣሪያዎችን (antigravity፣ chipotle፣ commandCode፣
-devin-cli፣ ወዘተ) ያስተዳድሩ። ሙሉውን ዝርዝር ለማየት [የአቅራቢዎች ማጣቀሻ](./PROVIDER_REFERENCE.md)ን ይመልከቱ።
+ከOmniRoute ጋር የሚዋሃዱ CLI መሣሪያዎችን (antigravity፣ commandCode፣
+devin-cli፣ ወዘተ) ያስተዳድሩ። ሙሉውን ዝርዝር ለማየት [የአቅራቢ ማጣቀሻ](./PROVIDER_REFERENCE.md)ን ይመልከቱ።
 
-| ዘዴ   | ዱካ                                      | መግለጫ                                                                                                                                |
-| ---- | --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| GET  | `/api/cli-tools/all-statuses`           | የሁሉም የCLI መሣሪያዎች ሁኔታ (የተጫነ፣ ስሪት፣ ለመጨረሻ ጊዜ የታየበት)                                                                                    |
-| GET  | `/api/cli-tools/status`                 | የአንድ የCLI መሣሪያ ዝርዝር ሁኔታ (`?tool=` መጠይቅ)                                                                                             |
-| POST | `/api/cli-tools/apply`                  | በመሣሪያው የተፈጠረውን ውቅር ይጻፉ (`dryRun` ቅድመ ዕይታ ያሳያል፤ በኮንቴይነር ሲከናወን `422` + `containerEphemeralTarget`፤ `migration` የቆየ Codex YAMLን ይጠቅሳል) |
-| GET  | `/api/cli-tools/backups`                | የCLI መሣሪያ ውቅር ምትኬዎችን ይዘርዝሩ                                                                                                          |
-| POST | `/api/cli-tools/backups`                | የሁሉም የCLI መሣሪያ ውቅሮች ምትኬ ይፍጠሩ                                                                                                        |
-| POST | `/api/cli-tools/backups`                | መልስ፦ በጥያቄው ይዘት ውስጥ `{tool, backupId}` በመጠቀም ያው መጨረሻ ነጥብ ያንን ምትኬ ይመልሳል                                                               |
-| GET  | `/api/cli-tools/antigravity-mitm`       | የAntigravity MITM ተኪ ሁኔታ (የ"antigravity-mitm" CLI መሣሪያ)                                                                             |
-| POST | `/api/cli-tools/antigravity-mitm/alias` | የantigravity-mitm ቅጽል ስሞችን ያዋቅሩ                                                                                                     |
+| ዘዴ   | ዱካ                                      | መግለጫ                                                                                                                                     |
+| ---- | --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| GET  | `/api/cli-tools/all-statuses`           | የሁሉም CLI መሣሪያዎች ሁኔታ (የተጫነ፣ ስሪት፣ ለመጨረሻ ጊዜ የታየበት)                                                                                          |
+| GET  | `/api/cli-tools/status`                 | የአንድ CLI መሣሪያ ዝርዝር ሁኔታ (`?tool=` መጠይቅ)                                                                                                   |
+| POST | `/api/cli-tools/apply`                  | የመሣሪያውን የተፈጠረ ውቅር ይጽፋል (`dryRun` ቅድመ ዕይታዎች፤ በኮንቴይነር ውስጥ ሲሆን `422` + `containerEphemeralTarget`፤ `migration` ስለ ቆየ Codex YAML ማስታወሻ ይሰጣል) |
+| GET  | `/api/cli-tools/backups`                | የCLI መሣሪያ ውቅር ምትኬዎችን ይዘረዝራል                                                                                                              |
+| POST | `/api/cli-tools/backups`                | የሁሉም CLI መሣሪያ ውቅሮች ምትኬ ይፈጥራል                                                                                                             |
+| POST | `/api/cli-tools/backups`                | መልሶ ማግኘት፦ በጥያቄው አካል ውስጥ `{tool, backupId}` በመጠቀም ተመሳሳዩ መግቢያ ነጥብ ያንን ምትኬ ይመልሳል                                                            |
+| GET  | `/api/cli-tools/antigravity-mitm`       | የAntigravity MITM ፕሮክሲ ሁኔታ (የ"antigravity-mitm" CLI መሣሪያ)                                                                                |
+| POST | `/api/cli-tools/antigravity-mitm/alias` | የantigravity-mitm ተለዋጭ ስሞችን ያዋቅራል                                                                                                        |
 
 **ማረጋገጫ፦** የአስተዳደር ክፍለ ጊዜ ያስፈልጋል።
 

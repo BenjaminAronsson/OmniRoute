@@ -1,21 +1,12 @@
-# API_REFERENCE (Hrvatski)
+# API Reference (Hrvatski)
 
 🌐 **Languages:** 🇺🇸 [English](../../../../reference/API_REFERENCE.md) · 🇪🇹 [am](../../../am/docs/reference/API_REFERENCE.md) · 🇸🇦 [ar](../../../ar/docs/reference/API_REFERENCE.md) · 🇦🇿 [az](../../../az/docs/reference/API_REFERENCE.md) · 🇧🇬 [bg](../../../bg/docs/reference/API_REFERENCE.md) · 🇧🇩 [bn](../../../bn/docs/reference/API_REFERENCE.md) · 🇨🇿 [cs](../../../cs/docs/reference/API_REFERENCE.md) · 🇩🇰 [da](../../../da/docs/reference/API_REFERENCE.md) · 🇩🇪 [de](../../../de/docs/reference/API_REFERENCE.md) · 🇬🇷 [el](../../../el/docs/reference/API_REFERENCE.md) · 🇪🇸 [es](../../../es/docs/reference/API_REFERENCE.md) · 🇪🇪 [et](../../../et/docs/reference/API_REFERENCE.md) · 🇮🇷 [fa](../../../fa/docs/reference/API_REFERENCE.md) · 🇫🇮 [fi](../../../fi/docs/reference/API_REFERENCE.md) · 🇫🇷 [fr](../../../fr/docs/reference/API_REFERENCE.md) · 🇮🇪 [ga](../../../ga/docs/reference/API_REFERENCE.md) · 🇮🇳 [gu](../../../gu/docs/reference/API_REFERENCE.md) · 🇳🇬 [ha](../../../ha/docs/reference/API_REFERENCE.md) · 🇮🇱 [he](../../../he/docs/reference/API_REFERENCE.md) · 🇮🇳 [hi](../../../hi/docs/reference/API_REFERENCE.md) · 🇭🇺 [hu](../../../hu/docs/reference/API_REFERENCE.md) · 🇦🇲 [hy](../../../hy/docs/reference/API_REFERENCE.md) · 🇮🇩 [id](../../../id/docs/reference/API_REFERENCE.md) · 🇳🇬 [ig](../../../ig/docs/reference/API_REFERENCE.md) · 🇮🇹 [it](../../../it/docs/reference/API_REFERENCE.md) · 🇯🇵 [ja](../../../ja/docs/reference/API_REFERENCE.md) · 🇬🇪 [ka](../../../ka/docs/reference/API_REFERENCE.md) · 🇰🇭 [km](../../../km/docs/reference/API_REFERENCE.md) · 🇮🇳 [kn](../../../kn/docs/reference/API_REFERENCE.md) · 🇰🇷 [ko](../../../ko/docs/reference/API_REFERENCE.md) · 🇱🇹 [lt](../../../lt/docs/reference/API_REFERENCE.md) · 🇱🇻 [lv](../../../lv/docs/reference/API_REFERENCE.md) · 🇮🇳 [ml](../../../ml/docs/reference/API_REFERENCE.md) · 🇮🇳 [mr](../../../mr/docs/reference/API_REFERENCE.md) · 🇲🇾 [ms](../../../ms/docs/reference/API_REFERENCE.md) · 🇲🇹 [mt](../../../mt/docs/reference/API_REFERENCE.md) · 🇲🇲 [my](../../../my/docs/reference/API_REFERENCE.md) · 🇳🇵 [ne](../../../ne/docs/reference/API_REFERENCE.md) · 🇳🇱 [nl](../../../nl/docs/reference/API_REFERENCE.md) · 🇳🇴 [no](../../../no/docs/reference/API_REFERENCE.md) · 🇮🇳 [or](../../../or/docs/reference/API_REFERENCE.md) · 🇮🇳 [pa](../../../pa/docs/reference/API_REFERENCE.md) · 🇵🇭 [phi](../../../phi/docs/reference/API_REFERENCE.md) · 🇵🇱 [pl](../../../pl/docs/reference/API_REFERENCE.md) · 🇵🇹 [pt](../../../pt/docs/reference/API_REFERENCE.md) · 🇧🇷 [pt-BR](../../../pt-BR/docs/reference/API_REFERENCE.md) · 🇷🇴 [ro](../../../ro/docs/reference/API_REFERENCE.md) · 🇷🇺 [ru](../../../ru/docs/reference/API_REFERENCE.md) · 🇱🇰 [si](../../../si/docs/reference/API_REFERENCE.md) · 🇸🇰 [sk](../../../sk/docs/reference/API_REFERENCE.md) · 🇸🇮 [sl](../../../sl/docs/reference/API_REFERENCE.md) · 🇷🇸 [sr](../../../sr/docs/reference/API_REFERENCE.md) · 🇸🇪 [sv](../../../sv/docs/reference/API_REFERENCE.md) · 🇰🇪 [sw](../../../sw/docs/reference/API_REFERENCE.md) · 🇮🇳 [ta](../../../ta/docs/reference/API_REFERENCE.md) · 🇮🇳 [te](../../../te/docs/reference/API_REFERENCE.md) · 🇹🇭 [th](../../../th/docs/reference/API_REFERENCE.md) · 🇹🇷 [tr](../../../tr/docs/reference/API_REFERENCE.md) · 🇺🇦 [uk-UA](../../../uk-UA/docs/reference/API_REFERENCE.md) · 🇵🇰 [ur](../../../ur/docs/reference/API_REFERENCE.md) · 🇺🇿 [uz](../../../uz/docs/reference/API_REFERENCE.md) · 🇻🇳 [vi](../../../vi/docs/reference/API_REFERENCE.md) · 🇳🇬 [yo](../../../yo/docs/reference/API_REFERENCE.md) · 🇨🇳 [zh-CN](../../../zh-CN/docs/reference/API_REFERENCE.md) · 🇹🇼 [zh-TW](../../../zh-TW/docs/reference/API_REFERENCE.md)
 
 ---
 
----
-
-title: "API Reference"
-version: 3.8.51
-lastUpdated: 2026-08-31
----
-
-# API referenca
-
 🌐 **Languages:** 🇺🇸 [English](../../../../reference/API_REFERENCE.md) · 🇪🇹 [am](../../../am/docs/reference/API_REFERENCE.md) · 🇸🇦 [ar](../../../ar/docs/reference/API_REFERENCE.md) · 🇦🇿 [az](../../../az/docs/reference/API_REFERENCE.md) · 🇧🇬 [bg](../../../bg/docs/reference/API_REFERENCE.md) · 🇧🇩 [bn](../../../bn/docs/reference/API_REFERENCE.md) · 🇨🇿 [cs](../../../cs/docs/reference/API_REFERENCE.md) · 🇩🇰 [da](../../../da/docs/reference/API_REFERENCE.md) · 🇩🇪 [de](../../../de/docs/reference/API_REFERENCE.md) · 🇬🇷 [el](../../../el/docs/reference/API_REFERENCE.md) · 🇪🇸 [es](../../../es/docs/reference/API_REFERENCE.md) · 🇪🇪 [et](../../../et/docs/reference/API_REFERENCE.md) · 🇮🇷 [fa](../../../fa/docs/reference/API_REFERENCE.md) · 🇫🇮 [fi](../../../fi/docs/reference/API_REFERENCE.md) · 🇫🇷 [fr](../../../fr/docs/reference/API_REFERENCE.md) · 🇮🇪 [ga](../../../ga/docs/reference/API_REFERENCE.md) · 🇮🇳 [gu](../../../gu/docs/reference/API_REFERENCE.md) · 🇳🇬 [ha](../../../ha/docs/reference/API_REFERENCE.md) · 🇮🇱 [he](../../../he/docs/reference/API_REFERENCE.md) · 🇮🇳 [hi](../../../hi/docs/reference/API_REFERENCE.md) · 🇭🇺 [hu](../../../hu/docs/reference/API_REFERENCE.md) · 🇦🇲 [hy](../../../hy/docs/reference/API_REFERENCE.md) · 🇮🇩 [id](../../../id/docs/reference/API_REFERENCE.md) · 🇳🇬 [ig](../../../ig/docs/reference/API_REFERENCE.md) · 🇮🇹 [it](../../../it/docs/reference/API_REFERENCE.md) · 🇯🇵 [ja](../../../ja/docs/reference/API_REFERENCE.md) · 🇬🇪 [ka](../../../ka/docs/reference/API_REFERENCE.md) · 🇰🇭 [km](../../../km/docs/reference/API_REFERENCE.md) · 🇮🇳 [kn](../../../kn/docs/reference/API_REFERENCE.md) · 🇰🇷 [ko](../../../ko/docs/reference/API_REFERENCE.md) · 🇱🇹 [lt](../../../lt/docs/reference/API_REFERENCE.md) · 🇱🇻 [lv](../../../lv/docs/reference/API_REFERENCE.md) · 🇮🇳 [ml](../../../ml/docs/reference/API_REFERENCE.md) · 🇮🇳 [mr](../../../mr/docs/reference/API_REFERENCE.md) · 🇲🇾 [ms](../../../ms/docs/reference/API_REFERENCE.md) · 🇲🇹 [mt](../../../mt/docs/reference/API_REFERENCE.md) · 🇲🇲 [my](../../../my/docs/reference/API_REFERENCE.md) · 🇳🇵 [ne](../../../ne/docs/reference/API_REFERENCE.md) · 🇳🇱 [nl](../../../nl/docs/reference/API_REFERENCE.md) · 🇳🇴 [no](../../../no/docs/reference/API_REFERENCE.md) · 🇮🇳 [or](../../../or/docs/reference/API_REFERENCE.md) · 🇮🇳 [pa](../../../pa/docs/reference/API_REFERENCE.md) · 🇵🇭 [phi](../../../phi/docs/reference/API_REFERENCE.md) · 🇵🇱 [pl](../../../pl/docs/reference/API_REFERENCE.md) · 🇵🇹 [pt](../../../pt/docs/reference/API_REFERENCE.md) · 🇧🇷 [pt-BR](../../../pt-BR/docs/reference/API_REFERENCE.md) · 🇷🇴 [ro](../../../ro/docs/reference/API_REFERENCE.md) · 🇷🇺 [ru](../../../ru/docs/reference/API_REFERENCE.md) · 🇱🇰 [si](../../../si/docs/reference/API_REFERENCE.md) · 🇸🇰 [sk](../../../sk/docs/reference/API_REFERENCE.md) · 🇸🇮 [sl](../../../sl/docs/reference/API_REFERENCE.md) · 🇷🇸 [sr](../../../sr/docs/reference/API_REFERENCE.md) · 🇸🇪 [sv](../../../sv/docs/reference/API_REFERENCE.md) · 🇰🇪 [sw](../../../sw/docs/reference/API_REFERENCE.md) · 🇮🇳 [ta](../../../ta/docs/reference/API_REFERENCE.md) · 🇮🇳 [te](../../../te/docs/reference/API_REFERENCE.md) · 🇹🇭 [th](../../../th/docs/reference/API_REFERENCE.md) · 🇹🇷 [tr](../../../tr/docs/reference/API_REFERENCE.md) · 🇺🇦 [uk-UA](../../../uk-UA/docs/reference/API_REFERENCE.md) · 🇵🇰 [ur](../../../ur/docs/reference/API_REFERENCE.md) · 🇺🇿 [uz](../../../uz/docs/reference/API_REFERENCE.md) · 🇻🇳 [vi](../../../vi/docs/reference/API_REFERENCE.md) · 🇳🇬 [yo](../../../yo/docs/reference/API_REFERENCE.md) · 🇨🇳 [zh-CN](../../../zh-CN/docs/reference/API_REFERENCE.md) · 🇹🇼 [zh-TW](../../../zh-TW/docs/reference/API_REFERENCE.md)
 
-Osnovna referenca za OmniRoute API. Obuhvaća javnu `/v1` površinu i najkorištenije upravljačke krajnje točke (endpointe); iscrpni izvori podataka su strojno čitljiva datoteka [`docs/openapi.yaml`](../openapi.yaml) i stablo ruta u `src/app/api/`.
+Temeljna referenca za OmniRoute API. Obuhvaća javno sučelje `/v1` i najčešće korištene krajnje točke za upravljanje; strojno čitljiva datoteka [`docs/openapi.yaml`](../openapi.yaml) i stablo ruta u `src/app/api/` iscrpni su izvori.
 
 ---
 
@@ -503,35 +494,41 @@ Prefiks providera automatski se dodaje ako nedostaje. Neusklađeni modeli vraća
 
 ---
 
-## Files API
+## API za datoteke
 
-OpenAI-kompatibilan krajnji zahtjev (endpoint) za datoteke za grupni unos/izlaz i prijenose s namjenom datoteke.
+Krajnja točka za datoteke kompatibilna s OpenAI-jem za skupni ulaz/izlaz i prijenose datoteka s određenom namjenom.
 
-| Metoda | Putanja                  | Opis                                                                                                                     |
-| ------ | ------------------------ | ------------------------------------------------------------------------------------------------------------------------ |
-| POST   | `/v1/files`              | Prijenos datoteke (multipart: `file`, `purpose`, `expires_after[anchor]`, `expires_after[seconds]`) — maksimalno 512 MiB |
-| GET    | `/v1/files`              | Prikaz popisa datoteka za autentificirani API ključ                                                                      |
-| GET    | `/v1/files/[id]`         | Dohvat metapodataka datoteke                                                                                             |
-| DELETE | `/v1/files/[id]`         | Brisanje datoteke                                                                                                        |
-| GET    | `/v1/files/[id]/content` | Strujanje (streaming) sirovog sadržaja datoteke                                                                          |
+| Metoda | Putanja                  | Opis                                                                                                                   |
+| ------ | ------------------------ | ---------------------------------------------------------------------------------------------------------------------- |
+| POST   | `/v1/files`              | Prenesite datoteku (multipart: `file`, `purpose`, `expires_after[anchor]`, `expires_after[seconds]`) — najviše 512 MiB |
+| GET    | `/v1/files`              | Navedite datoteke za autentificirani API ključ                                                                         |
+| GET    | `/v1/files/[id]`         | Dohvatite metapodatke datoteke                                                                                         |
+| DELETE | `/v1/files/[id]`         | Izbrišite datoteku                                                                                                     |
+| GET    | `/v1/files/[id]/content` | Prenesite neobrađeni sadržaj datoteke u obliku toka podataka                                                           |
 
-**Autentikacija:** Bearer API ključ — datoteke su ograničene po API ključu putem `getApiKeyRequestScope`.
+**Autentifikacija:** API ključ Bearer — opseg datoteka određuje se zasebno za svaki API ključ putem `getApiKeyRequestScope`. Ključ
+može vidjeti, preuzimati i brisati samo vlastite datoteke; sesija nadzorne ploče bez ključa može čitati
+cijelu instancu; pristup datoteci bez vlasnika (anonimni prijenos ili prijenos putem sesije nadzorne ploče) odbija se svakom
+pozivatelju bez sesije. `GET /v1/files` odbija anonimnog pozivatelja — kao i navedeni ključ koji se ne može
+razriješiti — odgovorom `401` čak i kada je `REQUIRE_API_KEY=false`, umjesto navođenja datoteka svih zakupaca
+(GHSA-m3hp-hq9g-fpmv, GHSA-2jm2-mpx8-6523).
 
 ---
 
 ## Batches API
 
-OpenAI-kompatibilna grupna obrada.
+Skupna obrada kompatibilna s OpenAI-jem.
 
-| Metoda | Putanja                   | Opis                                                                                                                                |
-| ------ | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| POST   | `/v1/batches`             | Kreiranje grupe (batch) — tijelo zahtjeva validirano putem `v1BatchCreateSchema` (`input_file_id`, `endpoint`, `completion_window`) |
-| GET    | `/v1/batches`             | Prikaz popisa grupa                                                                                                                 |
-| GET    | `/v1/batches/[id]`        | Dohvat statusa grupe + `request_counts`                                                                                             |
-| DELETE | `/v1/batches/[id]`        | Brisanje završene/neuspjele grupe                                                                                                   |
-| POST   | `/v1/batches/[id]/cancel` | Otkazivanje grupe u tijeku obrade                                                                                                   |
+| Metoda | Putanja                   | Opis                                                                                                                           |
+| ------ | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| POST   | `/v1/batches`             | Stvaranje skupne obrade — tijelo se provjerava pomoću `v1BatchCreateSchema` (`input_file_id`, `endpoint`, `completion_window`) |
+| GET    | `/v1/batches`             | Popis skupnih obrada                                                                                                           |
+| GET    | `/v1/batches/[id]`        | Dohvaćanje statusa skupne obrade + `request_counts`                                                                            |
+| DELETE | `/v1/batches/[id]`        | Brisanje dovršene/neuspjele skupne obrade                                                                                      |
+| POST   | `/v1/batches/[id]/cancel` | Otkazivanje skupne obrade u tijeku                                                                                             |
 
-**Autentikacija:** Bearer API ključ. Grupe su ograničene po API ključu.
+**Autentifikacija:** API ključ tipa Bearer. Skupne obrade ograničene su po API ključu prema istom trostrukom pravilu kao i datoteke: samo vlastiti ključ, sesija nadzorne ploče ima pristup cijeloj instanci, a zapisi bez vlasnika nedostupni su svakom pozivatelju bez sesije (dohvaćanje, brisanje, otkazivanje i provjera `input_file_id` pri stvaranju).
+`GET /v1/batches` odbija anonimnog pozivatelja statusom `401` čak i kada je `REQUIRE_API_KEY=false`.
 
 ---
 
@@ -1595,21 +1592,21 @@ Endpointi dostupni samo administratorima za operativno upravljanje.
 
 ## Upravljanje CLI alatima
 
-Upravljanje CLI alatima koji se integriraju s OmniRoute (antigravity, chipotle, commandCode,
-devin-cli, itd.). Pogledajte [Referencu pružatelja usluga](./PROVIDER_REFERENCE.md) za potpuni popis.
+Upravljajte CLI alatima koji se integriraju s OmniRouteom (antigravity, commandCode,
+devin-cli itd.). Potpuni popis potražite u [Referenci pružatelja usluga](./PROVIDER_REFERENCE.md).
 
-| Metoda | Putanja                                 | Opis                                                                                                                                                                             |
-| ------ | --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| GET    | `/api/cli-tools/all-statuses`           | Status svih CLI alata (instaliranost, verzija, zadnje viđen)                                                                                                                     |
-| GET    | `/api/cli-tools/status`                 | Detaljan status za jedan CLI alat (upit `?tool=`)                                                                                                                                |
-| POST   | `/api/cli-tools/apply`                  | Zapisivanje generirane konfiguracije alata (`dryRun` prikazuje pregled; `422` + `containerEphemeralTarget` kada je kontejnerizirano; `migration` označava zastarjeli Codex YAML) |
-| GET    | `/api/cli-tools/backups`                | Popis sigurnosnih kopija konfiguracije CLI alata                                                                                                                                 |
-| POST   | `/api/cli-tools/backups`                | Kreiranje sigurnosne kopije svih konfiguracija CLI alata                                                                                                                         |
-| POST   | `/api/cli-tools/backups`                | Vraćanje: isti endpoint s `{tool, backupId}` u tijelu vraća tu sigurnosnu kopiju                                                                                                 |
-| GET    | `/api/cli-tools/antigravity-mitm`       | Status Antigravity MITM proxy-a (CLI alat "antigravity-mitm")                                                                                                                    |
-| POST   | `/api/cli-tools/antigravity-mitm/alias` | Konfiguracija aliasa za antigravity-mitm                                                                                                                                         |
+| Metoda | Putanja                                 | Opis                                                                                                                                                                               |
+| ------ | --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GET    | `/api/cli-tools/all-statuses`           | Status svih CLI alata (instaliranost, verzija, posljednja aktivnost)                                                                                                               |
+| GET    | `/api/cli-tools/status`                 | Pojedinosti o statusu jednog CLI alata (upit `?tool=`)                                                                                                                             |
+| POST   | `/api/cli-tools/apply`                  | Zapisuje generiranu konfiguraciju alata (`dryRun` prikazuje pretpregled; `422` + `containerEphemeralTarget` kada se izvodi u spremniku; `migration` navodi naslijeđeni Codex YAML) |
+| GET    | `/api/cli-tools/backups`                | Navodi sigurnosne kopije konfiguracija CLI alata                                                                                                                                   |
+| POST   | `/api/cli-tools/backups`                | Stvara sigurnosnu kopiju konfiguracija svih CLI alata                                                                                                                              |
+| POST   | `/api/cli-tools/backups`                | Vraćanje: ista krajnja točka s `{tool, backupId}` u tijelu zahtjeva vraća tu sigurnosnu kopiju                                                                                     |
+| GET    | `/api/cli-tools/antigravity-mitm`       | Status MITM proxyja Antigravity (CLI alat "antigravity-mitm")                                                                                                                      |
+| POST   | `/api/cli-tools/antigravity-mitm/alias` | Konfigurira pseudonime za antigravity-mitm                                                                                                                                         |
 
-**Autentikacija:** Zahtijeva upravljačku sesiju.
+**Autorizacija:** Potrebna je sesija za upravljanje.
 
 ---
 

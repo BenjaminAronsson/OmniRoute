@@ -3,6 +3,7 @@ import {
   getCachedResponse,
   isCacheableForRead,
   recordSemanticCacheHit,
+  outputContractOf,
 } from "@/lib/semanticCache";
 import { calculateCost } from "@/lib/usage/costCalculator";
 import { finalizePendingScope, type PendingRequestScope } from "@/lib/usage/pendingRequestScope";
@@ -31,13 +32,7 @@ export async function checkSemanticCache({
   semanticCacheEnabled: boolean;
   // Only the fields this read path actually touches are named; everything else
   // on the request body stays `unknown` via the index signature.
-  body: Record<string, unknown> & {
-    temperature?: number;
-    top_p?: number;
-    tool_choice?: unknown;
-    tools?: unknown;
-    response_format?: unknown;
-  };
+  body: Record<string, unknown> & { temperature?: number; top_p?: number };
   clientRawRequest: { headers?: unknown } | null;
   model: string;
   provider: string;
@@ -75,15 +70,16 @@ export async function checkSemanticCache({
       similarity = managerResult.similarity;
     } else {
       // Legacy SQLite / in-memory cache check fallback. Include tool_choice/tools/
-      // response_format in the signature (#12309/#12734): they change model behavior
-      // and must not collide with a signature computed without them.
+      // response_format (#12309/#12734), plus the Responses-API text.format spelling
+      // (#12307), in the signature: they change model behavior and must not collide
+      // with a signature computed without them.
       const signature = generateSignature(
         model,
         body.messages ?? body.input,
         body.temperature,
         body.top_p,
         apiKeyId ?? undefined,
-        { toolChoice: body.tool_choice, tools: body.tools, responseFormat: body.response_format }
+        outputContractOf(body)
       );
       const legacyCached = getCachedResponse(signature);
       if (legacyCached) {
@@ -139,7 +135,7 @@ export async function checkSemanticCache({
         body.temperature,
         body.top_p,
         apiKeyId ?? undefined,
-        { toolChoice: body.tool_choice, tools: body.tools, responseFormat: body.response_format }
+        outputContractOf(body)
       );
 
       const targetSignature =

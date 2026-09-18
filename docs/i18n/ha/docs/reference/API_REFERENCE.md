@@ -1,21 +1,12 @@
-# API_REFERENCE (Hausa)
+# API Reference (Hausa)
 
 🌐 **Languages:** 🇺🇸 [English](../../../../reference/API_REFERENCE.md) · 🇪🇹 [am](../../../am/docs/reference/API_REFERENCE.md) · 🇸🇦 [ar](../../../ar/docs/reference/API_REFERENCE.md) · 🇦🇿 [az](../../../az/docs/reference/API_REFERENCE.md) · 🇧🇬 [bg](../../../bg/docs/reference/API_REFERENCE.md) · 🇧🇩 [bn](../../../bn/docs/reference/API_REFERENCE.md) · 🇨🇿 [cs](../../../cs/docs/reference/API_REFERENCE.md) · 🇩🇰 [da](../../../da/docs/reference/API_REFERENCE.md) · 🇩🇪 [de](../../../de/docs/reference/API_REFERENCE.md) · 🇬🇷 [el](../../../el/docs/reference/API_REFERENCE.md) · 🇪🇸 [es](../../../es/docs/reference/API_REFERENCE.md) · 🇪🇪 [et](../../../et/docs/reference/API_REFERENCE.md) · 🇮🇷 [fa](../../../fa/docs/reference/API_REFERENCE.md) · 🇫🇮 [fi](../../../fi/docs/reference/API_REFERENCE.md) · 🇫🇷 [fr](../../../fr/docs/reference/API_REFERENCE.md) · 🇮🇪 [ga](../../../ga/docs/reference/API_REFERENCE.md) · 🇮🇳 [gu](../../../gu/docs/reference/API_REFERENCE.md) · 🇮🇱 [he](../../../he/docs/reference/API_REFERENCE.md) · 🇮🇳 [hi](../../../hi/docs/reference/API_REFERENCE.md) · 🇭🇷 [hr](../../../hr/docs/reference/API_REFERENCE.md) · 🇭🇺 [hu](../../../hu/docs/reference/API_REFERENCE.md) · 🇦🇲 [hy](../../../hy/docs/reference/API_REFERENCE.md) · 🇮🇩 [id](../../../id/docs/reference/API_REFERENCE.md) · 🇳🇬 [ig](../../../ig/docs/reference/API_REFERENCE.md) · 🇮🇹 [it](../../../it/docs/reference/API_REFERENCE.md) · 🇯🇵 [ja](../../../ja/docs/reference/API_REFERENCE.md) · 🇬🇪 [ka](../../../ka/docs/reference/API_REFERENCE.md) · 🇰🇭 [km](../../../km/docs/reference/API_REFERENCE.md) · 🇮🇳 [kn](../../../kn/docs/reference/API_REFERENCE.md) · 🇰🇷 [ko](../../../ko/docs/reference/API_REFERENCE.md) · 🇱🇹 [lt](../../../lt/docs/reference/API_REFERENCE.md) · 🇱🇻 [lv](../../../lv/docs/reference/API_REFERENCE.md) · 🇮🇳 [ml](../../../ml/docs/reference/API_REFERENCE.md) · 🇮🇳 [mr](../../../mr/docs/reference/API_REFERENCE.md) · 🇲🇾 [ms](../../../ms/docs/reference/API_REFERENCE.md) · 🇲🇹 [mt](../../../mt/docs/reference/API_REFERENCE.md) · 🇲🇲 [my](../../../my/docs/reference/API_REFERENCE.md) · 🇳🇵 [ne](../../../ne/docs/reference/API_REFERENCE.md) · 🇳🇱 [nl](../../../nl/docs/reference/API_REFERENCE.md) · 🇳🇴 [no](../../../no/docs/reference/API_REFERENCE.md) · 🇮🇳 [or](../../../or/docs/reference/API_REFERENCE.md) · 🇮🇳 [pa](../../../pa/docs/reference/API_REFERENCE.md) · 🇵🇭 [phi](../../../phi/docs/reference/API_REFERENCE.md) · 🇵🇱 [pl](../../../pl/docs/reference/API_REFERENCE.md) · 🇵🇹 [pt](../../../pt/docs/reference/API_REFERENCE.md) · 🇧🇷 [pt-BR](../../../pt-BR/docs/reference/API_REFERENCE.md) · 🇷🇴 [ro](../../../ro/docs/reference/API_REFERENCE.md) · 🇷🇺 [ru](../../../ru/docs/reference/API_REFERENCE.md) · 🇱🇰 [si](../../../si/docs/reference/API_REFERENCE.md) · 🇸🇰 [sk](../../../sk/docs/reference/API_REFERENCE.md) · 🇸🇮 [sl](../../../sl/docs/reference/API_REFERENCE.md) · 🇷🇸 [sr](../../../sr/docs/reference/API_REFERENCE.md) · 🇸🇪 [sv](../../../sv/docs/reference/API_REFERENCE.md) · 🇰🇪 [sw](../../../sw/docs/reference/API_REFERENCE.md) · 🇮🇳 [ta](../../../ta/docs/reference/API_REFERENCE.md) · 🇮🇳 [te](../../../te/docs/reference/API_REFERENCE.md) · 🇹🇭 [th](../../../th/docs/reference/API_REFERENCE.md) · 🇹🇷 [tr](../../../tr/docs/reference/API_REFERENCE.md) · 🇺🇦 [uk-UA](../../../uk-UA/docs/reference/API_REFERENCE.md) · 🇵🇰 [ur](../../../ur/docs/reference/API_REFERENCE.md) · 🇺🇿 [uz](../../../uz/docs/reference/API_REFERENCE.md) · 🇻🇳 [vi](../../../vi/docs/reference/API_REFERENCE.md) · 🇳🇬 [yo](../../../yo/docs/reference/API_REFERENCE.md) · 🇨🇳 [zh-CN](../../../zh-CN/docs/reference/API_REFERENCE.md) · 🇹🇼 [zh-TW](../../../zh-TW/docs/reference/API_REFERENCE.md)
 
 ---
 
----
-
-title: "Manazartar API"
-version: 3.8.51
-lastUpdated: 2026-08-31
----
-
-# Manazartar API
-
 🌐 **Languages:** 🇺🇸 [English](../../../../reference/API_REFERENCE.md) · 🇪🇹 [am](../../../am/docs/reference/API_REFERENCE.md) · 🇸🇦 [ar](../../../ar/docs/reference/API_REFERENCE.md) · 🇦🇿 [az](../../../az/docs/reference/API_REFERENCE.md) · 🇧🇬 [bg](../../../bg/docs/reference/API_REFERENCE.md) · 🇧🇩 [bn](../../../bn/docs/reference/API_REFERENCE.md) · 🇨🇿 [cs](../../../cs/docs/reference/API_REFERENCE.md) · 🇩🇰 [da](../../../da/docs/reference/API_REFERENCE.md) · 🇩🇪 [de](../../../de/docs/reference/API_REFERENCE.md) · 🇬🇷 [el](../../../el/docs/reference/API_REFERENCE.md) · 🇪🇸 [es](../../../es/docs/reference/API_REFERENCE.md) · 🇪🇪 [et](../../../et/docs/reference/API_REFERENCE.md) · 🇮🇷 [fa](../../../fa/docs/reference/API_REFERENCE.md) · 🇫🇮 [fi](../../../fi/docs/reference/API_REFERENCE.md) · 🇫🇷 [fr](../../../fr/docs/reference/API_REFERENCE.md) · 🇮🇪 [ga](../../../ga/docs/reference/API_REFERENCE.md) · 🇮🇳 [gu](../../../gu/docs/reference/API_REFERENCE.md) · 🇮🇱 [he](../../../he/docs/reference/API_REFERENCE.md) · 🇮🇳 [hi](../../../hi/docs/reference/API_REFERENCE.md) · 🇭🇷 [hr](../../../hr/docs/reference/API_REFERENCE.md) · 🇭🇺 [hu](../../../hu/docs/reference/API_REFERENCE.md) · 🇦🇲 [hy](../../../hy/docs/reference/API_REFERENCE.md) · 🇮🇩 [id](../../../id/docs/reference/API_REFERENCE.md) · 🇳🇬 [ig](../../../ig/docs/reference/API_REFERENCE.md) · 🇮🇹 [it](../../../it/docs/reference/API_REFERENCE.md) · 🇯🇵 [ja](../../../ja/docs/reference/API_REFERENCE.md) · 🇬🇪 [ka](../../../ka/docs/reference/API_REFERENCE.md) · 🇰🇭 [km](../../../km/docs/reference/API_REFERENCE.md) · 🇮🇳 [kn](../../../kn/docs/reference/API_REFERENCE.md) · 🇰🇷 [ko](../../../ko/docs/reference/API_REFERENCE.md) · 🇱🇹 [lt](../../../lt/docs/reference/API_REFERENCE.md) · 🇱🇻 [lv](../../../lv/docs/reference/API_REFERENCE.md) · 🇮🇳 [ml](../../../ml/docs/reference/API_REFERENCE.md) · 🇮🇳 [mr](../../../mr/docs/reference/API_REFERENCE.md) · 🇲🇾 [ms](../../../ms/docs/reference/API_REFERENCE.md) · 🇲🇹 [mt](../../../mt/docs/reference/API_REFERENCE.md) · 🇲🇲 [my](../../../my/docs/reference/API_REFERENCE.md) · 🇳🇵 [ne](../../../ne/docs/reference/API_REFERENCE.md) · 🇳🇱 [nl](../../../nl/docs/reference/API_REFERENCE.md) · 🇳🇴 [no](../../../no/docs/reference/API_REFERENCE.md) · 🇮🇳 [or](../../../or/docs/reference/API_REFERENCE.md) · 🇮🇳 [pa](../../../pa/docs/reference/API_REFERENCE.md) · 🇵🇭 [phi](../../../phi/docs/reference/API_REFERENCE.md) · 🇵🇱 [pl](../../../pl/docs/reference/API_REFERENCE.md) · 🇵🇹 [pt](../../../pt/docs/reference/API_REFERENCE.md) · 🇧🇷 [pt-BR](../../../pt-BR/docs/reference/API_REFERENCE.md) · 🇷🇴 [ro](../../../ro/docs/reference/API_REFERENCE.md) · 🇷🇺 [ru](../../../ru/docs/reference/API_REFERENCE.md) · 🇱🇰 [si](../../../si/docs/reference/API_REFERENCE.md) · 🇸🇰 [sk](../../../sk/docs/reference/API_REFERENCE.md) · 🇸🇮 [sl](../../../sl/docs/reference/API_REFERENCE.md) · 🇷🇸 [sr](../../../sr/docs/reference/API_REFERENCE.md) · 🇸🇪 [sv](../../../sv/docs/reference/API_REFERENCE.md) · 🇰🇪 [sw](../../../sw/docs/reference/API_REFERENCE.md) · 🇮🇳 [ta](../../../ta/docs/reference/API_REFERENCE.md) · 🇮🇳 [te](../../../te/docs/reference/API_REFERENCE.md) · 🇹🇭 [th](../../../th/docs/reference/API_REFERENCE.md) · 🇹🇷 [tr](../../../tr/docs/reference/API_REFERENCE.md) · 🇺🇦 [uk-UA](../../../uk-UA/docs/reference/API_REFERENCE.md) · 🇵🇰 [ur](../../../ur/docs/reference/API_REFERENCE.md) · 🇺🇿 [uz](../../../uz/docs/reference/API_REFERENCE.md) · 🇻🇳 [vi](../../../vi/docs/reference/API_REFERENCE.md) · 🇳🇬 [yo](../../../yo/docs/reference/API_REFERENCE.md) · 🇨🇳 [zh-CN](../../../zh-CN/docs/reference/API_REFERENCE.md) · 🇹🇼 [zh-TW](../../../zh-TW/docs/reference/API_REFERENCE.md)
 
-Babban manazarta na OmniRoute API. Ya ƙunshi ɓangaren `/v1` na jama'a da kuma wuraren ƙarshen gudanarwa da aka fi amfani da su; [`docs/openapi.yaml`](../openapi.yaml) mai iya karantawa ta na'ura da bishiyar hanyoyi da ke ƙarƙashin `src/app/api/` su ne cikakkun tushe.
+Babban madogara don API na OmniRoute. Ya ƙunshi ɓangaren `/v1` na jama'a da kuma wuraren sarrafawa da aka fi amfani da su; [`docs/openapi.yaml`](../openapi.yaml) mai iya karantawa ta na'ura da tsarin hanyoyi da ke ƙarƙashin `src/app/api/` su ne cikakkun tushe.
 
 ---
 
@@ -529,33 +520,41 @@ Ana ƙara prefix na mai bayarwa kai tsaye idan babu shi. Models marasa daidaituw
 
 ## API na Fayiloli
 
-Wurin ƙarshen fayiloli mai dacewa da OpenAI don shigarwa/fitarwa ta rukuni da lodin fayiloli bisa manufa.
+Ƙarshen mashigar fayiloli mai dacewa da OpenAI don shigarwa/fitarwa ta rukuni da loda fayiloli bisa manufarsu.
 
-| Hanya  | Tafarki                  | Bayani                                                                                                        |
-| ------ | ------------------------ | ------------------------------------------------------------------------------------------------------------- |
-| POST   | `/v1/files`              | Loda fayil (multipart: `file`, `purpose`, `expires_after[anchor]`, `expires_after[seconds]`) — iyakar 512 MiB |
-| GET    | `/v1/files`              | Jera fayiloli na maɓallin API da aka tantance                                                                 |
-| GET    | `/v1/files/[id]`         | Karɓo metadata na fayil                                                                                       |
-| DELETE | `/v1/files/[id]`         | Share fayil                                                                                                   |
-| GET    | `/v1/files/[id]/content` | Yaɗa ainihin jikin fayil ɗin kai tsaye                                                                        |
+| Hanya  | Path                     | Bayani                                                                                                             |
+| ------ | ------------------------ | ------------------------------------------------------------------------------------------------------------------ |
+| POST   | `/v1/files`              | Loda fayil (multipart: `file`, `purpose`, `expires_after[anchor]`, `expires_after[seconds]`) — matsakaicin 512 MiB |
+| GET    | `/v1/files`              | Jera fayiloli na maɓallin API da aka tantance                                                                      |
+| GET    | `/v1/files/[id]`         | Samo metadata na fayil                                                                                             |
+| DELETE | `/v1/files/[id]`         | Share fayil                                                                                                        |
+| GET    | `/v1/files/[id]/content` | Watsa ainihin jikin fayil ɗin kai tsaye                                                                            |
 
-**Tantancewa:** Maɓallin API na Bearer — ana ware fayiloli ga kowane maɓallin API ta hanyar `getApiKeyRequestScope`.
+**Tantancewa:** Maɓallin API na Bearer — ana ware fayiloli ga kowane maɓallin API ta hanyar `getApiKeyRequestScope`. Maɓalli
+yana iya gani, saukewa da share fayilolinsa kawai; zaman dashboard ba tare da maɓalli ba yana karanta
+dukkan instance ɗin; fayil marar mai shi (wanda aka loda ba tare da tantancewa ba ko ta zaman dashboard) ba a ba kowane
+mai kira da ba na zaman ba damar shiga. `GET /v1/files` yana ƙin mai kira marar tantancewa — da kuma maɓallin da aka gabatar wanda
+ba a iya gano shi ba — da `401` ko da `REQUIRE_API_KEY=false`, maimakon jera fayilolin
+duk masu amfani (GHSA-m3hp-hq9g-fpmv, GHSA-2jm2-mpx8-6523).
 
 ---
 
-## API na Rukunonin Aiki
+## API na Batches
 
-Sarrafa ayyuka a rukuni mai dacewa da OpenAI.
+Sarrafa batches cikin salo mai jituwa da OpenAI.
 
-| Hanya  | Tafarki                   | Bayani                                                                                                         |
-| ------ | ------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| POST   | `/v1/batches`             | Ƙirƙiri rukuni — ana tantance body ta `v1BatchCreateSchema` (`input_file_id`, `endpoint`, `completion_window`) |
-| GET    | `/v1/batches`             | Jera rukunonin aiki                                                                                            |
-| GET    | `/v1/batches/[id]`        | Karɓo matsayin rukuni + `request_counts`                                                                       |
-| DELETE | `/v1/batches/[id]`        | Share rukuni da ya kammala/ya gaza                                                                             |
-| POST   | `/v1/batches/[id]/cancel` | Soke rukuni da ake kan aiwatarwa                                                                               |
+| Hanya  | Path                      | Bayani                                                                                                           |
+| ------ | ------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| POST   | `/v1/batches`             | Ƙirƙiri batch — ana tabbatar da body ta `v1BatchCreateSchema` (`input_file_id`, `endpoint`, `completion_window`) |
+| GET    | `/v1/batches`             | Jera batches                                                                                                     |
+| GET    | `/v1/batches/[id]`        | Dawo da matsayin batch + `request_counts`                                                                        |
+| DELETE | `/v1/batches/[id]`        | Share batch da ya ƙare/ya gaza                                                                                   |
+| POST   | `/v1/batches/[id]/cancel` | Soke batch da ake kan aiwatarwa                                                                                  |
 
-**Tantancewa:** Maɓallin API na Bearer. Ana ware rukunonin aiki ga kowane maɓallin API.
+**Tabbatar da izini:** Maɓallin API na Bearer. Ana keɓance batches ga kowane maɓallin API bisa ƙa'ida mai ɓangarori uku iri ɗaya da ta
+files: maɓallin mai shi kawai, zaman dashboard yana da damar duk faɗin instance, ana hana duk
+mai kira da ba na session ba samun records marasa mai shi (dawo da su, share su, soke su, da kuma duba `input_file_id` lokacin ƙirƙirawa).
+`GET /v1/batches` yana ƙin mai kira marar tantancewa da `401` ko da `REQUIRE_API_KEY=false`.
 
 ---
 
@@ -1614,21 +1613,21 @@ Wuraren haɗi na admin kawai don gudanar da ayyuka.
 
 ## Gudanar da Kayan Aikin CLI
 
-Gudanar da kayan aikin CLI da ke haɗuwa da OmniRoute (antigravity, chipotle, commandCode,
-devin-cli, da sauransu). Duba [Manazartar Masu Samarwa](./PROVIDER_REFERENCE.md) don cikakken jerin.
+Gudanar da kayan aikin CLI da ke haɗuwa da OmniRoute (antigravity, commandCode,
+devin-cli, da sauransu). Duba [Manazartar Mai Bayarwa](./PROVIDER_REFERENCE.md) don cikakken jerin.
 
-| Hanya | Path                                    | Bayani                                                                                                                                                                            |
-| ----- | --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| GET   | `/api/cli-tools/all-statuses`           | Matsayin duk kayan aikin CLI (an girka, sigar, lokacin ƙarshe da aka gani)                                                                                                        |
-| GET   | `/api/cli-tools/status`                 | Cikakken matsayin kayan aikin CLI guda ɗaya (tambayar `?tool=`)                                                                                                                   |
-| POST  | `/api/cli-tools/apply`                  | Rubuta config da aka samar na wani kayan aiki (`dryRun` yana nuna samfoti; `422` + `containerEphemeralTarget` idan yana cikin container; `migration` yana nuna tsohon Codex YAML) |
-| GET   | `/api/cli-tools/backups`                | Jera ajiyayyun kwafin saitunan kayan aikin CLI                                                                                                                                    |
-| POST  | `/api/cli-tools/backups`                | Ƙirƙiri ajiyayyen kwafin duk saitunan kayan aikin CLI                                                                                                                             |
-| POST  | `/api/cli-tools/backups`                | Mayarwa: wannan endpoint ɗin tare da `{tool, backupId}` a cikin body yana mayar da wannan ajiyayyen kwafin                                                                        |
-| GET   | `/api/cli-tools/antigravity-mitm`       | Matsayin proxy na Antigravity MITM (kayan aikin CLI na "antigravity-mitm")                                                                                                        |
-| POST  | `/api/cli-tools/antigravity-mitm/alias` | Saita aliases na antigravity-mitm                                                                                                                                                 |
+| Hanya | Path                                    | Bayani                                                                                                                                                                              |
+| ----- | --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GET   | `/api/cli-tools/all-statuses`           | Matsayin duk kayan aikin CLI (an shigar, siga, lokacin da aka gani na ƙarshe)                                                                                                       |
+| GET   | `/api/cli-tools/status`                 | Cikakken matsayin kayan aikin CLI guda ɗaya (tambayar `?tool=`)                                                                                                                     |
+| POST  | `/api/cli-tools/apply`                  | Rubuta saitin da aka samar na kayan aiki (`dryRun` yana nuna samfoti; `422` + `containerEphemeralTarget` idan yana cikin kwantena; `migration` yana nuna bayanin tsohon Codex YAML) |
+| GET   | `/api/cli-tools/backups`                | Jera kwafin ajiyar saitunan kayan aikin CLI                                                                                                                                         |
+| POST  | `/api/cli-tools/backups`                | Ƙirƙiri kwafin ajiyar duk saitunan kayan aikin CLI                                                                                                                                  |
+| POST  | `/api/cli-tools/backups`                | Maidowa: wannan endpoint ɗin tare da `{tool, backupId}` a cikin body yana maido da wannan kwafin ajiyar                                                                             |
+| GET   | `/api/cli-tools/antigravity-mitm`       | Matsayin proxy na Antigravity MITM (kayan aikin CLI na "antigravity-mitm")                                                                                                          |
+| POST  | `/api/cli-tools/antigravity-mitm/alias` | Saita aliases na antigravity-mitm                                                                                                                                                   |
 
-**Tabbatar da izini:** Ana buƙatar zaman gudanarwa.
+**Tabbatar da Shaida:** Yana buƙatar zaman gudanarwa.
 
 ---
 

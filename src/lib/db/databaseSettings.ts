@@ -59,6 +59,7 @@ const LEGACY_FLAT_KEYS: {
     configAudit: ["configAudit"],
     a2aEvents: ["a2aEvents"],
     callLogs: ["callLogs"],
+    conversationTurnNodes: ["conversationTurnNodes"],
     usageHistory: ["usageHistory"],
     memoryEntries: ["memoryEntries"],
     domainCostHistory: ["domainCostHistory"],
@@ -270,6 +271,8 @@ export function getDatabaseSettings(): DatabaseSettings {
         vacuumState.lastRunAt !== null ? new Date(vacuumState.lastRunAt).toISOString() : null,
       lastOptimizationAt: null,
       integrityCheck: getIntegrityCheck(),
+      autoVacuumDrift: vacuumState.autoVacuumDrift,
+      lastReclaimedPages: vacuumState.lastReclaimedPages,
     },
   };
 }

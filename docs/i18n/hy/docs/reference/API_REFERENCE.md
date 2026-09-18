@@ -1,21 +1,12 @@
-# API_REFERENCE (Հայերեն)
+# API Reference (Հայերեն)
 
 🌐 **Languages:** 🇺🇸 [English](../../../../reference/API_REFERENCE.md) · 🇪🇹 [am](../../../am/docs/reference/API_REFERENCE.md) · 🇸🇦 [ar](../../../ar/docs/reference/API_REFERENCE.md) · 🇦🇿 [az](../../../az/docs/reference/API_REFERENCE.md) · 🇧🇬 [bg](../../../bg/docs/reference/API_REFERENCE.md) · 🇧🇩 [bn](../../../bn/docs/reference/API_REFERENCE.md) · 🇨🇿 [cs](../../../cs/docs/reference/API_REFERENCE.md) · 🇩🇰 [da](../../../da/docs/reference/API_REFERENCE.md) · 🇩🇪 [de](../../../de/docs/reference/API_REFERENCE.md) · 🇬🇷 [el](../../../el/docs/reference/API_REFERENCE.md) · 🇪🇸 [es](../../../es/docs/reference/API_REFERENCE.md) · 🇪🇪 [et](../../../et/docs/reference/API_REFERENCE.md) · 🇮🇷 [fa](../../../fa/docs/reference/API_REFERENCE.md) · 🇫🇮 [fi](../../../fi/docs/reference/API_REFERENCE.md) · 🇫🇷 [fr](../../../fr/docs/reference/API_REFERENCE.md) · 🇮🇪 [ga](../../../ga/docs/reference/API_REFERENCE.md) · 🇮🇳 [gu](../../../gu/docs/reference/API_REFERENCE.md) · 🇳🇬 [ha](../../../ha/docs/reference/API_REFERENCE.md) · 🇮🇱 [he](../../../he/docs/reference/API_REFERENCE.md) · 🇮🇳 [hi](../../../hi/docs/reference/API_REFERENCE.md) · 🇭🇷 [hr](../../../hr/docs/reference/API_REFERENCE.md) · 🇭🇺 [hu](../../../hu/docs/reference/API_REFERENCE.md) · 🇮🇩 [id](../../../id/docs/reference/API_REFERENCE.md) · 🇳🇬 [ig](../../../ig/docs/reference/API_REFERENCE.md) · 🇮🇹 [it](../../../it/docs/reference/API_REFERENCE.md) · 🇯🇵 [ja](../../../ja/docs/reference/API_REFERENCE.md) · 🇬🇪 [ka](../../../ka/docs/reference/API_REFERENCE.md) · 🇰🇭 [km](../../../km/docs/reference/API_REFERENCE.md) · 🇮🇳 [kn](../../../kn/docs/reference/API_REFERENCE.md) · 🇰🇷 [ko](../../../ko/docs/reference/API_REFERENCE.md) · 🇱🇹 [lt](../../../lt/docs/reference/API_REFERENCE.md) · 🇱🇻 [lv](../../../lv/docs/reference/API_REFERENCE.md) · 🇮🇳 [ml](../../../ml/docs/reference/API_REFERENCE.md) · 🇮🇳 [mr](../../../mr/docs/reference/API_REFERENCE.md) · 🇲🇾 [ms](../../../ms/docs/reference/API_REFERENCE.md) · 🇲🇹 [mt](../../../mt/docs/reference/API_REFERENCE.md) · 🇲🇲 [my](../../../my/docs/reference/API_REFERENCE.md) · 🇳🇵 [ne](../../../ne/docs/reference/API_REFERENCE.md) · 🇳🇱 [nl](../../../nl/docs/reference/API_REFERENCE.md) · 🇳🇴 [no](../../../no/docs/reference/API_REFERENCE.md) · 🇮🇳 [or](../../../or/docs/reference/API_REFERENCE.md) · 🇮🇳 [pa](../../../pa/docs/reference/API_REFERENCE.md) · 🇵🇭 [phi](../../../phi/docs/reference/API_REFERENCE.md) · 🇵🇱 [pl](../../../pl/docs/reference/API_REFERENCE.md) · 🇵🇹 [pt](../../../pt/docs/reference/API_REFERENCE.md) · 🇧🇷 [pt-BR](../../../pt-BR/docs/reference/API_REFERENCE.md) · 🇷🇴 [ro](../../../ro/docs/reference/API_REFERENCE.md) · 🇷🇺 [ru](../../../ru/docs/reference/API_REFERENCE.md) · 🇱🇰 [si](../../../si/docs/reference/API_REFERENCE.md) · 🇸🇰 [sk](../../../sk/docs/reference/API_REFERENCE.md) · 🇸🇮 [sl](../../../sl/docs/reference/API_REFERENCE.md) · 🇷🇸 [sr](../../../sr/docs/reference/API_REFERENCE.md) · 🇸🇪 [sv](../../../sv/docs/reference/API_REFERENCE.md) · 🇰🇪 [sw](../../../sw/docs/reference/API_REFERENCE.md) · 🇮🇳 [ta](../../../ta/docs/reference/API_REFERENCE.md) · 🇮🇳 [te](../../../te/docs/reference/API_REFERENCE.md) · 🇹🇭 [th](../../../th/docs/reference/API_REFERENCE.md) · 🇹🇷 [tr](../../../tr/docs/reference/API_REFERENCE.md) · 🇺🇦 [uk-UA](../../../uk-UA/docs/reference/API_REFERENCE.md) · 🇵🇰 [ur](../../../ur/docs/reference/API_REFERENCE.md) · 🇺🇿 [uz](../../../uz/docs/reference/API_REFERENCE.md) · 🇻🇳 [vi](../../../vi/docs/reference/API_REFERENCE.md) · 🇳🇬 [yo](../../../yo/docs/reference/API_REFERENCE.md) · 🇨🇳 [zh-CN](../../../zh-CN/docs/reference/API_REFERENCE.md) · 🇹🇼 [zh-TW](../../../zh-TW/docs/reference/API_REFERENCE.md)
 
 ---
 
----
-
-title: "API տեղեկատու"
-version: 3.8.51
-lastUpdated: 2026-08-31
----
-
-# API տեղեկատու
-
 🌐 **Languages:** 🇺🇸 [English](../../../../reference/API_REFERENCE.md) · 🇪🇹 [am](../../../am/docs/reference/API_REFERENCE.md) · 🇸🇦 [ar](../../../ar/docs/reference/API_REFERENCE.md) · 🇦🇿 [az](../../../az/docs/reference/API_REFERENCE.md) · 🇧🇬 [bg](../../../bg/docs/reference/API_REFERENCE.md) · 🇧🇩 [bn](../../../bn/docs/reference/API_REFERENCE.md) · 🇨🇿 [cs](../../../cs/docs/reference/API_REFERENCE.md) · 🇩🇰 [da](../../../da/docs/reference/API_REFERENCE.md) · 🇩🇪 [de](../../../de/docs/reference/API_REFERENCE.md) · 🇬🇷 [el](../../../el/docs/reference/API_REFERENCE.md) · 🇪🇸 [es](../../../es/docs/reference/API_REFERENCE.md) · 🇪🇪 [et](../../../et/docs/reference/API_REFERENCE.md) · 🇮🇷 [fa](../../../fa/docs/reference/API_REFERENCE.md) · 🇫🇮 [fi](../../../fi/docs/reference/API_REFERENCE.md) · 🇫🇷 [fr](../../../fr/docs/reference/API_REFERENCE.md) · 🇮🇪 [ga](../../../ga/docs/reference/API_REFERENCE.md) · 🇮🇳 [gu](../../../gu/docs/reference/API_REFERENCE.md) · 🇳🇬 [ha](../../../ha/docs/reference/API_REFERENCE.md) · 🇮🇱 [he](../../../he/docs/reference/API_REFERENCE.md) · 🇮🇳 [hi](../../../hi/docs/reference/API_REFERENCE.md) · 🇭🇷 [hr](../../../hr/docs/reference/API_REFERENCE.md) · 🇭🇺 [hu](../../../hu/docs/reference/API_REFERENCE.md) · 🇮🇩 [id](../../../id/docs/reference/API_REFERENCE.md) · 🇳🇬 [ig](../../../ig/docs/reference/API_REFERENCE.md) · 🇮🇹 [it](../../../it/docs/reference/API_REFERENCE.md) · 🇯🇵 [ja](../../../ja/docs/reference/API_REFERENCE.md) · 🇬🇪 [ka](../../../ka/docs/reference/API_REFERENCE.md) · 🇰🇭 [km](../../../km/docs/reference/API_REFERENCE.md) · 🇮🇳 [kn](../../../kn/docs/reference/API_REFERENCE.md) · 🇰🇷 [ko](../../../ko/docs/reference/API_REFERENCE.md) · 🇱🇹 [lt](../../../lt/docs/reference/API_REFERENCE.md) · 🇱🇻 [lv](../../../lv/docs/reference/API_REFERENCE.md) · 🇮🇳 [ml](../../../ml/docs/reference/API_REFERENCE.md) · 🇮🇳 [mr](../../../mr/docs/reference/API_REFERENCE.md) · 🇲🇾 [ms](../../../ms/docs/reference/API_REFERENCE.md) · 🇲🇹 [mt](../../../mt/docs/reference/API_REFERENCE.md) · 🇲🇲 [my](../../../my/docs/reference/API_REFERENCE.md) · 🇳🇵 [ne](../../../ne/docs/reference/API_REFERENCE.md) · 🇳🇱 [nl](../../../nl/docs/reference/API_REFERENCE.md) · 🇳🇴 [no](../../../no/docs/reference/API_REFERENCE.md) · 🇮🇳 [or](../../../or/docs/reference/API_REFERENCE.md) · 🇮🇳 [pa](../../../pa/docs/reference/API_REFERENCE.md) · 🇵🇭 [phi](../../../phi/docs/reference/API_REFERENCE.md) · 🇵🇱 [pl](../../../pl/docs/reference/API_REFERENCE.md) · 🇵🇹 [pt](../../../pt/docs/reference/API_REFERENCE.md) · 🇧🇷 [pt-BR](../../../pt-BR/docs/reference/API_REFERENCE.md) · 🇷🇴 [ro](../../../ro/docs/reference/API_REFERENCE.md) · 🇷🇺 [ru](../../../ru/docs/reference/API_REFERENCE.md) · 🇱🇰 [si](../../../si/docs/reference/API_REFERENCE.md) · 🇸🇰 [sk](../../../sk/docs/reference/API_REFERENCE.md) · 🇸🇮 [sl](../../../sl/docs/reference/API_REFERENCE.md) · 🇷🇸 [sr](../../../sr/docs/reference/API_REFERENCE.md) · 🇸🇪 [sv](../../../sv/docs/reference/API_REFERENCE.md) · 🇰🇪 [sw](../../../sw/docs/reference/API_REFERENCE.md) · 🇮🇳 [ta](../../../ta/docs/reference/API_REFERENCE.md) · 🇮🇳 [te](../../../te/docs/reference/API_REFERENCE.md) · 🇹🇭 [th](../../../th/docs/reference/API_REFERENCE.md) · 🇹🇷 [tr](../../../tr/docs/reference/API_REFERENCE.md) · 🇺🇦 [uk-UA](../../../uk-UA/docs/reference/API_REFERENCE.md) · 🇵🇰 [ur](../../../ur/docs/reference/API_REFERENCE.md) · 🇺🇿 [uz](../../../uz/docs/reference/API_REFERENCE.md) · 🇻🇳 [vi](../../../vi/docs/reference/API_REFERENCE.md) · 🇳🇬 [yo](../../../yo/docs/reference/API_REFERENCE.md) · 🇨🇳 [zh-CN](../../../zh-CN/docs/reference/API_REFERENCE.md) · 🇹🇼 [zh-TW](../../../zh-TW/docs/reference/API_REFERENCE.md)
 
-OmniRoute API-ի հիմնական տեղեկատուն։ Այն ընդգրկում է հանրային `/v1` միջերեսը և առավել հաճախ օգտագործվող կառավարման վերջնակետերը․ մեքենայաընթեռնելի [`docs/openapi.yaml`](../openapi.yaml)-ը և `src/app/api/`-ի ներքո գտնվող երթուղիների ծառը սպառիչ աղբյուրներն են։
+OmniRoute API-ի հիմնական տեղեկատու։ Այն ընդգրկում է հանրային `/v1` մակերեսը և կառավարման առավել հաճախ օգտագործվող վերջնակետերը. մեքենայաընթեռնելի [`docs/openapi.yaml`](../openapi.yaml)-ը և `src/app/api/`-ի տակ գտնվող երթուղիների ծառը սպառիչ աղբյուրներն են։
 
 ---
 
@@ -502,33 +493,41 @@ POST /v1/providers/{provider}/images/generations
 
 ## Ֆայլերի API
 
-OpenAI-ի հետ համատեղելի ֆայլերի վերջնակետ՝ փաթեթային մուտքագրման/ելքագրման և ֆայլերի՝ ըստ նպատակի վերբեռնման համար։
+OpenAI-ի հետ համատեղելի ֆայլերի վերջնակետ՝ փաթեթային մուտքագրման/ելքագրման և ըստ նշանակության ֆայլերի վերբեռնման համար։
 
 | Մեթոդ  | Ուղի                     | Նկարագրություն                                                                                                           |
 | ------ | ------------------------ | ------------------------------------------------------------------------------------------------------------------------ |
 | POST   | `/v1/files`              | Վերբեռնել ֆայլ (multipart՝ `file`, `purpose`, `expires_after[anchor]`, `expires_after[seconds]`) — առավելագույնը 512 MiB |
-| GET    | `/v1/files`              | Ցուցադրել նույնականացված API բանալու ֆայլերը                                                                             |
+| GET    | `/v1/files`              | Ցուցակել նույնականացված API բանալուն պատկանող ֆայլերը                                                                    |
 | GET    | `/v1/files/[id]`         | Ստանալ ֆայլի մետատվյալները                                                                                               |
 | DELETE | `/v1/files/[id]`         | Ջնջել ֆայլը                                                                                                              |
 | GET    | `/v1/files/[id]/content` | Հոսքային եղանակով վերադարձնել ֆայլի չմշակված բովանդակությունը                                                            |
 
-**Նույնականացում․** Bearer API բանալի — ֆայլերի տեսանելիության շրջանակը սահմանվում է յուրաքանչյուր API բանալու համար՝ `getApiKeyRequestScope`-ի միջոցով։
+**Նույնականացում․** Bearer API բանալի — ֆայլերը սահմանափակված են ըստ API բանալու՝ `getApiKeyRequestScope`-ի միջոցով։ Բանալին
+տեսնում, ներբեռնում և ջնջում է միայն իրեն պատկանող ֆայլերը․ առանց բանալու կառավարման վահանակի աշխատաշրջանը կարդում է
+ամբողջ օրինակը․ սեփականատեր չունեցող ֆայլը (անանուն կամ կառավարման վահանակի աշխատաշրջանի միջոցով վերբեռնված) մերժվում է յուրաքանչյուր
+ոչ աշխատաշրջանային կանչողի համար։ `GET /v1/files`-ը անանուն կանչողին, ինչպես նաև տրամադրված, սակայն
+չգտնված բանալիով կանչողին վերադարձնում է `401`, նույնիսկ երբ `REQUIRE_API_KEY=false`՝ բոլոր վարձակալների
+ֆայլերը ցուցակելու փոխարեն (GHSA-m3hp-hq9g-fpmv, GHSA-2jm2-mpx8-6523)։
 
 ---
 
-## Փաթեթների API
+## Batches API
 
 OpenAI-ի հետ համատեղելի փաթեթային մշակում։
 
 | Մեթոդ  | Ուղի                      | Նկարագրություն                                                                                                            |
 | ------ | ------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
 | POST   | `/v1/batches`             | Ստեղծել փաթեթ — հարցման մարմինը վավերացվում է `v1BatchCreateSchema`-ով (`input_file_id`, `endpoint`, `completion_window`) |
-| GET    | `/v1/batches`             | Ցուցադրել փաթեթները                                                                                                       |
-| GET    | `/v1/batches/[id]`        | Ստանալ փաթեթի կարգավիճակը և `request_counts`-ը                                                                            |
+| GET    | `/v1/batches`             | Ցուցակել փաթեթները                                                                                                        |
+| GET    | `/v1/batches/[id]`        | Ստանալ փաթեթի կարգավիճակը + `request_counts`                                                                              |
 | DELETE | `/v1/batches/[id]`        | Ջնջել ավարտված/ձախողված փաթեթը                                                                                            |
 | POST   | `/v1/batches/[id]/cancel` | Չեղարկել ընթացքի մեջ գտնվող փաթեթը                                                                                        |
 
-**Նույնականացում․** Bearer API բանալի։ Փաթեթների տեսանելիության շրջանակը սահմանվում է յուրաքանչյուր API բանալու համար։
+**Նույնականացում․** Bearer API բանալի։ Փաթեթների հասանելիության շրջանակը սահմանվում է ըստ API բանալու՝ նույն եռակողմ կանոնով, ինչ
+ֆայլերի դեպքում․ հասանելի է միայն սեփական բանալիով, կառավարման վահանակի աշխատաշրջանին՝ ամբողջ օրինակի մասշտաբով, իսկ սեփականատեր չունեցող գրառումների հասանելիությունը մերժվում է աշխատաշրջանից դուրս բոլոր
+դիմողներին (ստացում, ջնջում, չեղարկում և ստեղծելիս `input_file_id`-ի ստուգում)։
+`GET /v1/batches`-ը անանուն դիմողին վերադարձնում է `401`, նույնիսկ երբ `REQUIRE_API_KEY=false`։
 
 ---
 
@@ -1589,21 +1588,21 @@ GET /.well-known/agent.json
 
 ## CLI գործիքների կառավարում
 
-Կառավարեք OmniRoute-ի հետ ինտեգրվող CLI գործիքները (antigravity, chipotle, commandCode,
-devin-cli և այլն)։ Ամբողջական ցանկի համար տե՛ս [Մատակարարների տեղեկատուն](./PROVIDER_REFERENCE.md)։
+Կառավարեք OmniRoute-ի հետ ինտեգրվող CLI գործիքները (antigravity, commandCode,
+devin-cli և այլն)։ Ամբողջական ցանկը տեսեք [Մատակարարների տեղեկատուում](./PROVIDER_REFERENCE.md)։
 
-| Մեթոդ | Ուղի                                    | Նկարագրություն                                                                                                                                                                       |
-| ----- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| GET   | `/api/cli-tools/all-statuses`           | Բոլոր CLI գործիքների կարգավիճակը (տեղադրված լինելը, տարբերակը, վերջին հայտնվելը)                                                                                                     |
-| GET   | `/api/cli-tools/status`                 | Մեկ CLI գործիքի կարգավիճակի մանրամասները (`?tool=` հարցում)                                                                                                                          |
-| POST  | `/api/cli-tools/apply`                  | Գրանցել գործիքի գեներացված կազմաձևը (`dryRun`-ը ցուցադրում է նախադիտումը, կոնտեյներային միջավայրում՝ `422` + `containerEphemeralTarget`, իսկ `migration`-ը նշում է հին Codex YAML-ը) |
-| GET   | `/api/cli-tools/backups`                | Ցուցակել CLI գործիքների կազմաձևերի պահուստային պատճենները                                                                                                                            |
-| POST  | `/api/cli-tools/backups`                | Ստեղծել CLI գործիքների բոլոր կազմաձևերի պահուստային պատճենը                                                                                                                          |
-| POST  | `/api/cli-tools/backups`                | Վերականգնել՝ նույն վերջնակետը, որի մարմնում կա `{tool, backupId}`, վերականգնում է տվյալ պահուստային պատճենը                                                                          |
-| GET   | `/api/cli-tools/antigravity-mitm`       | Antigravity MITM պրոքսիի կարգավիճակը («antigravity-mitm» CLI գործիք)                                                                                                                 |
-| POST  | `/api/cli-tools/antigravity-mitm/alias` | Կազմաձևել antigravity-mitm-ի այլանունները                                                                                                                                            |
+| Մեթոդ | Ուղի                                    | Նկարագրություն                                                                                                                                                                                |
+| ----- | --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GET   | `/api/cli-tools/all-statuses`           | Բոլոր CLI գործիքների կարգավիճակը (տեղադրված լինելը, տարբերակը, վերջին հայտնաբերումը)                                                                                                          |
+| GET   | `/api/cli-tools/status`                 | Մեկ CLI գործիքի կարգավիճակի մանրամասները (`?tool=` հարցում)                                                                                                                                   |
+| POST  | `/api/cli-tools/apply`                  | Գրանցում է գործիքի ստեղծված կազմաձևը (`dryRun`-ը ցուցադրում է նախադիտումը, կոնտեյներացված լինելու դեպքում՝ `422` + `containerEphemeralTarget`, իսկ `migration`-ը նշում է հնացած Codex YAML-ը) |
+| GET   | `/api/cli-tools/backups`                | Ցուցադրում է CLI գործիքների կազմաձևերի պահուստային պատճենները                                                                                                                                 |
+| POST  | `/api/cli-tools/backups`                | Ստեղծում է բոլոր CLI գործիքների կազմաձևերի պահուստային պատճենը                                                                                                                                |
+| POST  | `/api/cli-tools/backups`                | Վերականգնում․ նույն վերջնակետը, երբ հարցման մարմնում փոխանցվում է `{tool, backupId}`, վերականգնում է այդ պահուստային պատճենը                                                                  |
+| GET   | `/api/cli-tools/antigravity-mitm`       | Antigravity MITM պրոքսիի կարգավիճակը («antigravity-mitm» CLI գործիք)                                                                                                                          |
+| POST  | `/api/cli-tools/antigravity-mitm/alias` | Կազմաձևում է antigravity-mitm կեղծանունները                                                                                                                                                   |
 
-**Նույնականացում՝** Պահանջվում է կառավարման աշխատաշրջան։
+**Նույնականացում․** Պահանջվում է կառավարման աշխատաշրջան։
 
 ---
 
