@@ -426,10 +426,16 @@ export function normalizeDiscoveredModels(
     // Keep the total context window distinct from an explicit maximum-input limit. Existing
     // providers historically stored context_length as inputTokenLimit, so retain that compatibility
     // outside Vertex while persisting the separate contextWindow field for new consumers.
+    // vLLM — and every server that copies its /v1/models shape — reports the
+    // window as `max_model_len`, the value the engine was actually started with.
+    // Without it a vLLM model syncs with no window at all and the resolver hands
+    // out the 128K default, understating a 250K deployment by half. #12858
     const contextWindow = firstPositiveNumber(
       record.context_length,
       record.contextLength,
       record.contextWindow,
+      record.max_model_len,
+      record.maxModelLen,
       topProvider.context_length
     );
     const isVertexProvider = providerId === "vertex" || providerId === "vertex-partner";
