@@ -47,6 +47,7 @@ import type { CompressionExclusions } from "@omniroute/open-sse/services/compres
 import { resolveComboConfig } from "@omniroute/open-sse/services/comboConfig.ts";
 import { comboPinAllowlist } from "@/lib/combos/steps.ts";
 import { injectHandoffIntoBody } from "@omniroute/open-sse/services/contextHandoff.ts";
+import { runWithTransientBackendRetry } from "@omniroute/open-sse/services/transientBackendRetry.ts";
 import {
   HTTP_STATUS,
   ANTIGRAVITY_PRE_RESPONSE_TIMEOUT_CODE,
@@ -485,6 +486,16 @@ async function handleChatImplementation(
   if (Array.isArray(msgBody.messages) && msgBody.messages.length === 0) {
     log.warn("CHAT", "Rejecting request with empty messages array");
     return errorResponse(HTTP_STATUS.BAD_REQUEST, "messages: at least one message is required");
+  }
+  // Reject non-object entries before they reach code that reads `msg.role` /
+  // `msg.content` off them (crash-then-500 in translators — #12643). The
+  // route schema accepts `z.array(z.unknown())`, so `[null]` gets this far.
+  if (
+    Array.isArray(msgBody.messages) &&
+    msgBody.messages.some((m) => m === null || typeof m !== "object" || Array.isArray(m))
+  ) {
+    log.warn("CHAT", "Rejecting request with non-object message entries");
+    return errorResponse(HTTP_STATUS.BAD_REQUEST, "messages: Expected array of objects");
   }
   if (!("messages" in msgBody) && !("input" in msgBody) && sourceFormat !== "antigravity") {
     log.warn("CHAT", "Rejecting request with missing messages");
@@ -1245,25 +1256,29 @@ async function handleChatImplementation(
         `Combo "${combo.name}" exhausted — attempting global fallback: ${fallbackModel}`
       );
       try {
-        const fallbackResponse = await handleSingleModelChat(
-          body,
-          fallbackModel,
-          clientRawRequest,
-          request,
-          combo.name,
-          apiKeyInfo,
-          telemetry,
-          {
-            sessionId,
-            sessionAffinityKey,
-            emergencyFallbackTried: true,
-            forceLiveComboTest: isComboLiveTest,
-            conversationId,
-            managedLease,
-            videoBridgeLog,
-          },
-          combo.strategy,
-          true
+        const fallbackResponse = await runWithTransientBackendRetry(
+          () =>
+            handleSingleModelChat(
+              body,
+              fallbackModel,
+              clientRawRequest,
+              request,
+              combo.name,
+              apiKeyInfo,
+              telemetry,
+              {
+                sessionId,
+                sessionAffinityKey,
+                emergencyFallbackTried: true,
+                forceLiveComboTest: isComboLiveTest,
+                conversationId,
+                managedLease,
+                videoBridgeLog,
+              },
+              combo.strategy,
+              true
+            ),
+          { signal: request?.signal, source: "global-fallback" }
         );
         if (fallbackResponse.ok) {
           log.info("GLOBAL_FALLBACK", `Global fallback ${fallbackModel} succeeded`);
@@ -1514,24 +1529,13 @@ async function handleSingleModelChat(
     customModelTargetFormat,
     extendedContext,
     apiFormat,
+    resolvedThinkingEffort,
   } = resolved;
-  // Prefer the combo target's providerId when available — the model string's
-  // provider prefix may differ from the credential provider ID (e.g. model
-  // "xiaomi/mimo-v2-flash" resolves to provider "xiaomi" but the combo target
-  // may specify providerId: "opengate" for credential lookup).
-  // Guard: if runtimeOptions.providerId is merely the prefix already encoded in
-  // the model string (e.g. "p2" from "p2/test-model"), and resolveModelOrError
-  // expanded it to a full custom-node ID (e.g. "openai-compatible-chat-e2e-p2"),
-  // trust resolvedProvider so the executor receives the full node ID and can
-  // correctly resolve the custom baseUrl. (#3058 follow-up)
+  // Use explicit credential redirects, but preserve resolved node IDs for implicit prefixes.
   const provider = (() => {
     if (!runtimeOptions.providerId) return resolvedProvider;
-    // If the override is identical to resolvedProvider, no-op.
     if (runtimeOptions.providerId === resolvedProvider) return resolvedProvider;
-    // If the model string already encodes runtimeOptions.providerId as its prefix,
-    // the override is implicit (not an intentional redirect) — use resolvedProvider.
     if (modelStr.startsWith(runtimeOptions.providerId + "/")) return resolvedProvider;
-    // Intentional override (e.g. providerId points to a different credential pool).
     return runtimeOptions.providerId;
   })();
   const forceLiveComboTest = runtimeOptions.forceLiveComboTest === true;
@@ -1900,7 +1904,7 @@ async function handleSingleModelChat(
         if (handoff && handoff.fromAccount !== credentials.connectionId) {
           // Inject only after a real account switch. The combo loop itself cannot
           // reliably detect this because account selection happens inside auth.
-          requestBody = injectHandoffIntoBody(requestBody, handoff);
+          requestBody = injectHandoffIntoBody(requestBody, handoff, undefined, sourceFormat);
           injectedHandoff = handoff;
           log.info(
             "CONTEXT_RELAY",
@@ -1954,7 +1958,8 @@ async function handleSingleModelChat(
         proxyInfo = await safeResolveProxy(
           credentials.connectionId,
           apiKeyInfo?.id,
-          provider
+          provider,
+          comboName
         ).catch(agyLease.releasingRethrow(leaseId));
       } catch (error) {
         releaseOAuthSession();
@@ -1991,10 +1996,11 @@ async function handleSingleModelChat(
               runtimeOptions.comboExecutionKey ?? runtimeOptions.comboStepId ?? null,
             extendedContext,
             modelApiFormat: apiFormat,
-            // Only a model's explicit DB override may cross this boundary as
-            // modelInfo.targetFormat. The effective targetFormat above was
-            // resolved without credentials; forwarding it would let a stale
-            // provider-id fallback override the credential-aware resolution.
+            resolvedThinkingEffort:
+              effectiveModel === model && provider === resolvedProvider
+                ? resolvedThinkingEffort
+                : undefined,
+            // Forward only the DB override, not the credential-blind format fallback.
             modelTargetFormat: customModelTargetFormat,
             providerProfile,
             cachedSettings: runtimeOptions.cachedSettings,
@@ -2104,7 +2110,9 @@ async function handleSingleModelChat(
           result.errorType === "stream_early_eof");
 
       if (
-        (result.errorType === "stream_timeout" || result.errorType === "stream_early_eof") &&
+        (result.errorType === "stream_timeout" ||
+          result.errorType === "stream_early_eof" ||
+          result.errorCode === "empty_response") &&
         !isAntigravityStreamReadinessFailure
       ) {
         // Bug #3758: flaky OpenAI-compatible upstreams (e.g. NVIDIA NIM) sometimes
