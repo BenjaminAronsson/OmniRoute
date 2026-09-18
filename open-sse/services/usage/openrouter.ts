@@ -7,7 +7,11 @@
  */
 
 import { fetchOpenrouterQuota, type OpenrouterQuota } from "../openrouterQuotaFetcher.ts";
-import { getFreeWindowStatus, resolveAccountKey } from "../openrouterFreeWindow.ts";
+import {
+  getFreeWindowStatus,
+  resolveAccountKey,
+  syncPurchasedTierFromQuota,
+} from "../openrouterFreeWindow.ts";
 import { type UsageQuota } from "./quota.ts";
 
 function buildCreditsQuota(quota: OpenrouterQuota): UsageQuota | null {
@@ -62,6 +66,20 @@ export async function getOpenrouterUsage(
 
   const connection = { apiKey, providerSpecificData: providerSpecificData ?? {} };
   const quota = (await fetchOpenrouterQuota(connectionId, connection)) as OpenrouterQuota | null;
+
+  // Belt-and-suspenders: fetchOpenrouterQuota() already syncs the tier as a
+  // side effect, but re-apply here so the dashboard payload and the
+  // quota-preflight enforcement always agree even on cache-hit paths.
+  if (quota) {
+    try {
+      syncPurchasedTierFromQuota(resolveAccountKey(connectionId, connection), {
+        totalCredits: quota.totalCredits,
+        isFreeTier: quota.isFreeTier,
+      });
+    } catch {
+      // Fail open: tier sync must never break the usage payload.
+    }
+  }
 
   const quotas: Record<string, UsageQuota> = {};
   const { dailyQuota, rpmQuota } = buildFreeWindowQuota(connectionId, connection);

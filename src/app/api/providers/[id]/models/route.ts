@@ -12,6 +12,7 @@ import { resolveAlibabaProviderModelsUrl } from "@/shared/constants/alibabaProvi
 import { getStaticModelsForProvider } from "@/lib/providers/staticModels";
 import { providerUsesCuratedModelsOnly } from "@/lib/providers/modelListingCapability";
 import { mergeModelsWithCustomPrecedence } from "@/lib/providers/modelMetadataPrecedence";
+import { addModelsSuffix } from "@/lib/providers/validation/urlHelpers";
 import { getCachedProviderConnectionById } from "@/lib/db/readCache";
 import { resolveProxyForProvider } from "@/lib/db/proxies";
 import {
@@ -2166,6 +2167,23 @@ export async function GET(
           base = base.slice(0, -"/v1".length);
         }
         url = `${base}/v1/models`;
+      }
+    }
+    // OpenRouter is pinned by PROVIDER_MODELS_CONFIG to the *global* catalog
+    // (https://openrouter.ai/api/v1/models), so it never consulted the
+    // per-connection base-URL override. A connection pointed at a different
+    // OpenRouter region — e.g. the EU in-region endpoint
+    // (https://eu.openrouter.ai/api/v1) — therefore kept importing the global
+    // catalog and advertised models that endpoint cannot serve. Those ids then
+    // 404 at inference time even though the per-connection model list, and the
+    // auto-sync that maintains it, look healthy. Mirrors the `openai` override
+    // handling above (#5899). addModelsSuffix() reuses the shared normalization:
+    // it drops a trailing chat/responses/messages path, appends /models, and
+    // leaves an already-/models URL untouched.
+    if (provider === "openrouter") {
+      const customBaseUrl = getProviderBaseUrl(connection.providerSpecificData);
+      if (customBaseUrl) {
+        url = addModelsSuffix(customBaseUrl) || url;
       }
     }
     if (provider === "cloudflare-ai") {

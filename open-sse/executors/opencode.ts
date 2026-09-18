@@ -21,14 +21,18 @@ import {
   type AccountProxyConfig,
   type RotatableAccount,
   pickAccount as pickRotatableAccount,
-  markCooldown as markAccountCooldown,
-  markSuccess as markAccountSuccess,
   maskAccountId,
   isNetworkErrorRotatable,
   isEmptyUpstreamRejection,
   extractChatcmplId,
 } from "./accountRotation.ts";
-import { isOpencodeGeoBlocked, proxyKeyOf, isOpencodeUserBlocked } from "./opencodeGeoBlock.ts";
+import { markCooldown, markOutcome, noteResponseServed } from "./opencodeAccountHealth.ts";
+import {
+  isOpencodeFreeTierRefusal,
+  isOpencodeGeoBlocked,
+  proxyKeyOf,
+  isOpencodeUserBlocked,
+} from "./opencodeGeoBlock.ts";
 import {
   guardResponsesStall,
   isResponsesFirstByteTimeout,
@@ -41,13 +45,7 @@ import {
   sleepAbortable,
   transientRetryDelayMs,
 } from "./opencodeTransientFailure.ts";
-import {
-  hasProxyRefusals,
-  isProxyAvoided,
-  noteProxyRefusal,
-  noteProxyServed,
-  proxyEgressKey,
-} from "../utils/proxyRefusalMemory.ts";
+import { isProxyAvoided, noteProxyRefusal, proxyEgressKey } from "../utils/proxyRefusalMemory.ts";
 import {
   isNetworkRotationSharedEgressGuardEnabled,
   isProxySkipRecentlyFailedEnabled,
@@ -370,20 +368,6 @@ export class OpencodeExecutor extends BaseExecutor {
     isReady: (account: OpencodeAccountState) => boolean
   ): OpencodeAccountState {
     return pickRotatableAccount(this.accounts, this, isReady);
-  }
-
-  private markCooldown(
-    account: OpencodeAccountState,
-    kind: "transient" | "terminal" = "transient"
-  ): void {
-    markAccountCooldown(account, kind);
-  }
-
-  private markSuccess(account: OpencodeAccountState): void {
-    markAccountSuccess(account);
-    // A response came back through this proxy: it is usable again for every refusal kind.
-    // Nothing is held unless PROXY_SKIP_RECENTLY_FAILED was on, so this costs no flag read.
-    if (hasProxyRefusals()) noteProxyServed(proxyEgressKey(account.proxy));
   }
 
   /**
@@ -736,7 +720,7 @@ export class OpencodeExecutor extends BaseExecutor {
           // outage; proxied and proxy-less accounts rotate alike. A client abort never rotates.
           if (stallWindowMs > 0 && (isResponsesFirstByteTimeout(err) || input.signal?.aborted)) {
             if (input.signal?.aborted) throw err;
-            this.markCooldown(account);
+            markCooldown(account);
             const stallKey = proxyKeyOf(account.proxy);
             if (stallKey !== null) geoTriedProxyKeys.add(stallKey);
             else directTried = true;
@@ -757,7 +741,7 @@ export class OpencodeExecutor extends BaseExecutor {
           // silently either way: logged before rotating, skipping, or rethrowing.
           if (!isNetworkErrorRotatable(account)) {
             if (sharedEgressGuardEnabled) {
-              this.markCooldown(account);
+              markCooldown(account);
               sharedEgressDown = true;
               lastSharedEgressError = err;
               log?.warn?.(
@@ -772,7 +756,7 @@ export class OpencodeExecutor extends BaseExecutor {
             );
             throw err;
           }
-          this.markCooldown(account);
+          markCooldown(account);
           log?.warn?.(
             "OPENCODE",
             `${cid}network error on account ${masked}, rotating to next… (${reason})`
@@ -787,7 +771,7 @@ export class OpencodeExecutor extends BaseExecutor {
 
         const status = result.response.status;
         if (status === 429) {
-          this.markCooldown(account);
+          markCooldown(account);
           // The provider refused through this member: set it aside beyond the account
           // cooldown. A direct account has a null key and is never set aside.
           const setAsideMs = skipRecentlyFailed
@@ -866,7 +850,7 @@ export class OpencodeExecutor extends BaseExecutor {
             const key = proxyKeyOf(account.proxy);
             if (key !== null) geoTriedProxyKeys.add(key);
             else directTried = true;
-            this.markCooldown(account);
+            markCooldown(account);
             const rotate = userBlockedRotations === 0 && this.accounts.length > 1;
             log?.warn?.(
               "OPENCODE",
@@ -876,6 +860,19 @@ export class OpencodeExecutor extends BaseExecutor {
             userBlockedRotations++;
             abandonedResponse = result.response;
             continue;
+          }
+          // Free-tier refusal: upstream rejected the REQUEST (client identity or
+          // request shape), not this account. Every sibling account gets the same
+          // verdict from the same request, so rotating only adds latency; and the
+          // refusal must not touch account health — markSuccess would revive an
+          // evicted account. Return it untouched, health and cooldown unchanged.
+          if (bodyText !== null && isOpencodeFreeTierRefusal(status, bodyText)) {
+            log?.warn?.(
+              "OPENCODE",
+              `${cid}free-tier refusal ${status} on account ${masked} (proxy ${proxyKeyOf(account.proxy) ?? "direct"}), returning it unchanged (request-scoped, no rotation)`
+            );
+            noteResponseServed(account);
+            return result;
           }
         }
 
@@ -904,11 +901,11 @@ export class OpencodeExecutor extends BaseExecutor {
           }
           // A 400 carrying a real error (or non-empty content): propagate
           // immediately, untouched — same as before this change.
-          this.markSuccess(account);
+          markOutcome(account, result.response);
           return result;
         }
 
-        this.markSuccess(account);
+        markOutcome(account, result.response);
         return this.normalizeMuseSparkResponse(input, result);
       }
 
@@ -1153,6 +1150,11 @@ export class OpencodeExecutor extends BaseExecutor {
     }
     if (modifiedBody && typeof modifiedBody === "object" && !Array.isArray(modifiedBody)) {
       const mb = modifiedBody as Record<string, unknown>;
+      // OpenCode accepts stream_options only on streaming Chat Completions (#13699).
+      const format = this._requestFormat ?? resolveOpencodeTargetFormat(this.provider, model);
+      if (format !== "openai" || mb.stream !== true) {
+        delete mb.stream_options;
+      }
       const parsed = parseEffortLevel(model);
       if (parsed) {
         const deepseekFamily =
