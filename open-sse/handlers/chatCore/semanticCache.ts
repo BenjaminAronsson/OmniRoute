@@ -2,9 +2,10 @@ import {
   generateSignature,
   getCachedResponse,
   isCacheableForRead,
+  outputContractOf,
 } from "@/lib/semanticCache";
 import { calculateCost } from "@/lib/usage/costCalculator";
-import { trackPendingRequest } from "@/lib/usageDb";
+import { finalizePendingScope, type PendingRequestScope } from "@/lib/usage/pendingRequestScope";
 import { synthesizeOpenAiSseFromJson } from "../../utils/jsonToSse.ts";
 import { attachOmniRouteMetaHeaders } from "@/domain/omnirouteResponseMeta";
 import { extractUsageFromResponse } from "../usageExtractor.ts";
@@ -19,7 +20,7 @@ export async function checkSemanticCache({
   stream,
   reqLogger,
   effectiveServiceTier,
-  connectionId,
+  pendingScope,
   startTime,
   log,
   persistAttemptLogs,
@@ -36,7 +37,7 @@ export async function checkSemanticCache({
   stream: boolean;
   reqLogger: { logConvertedResponse: (response: Record<string, unknown>) => void };
   effectiveServiceTier: string | null | undefined;
-  connectionId: string | null;
+  pendingScope: PendingRequestScope;
   startTime: number;
   log: { debug?: (...args: unknown[]) => void } | null;
   persistAttemptLogs: (args: unknown) => void;
@@ -51,7 +52,8 @@ export async function checkSemanticCache({
       body.messages ?? body.input,
       body.temperature,
       body.top_p,
-      apiKeyId ?? undefined
+      apiKeyId ?? undefined,
+      outputContractOf(body)
     );
     const cached = getCachedResponse(signature);
     if (cached) {
@@ -74,7 +76,11 @@ export async function checkSemanticCache({
         clientResponse: cached,
         cacheSource: "semantic",
       });
-      trackPendingRequest(model, provider, connectionId, false);
+      finalizePendingScope(pendingScope, {
+        status: 200,
+        providerResponse: cached,
+        clientResponse: cached,
+      });
       const cachedSse = stream ? synthesizeOpenAiSseFromJson(JSON.stringify(cached)) : "";
       const headers: Record<string, string> = {
         "Content-Type": cachedSse ? "text/event-stream" : "application/json",

@@ -1,4 +1,5 @@
 import { isRetiredGitHubCopilotModelId } from "@omniroute/open-sse/config/providers/registry/github/retiredModels.ts";
+import type { VertexModelMetadataProvenance } from "@/lib/providerModels/vertexModelMetadata";
 
 import { asRecord, toNonEmptyString } from "./shared";
 
@@ -13,12 +14,16 @@ export interface SyncedAvailableModel {
   supportedThinkingEfforts?: string[];
   defaultThinkingEffort?: string;
   inputTokenLimit?: number;
+  contextWindow?: number;
   outputTokenLimit?: number;
+  metadataProvenance?: VertexModelMetadataProvenance;
   description?: string;
   supportsThinking?: boolean;
   alwaysThinking?: boolean;
   supportsTools?: boolean;
   supportsVideo?: boolean;
+  /** Discovery payload supplied free-economics evidence for this model. */
+  isFree?: boolean;
   // #4264: image-input capability captured at sync time (e.g. OpenRouter
   // `architecture.input_modalities`/`modality`) so the catalog can surface vision.
   supportsVision?: boolean;
@@ -76,8 +81,14 @@ function normalizeSyncedAvailableModel(model: unknown): SyncedAvailableModel | n
     ...(typeof record.inputTokenLimit === "number"
       ? { inputTokenLimit: record.inputTokenLimit }
       : {}),
+    ...(typeof record.contextWindow === "number" ? { contextWindow: record.contextWindow } : {}),
     ...(typeof record.outputTokenLimit === "number"
       ? { outputTokenLimit: record.outputTokenLimit }
+      : {}),
+    ...(record.metadataProvenance && typeof record.metadataProvenance === "object"
+      ? {
+          metadataProvenance: record.metadataProvenance as VertexModelMetadataProvenance,
+        }
       : {}),
     ...(typeof record.description === "string" ? { description: record.description } : {}),
     ...(typeof record.supportsThinking === "boolean"
@@ -86,6 +97,7 @@ function normalizeSyncedAvailableModel(model: unknown): SyncedAvailableModel | n
     ...(record.alwaysThinking === true ? { alwaysThinking: true } : {}),
     ...(typeof record.supportsTools === "boolean" ? { supportsTools: record.supportsTools } : {}),
     ...(typeof record.supportsVideo === "boolean" ? { supportsVideo: record.supportsVideo } : {}),
+    ...(record.isFree === true ? { isFree: true } : {}),
     ...(record.supportsVision === true ? { supportsVision: true } : {}),
   };
 }

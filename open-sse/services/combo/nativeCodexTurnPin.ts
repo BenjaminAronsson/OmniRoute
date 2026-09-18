@@ -346,6 +346,11 @@ export async function areAllPinnedTargetsModelScopedUnusable(
   return true;
 }
 
+export function releaseNativeCodexTurnPin(body: Record<string, unknown>, comboName: string): void {
+  const key = nativeCodexTurnKey(body, comboName);
+  if (key) pins.delete(key);
+}
+
 export function clearNativeCodexTurnPinsForTests(): void {
   turns.clear();
 }
