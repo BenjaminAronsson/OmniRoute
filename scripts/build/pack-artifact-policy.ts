@@ -50,6 +50,11 @@ export const APP_STAGING_ALLOWED_EXACT_PATHS: string[] = [
   "src/lib/db/healthCheckWorker.js",
   "package.json",
   "peer-stamp.mjs",
+  // #13636/#14064: server-ws.mjs imports ./httpClientAbortGuard.mjs (process crash
+  // guard); assembleStandalone copies it from src/shared/utils. Without this entry
+  // the prepublish prune deletes it and every boot of the published package dies
+  // with ERR_MODULE_NOT_FOUND — the 3.8.47 head-response-guard class.
+  "httpClientAbortGuard.mjs",
   "main-server-timeouts.mjs",
   // server-ws.mjs import (sd_notify helper) — enforced by the closure test
   // tests/unit/pack-artifact-server-ws-closure.test.ts.
@@ -201,6 +206,8 @@ export const PACK_ARTIFACT_REQUIRED_PATHS: string[] = [
   "dist/main-server-timeouts.mjs",
   // server-ws.mjs import (sd_notify helper) — enforced by the closure test.
   "dist/systemd-notify.mjs",
+  // server-ws.mjs import (process crash guard, #13636/#14064) — enforced by the closure test.
+  "dist/httpClientAbortGuard.mjs",
   "dist/http-method-guard.cjs",
   // #5452: regression guard — make check:pack-artifact fail loudly if the TLS
   // opt-in sidecar (imported by dist/server-ws.mjs) ever vanishes from the tarball.
