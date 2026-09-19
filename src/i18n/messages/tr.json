@@ -11411,6 +11411,7 @@
         "clientResponse": "Müşteri Yanıtı",
         "pipelineError": "Pipeline Hatası"
       },
+      "payloadSizeLimitOmitted": "İçerik atlandı — bu bölüm çağrı günlüğü boyut sınırını (CALL_LOG_PIPELINE_MAX_SIZE_KB) aştı ve kaydedilmedi; bu gerçek bir sağlayıcı hatası değildir.",
       "payloadMissing": "Bu günlük girişi için ayrıntılı yük nesnesi artık mevcut değil.",
       "payloadCorrupt": "Ayrıntılı yük nesnesi ayrıştırılamadı.",
       "notAvailable": "Yok",

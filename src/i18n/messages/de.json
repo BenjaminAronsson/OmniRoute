@@ -11411,6 +11411,7 @@
         "clientResponse": "Kundenantwort",
         "pipelineError": "Pipeline-Fehler"
       },
+      "payloadSizeLimitOmitted": "Payload ausgelassen — dieser Abschnitt hat das Größenlimit des Aufrufprotokolls (CALL_LOG_PIPELINE_MAX_SIZE_KB) überschritten und wurde nicht gespeichert; es handelt sich nicht um einen echten Upstream-Fehler.",
       "payloadMissing": "Das detaillierte Payload-Artefakt ist für diesen Protokolleintrag nicht mehr verfügbar.",
       "payloadCorrupt": "Detailliertes Payload-Artefakt konnte nicht analysiert werden.",
       "notAvailable": "Nicht verfügbar",

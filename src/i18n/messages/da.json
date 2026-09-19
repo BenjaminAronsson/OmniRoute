@@ -11411,6 +11411,7 @@
         "clientResponse": "Klientrespons",
         "pipelineError": "Pipeline Fejl"
       },
+      "payloadSizeLimitOmitted": "Payload udeladt — denne sektion overskred størrelsesgrænsen for kaldloggen (CALL_LOG_PIPELINE_MAX_SIZE_KB) og blev ikke gemt; det er ikke en reel upstream-fejl.",
       "payloadMissing": "Den detaljerede payload-artifact er ikke længere tilgængelig for denne logpost.",
       "payloadCorrupt": "Den detaljerede payload-artifact kunne ikke parses.",
       "notAvailable": "Ikke tilgængelig",

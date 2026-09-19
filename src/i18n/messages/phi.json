@@ -11411,6 +11411,7 @@
         "clientResponse": "Tugon ng Kliyente",
         "pipelineError": "Error sa Pipeline"
       },
+      "payloadSizeLimitOmitted": "Inalis ang payload — lumampas ang seksyong ito sa limitasyon ng laki ng call log (CALL_LOG_PIPELINE_MAX_SIZE_KB) at hindi na-save; hindi ito tunay na upstream error.",
       "payloadMissing": "Ang detalyadong payload artifact ay hindi na available para sa log entry na ito.",
       "payloadCorrupt": "Hindi ma-parse ang detalyadong payload artifact.",
       "notAvailable": "Hindi naaangkop",

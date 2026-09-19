@@ -11411,6 +11411,7 @@
         "clientResponse": "客户端响应",
         "pipelineError": "管道错误"
       },
+      "payloadSizeLimitOmitted": "已省略负载 — 此部分超出了调用日志大小限制（CALL_LOG_PIPELINE_MAX_SIZE_KB），未被存储；这不是真正的上游错误。",
       "payloadMissing": "此日志条目的详细有效负载工件不再可用。",
       "payloadCorrupt": "无法解析详细的有效负载工件。",
       "notAvailable": "不适用",

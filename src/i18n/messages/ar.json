@@ -11411,6 +11411,7 @@
         "clientResponse": "استجابة العميل",
         "pipelineError": "خطأ في خط الأنابيب"
       },
+      "payloadSizeLimitOmitted": "تم حذف الحمولة — تجاوز هذا القسم حد حجم سجل الاستدعاءات (CALL_LOG_PIPELINE_MAX_SIZE_KB) ولم يتم تخزينه؛ هذا ليس خطأً حقيقيًا من المزوّد.",
       "payloadMissing": "لا يتوفر حِمل البيانات التفصيلي بعد الآن لهذه السجل.",
       "payloadCorrupt": "تعذر تحليل الحمولة التفصيلية.",
       "notAvailable": "غير متوفر",

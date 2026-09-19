@@ -11411,6 +11411,7 @@
         "clientResponse": "Klientrespons",
         "pipelineError": "Pipeline-feil"
       },
+      "payloadSizeLimitOmitted": "Innhold utelatt — denne seksjonen overskred størrelsesgrensen for kalloggen (CALL_LOG_PIPELINE_MAX_SIZE_KB) og ble ikke lagret; dette er ikke en reell upstream-feil.",
       "payloadMissing": "Detaljert nyttelastartefakt er ikke lenger tilgjengelig for denne loggoppføringen.",
       "payloadCorrupt": "Detaljert nyttelastartefakt kunne ikke bli analysert.",
       "notAvailable": "Ikke tilgjengelig",

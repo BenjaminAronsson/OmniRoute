@@ -11411,6 +11411,7 @@
         "clientResponse": "Asiakkaan Vastaus",
         "pipelineError": "Putkivirhe"
       },
+      "payloadSizeLimitOmitted": "Sisältö jätetty pois — tämä osio ylitti kutsulokin kokorajan (CALL_LOG_PIPELINE_MAX_SIZE_KB) eikä sitä tallennettu; kyseessä ei ole todellinen upstream-virhe.",
       "payloadMissing": "Yksityiskohtainen kuormitusartefakti ei ole enää saatavilla tälle lokimerkinnälle.",
       "payloadCorrupt": "Yksityiskohtaisia kuormitusartefakteja ei voitu jäsentää.",
       "notAvailable": "Ei saatavilla",

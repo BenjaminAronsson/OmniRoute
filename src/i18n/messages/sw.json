@@ -11411,6 +11411,7 @@
         "clientResponse": "Majibu ya Mteja",
         "pipelineError": "Kosa la Pipeline"
       },
+      "payloadSizeLimitOmitted": "Maudhui yameachwa — sehemu hii ilizidi kikomo cha ukubwa wa kumbukumbu ya miito (CALL_LOG_PIPELINE_MAX_SIZE_KB) na haikuhifadhiwa; hili si kosa halisi la mtoa huduma.",
       "payloadMissing": "Kipande cha maelezo ya mzigo hakipatikani tena kwa ajili ya kipande hiki cha kumbukumbu.",
       "payloadCorrupt": "Kipande cha mzigo kilichofafanuliwa hakiwezi kufasiriwa.",
       "notAvailable": "Haitumiki",
