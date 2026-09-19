@@ -18,6 +18,7 @@ const cacheConfigUpdateSchema = z.object({
   semanticCacheEnabled: z.boolean().optional(),
   semanticCacheMaxSize: z.number().positive().optional(),
   semanticCacheTTL: z.number().positive().optional(),
+  semanticCacheVectorEnabled: z.boolean().optional(),
   semanticCacheBackend: z.enum(["memory", "redis"]).optional(),
   semanticCacheThreshold: z.number().min(0).max(1).optional(),
   semanticCacheEmbeddingProvider: z.string().trim().optional(),
@@ -39,6 +40,7 @@ const CACHE_CONFIG_KEYS = [
   "semanticCacheEnabled",
   "semanticCacheMaxSize",
   "semanticCacheTTL",
+  "semanticCacheVectorEnabled",
   "semanticCacheBackend",
   "semanticCacheThreshold",
   "semanticCacheEmbeddingProvider",
@@ -60,6 +62,7 @@ const DEFAULTS = {
   semanticCacheEnabled: true,
   semanticCacheMaxSize: 1000,
   semanticCacheTTL: 1800000,
+  semanticCacheVectorEnabled: false,
   semanticCacheBackend: "memory",
   semanticCacheThreshold: 0.8,
   semanticCacheEmbeddingProvider: "lemonade",
@@ -142,6 +145,9 @@ export async function PUT(request: NextRequest) {
     }
     if (body.semanticCacheTTL !== undefined) {
       updates.semanticCacheTTL = body.semanticCacheTTL;
+    }
+    if (body.semanticCacheVectorEnabled !== undefined) {
+      updates.semanticCacheVectorEnabled = body.semanticCacheVectorEnabled;
     }
     if (body.semanticCacheBackend !== undefined) {
       updates.semanticCacheBackend = body.semanticCacheBackend;

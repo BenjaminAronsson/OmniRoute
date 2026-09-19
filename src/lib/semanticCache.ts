@@ -548,6 +548,10 @@ export function isTruncatedCompletion(response: unknown): boolean {
  * disables caching.
  */
 export function isTruncatedStreamBody(streamBody: unknown): boolean {
+  // chatCore hands the streaming store the *assembled* body (an object with
+  // `choices[].finish_reason`), not raw SSE text — so the object shape must be
+  // checked too or the streaming guard is a no-op in production (#14159).
+  if (streamBody && typeof streamBody === "object") return isTruncatedCompletion(streamBody);
   if (typeof streamBody !== "string" || streamBody.length === 0) return false;
   for (const line of streamBody.split("\n")) {
     const trimmed = line.trim();

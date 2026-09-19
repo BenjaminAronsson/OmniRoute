@@ -32,6 +32,12 @@ export interface DatabaseSettings {
     semanticCacheEnabled: boolean;
     semanticCacheMaxSize: number;
     semanticCacheTTL: number;
+    /**
+     * Opt-in for the dual-layer vector-similarity cache (#14159). Off by default:
+     * it makes an embedding call per cacheable request, so it must never be on
+     * for an operator who only enabled the legacy exact-match cache.
+     */
+    semanticCacheVectorEnabled?: boolean;
     semanticCacheBackend?: "memory" | "redis";
     semanticCacheThreshold?: number;
     semanticCacheEmbeddingProvider?: string;
@@ -120,6 +126,7 @@ export const DEFAULT_DATABASE_SETTINGS: Omit<DatabaseSettings, "location" | "sta
     semanticCacheEnabled: true,
     semanticCacheMaxSize: 1000,
     semanticCacheTTL: 1800000,
+    semanticCacheVectorEnabled: false,
     semanticCacheBackend: "memory",
     semanticCacheThreshold: 0.8,
     semanticCacheEmbeddingProvider: "lemonade",

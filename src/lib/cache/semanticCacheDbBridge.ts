@@ -58,7 +58,10 @@ export function ensureSemanticCacheDbBridge(): void {
       const embeddingApiKey = s.semanticCacheEmbeddingApiKey || conn.apiKey;
 
       return {
-        enabled: s.semanticCacheEnabled,
+        // The vector layer is opt-in (#14159): it only runs when the operator turned
+        // on BOTH the master semantic-cache toggle and the vector-layer toggle. With
+        // it off, chatCore behaves exactly like the legacy SQLite exact-match cache.
+        enabled: s.semanticCacheEnabled !== false && s.semanticCacheVectorEnabled === true,
         backend: s.semanticCacheBackend,
         similarityThreshold: s.semanticCacheThreshold,
         ttlMs: s.semanticCacheTTL,

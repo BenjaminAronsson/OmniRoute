@@ -106,7 +106,10 @@ export async function checkSemanticCache({
         providerRequest: null,
         providerResponse: null,
         clientResponse: cached,
-        cacheSource: hitType === "semantic" ? "semantic_similarity" : "semantic",
+        // Both hit types are served without an upstream call; attemptLogging only
+        // knows "semantic" | "upstream", so a similarity hit must not fall through
+        // to "upstream" (#14159). The hit type is surfaced via the response headers.
+        cacheSource: "semantic",
       });
       // Finalize by exact request id (#12910): a (model, provider, connectionId)
       // tuple can match the wrong in-flight request when connectionId is null or
@@ -148,8 +151,12 @@ export async function checkSemanticCache({
 
       const headers: Record<string, string> = {
         "Content-Type": cachedSse ? "text/event-stream" : "application/json",
-        [OMNIROUTE_RESPONSE_HEADERS.cache]:
-          hitType === "semantic" ? "HIT (semantic)" : "HIT (exact)",
+        // Keep the legacy `HIT` value verbatim: consumers match it exactly
+        // (tests/unit/chatcore-semantic-cache.test.ts and the chat-route suites).
+        // A similarity hit is distinguished by X-OmniRoute-Cache-Similarity below.
+        [OMNIROUTE_RESPONSE_HEADERS.cache]: "HIT",
+        // Marker for latency measurement tools: this response served from cache
+        // has synthetic (near-zero) latency, not real upstream latency.
         [OMNIROUTE_RESPONSE_HEADERS.cacheLatency]: "synthetic",
         [OMNIROUTE_RESPONSE_HEADERS.savingsTokens]: String(tokensSaved),
       };

@@ -424,6 +424,15 @@ const KNOWN_EMBEDDING_PREFIXES = [
   "multilingual-e5",
 ];
 
+/** Mirrors CHAT_ENDPOINTS in open-sse/services/modelEndpointPolicy.ts. */
+const CHAT_ENDPOINT_HINTS = new Set([
+  "chat",
+  "chat-completions",
+  "chat/completions",
+  "messages",
+  "responses",
+]);
+
 const KNOWN_EMBEDDING_DIMENSIONS: Record<string, number> = {
   "harrier-oss-v1-0.6b": 1024,
   "text-embedding-3-small": 1536,
@@ -467,14 +476,22 @@ export function detectModelModality(
     (m) => m.id === modelLeaf || m.id === rawId || rawId.endsWith(`/${m.id}`)
   );
 
+  // An explicit chat endpoint is authoritative: a model that upstream says serves
+  // chat (e.g. `supportedEndpoints: ["chat", "embeddings"]`) must never be
+  // downgraded to embedding/rerank/image by the id/label heuristics below —
+  // that would drop it from the chat catalog (#14159 re-land of #12630).
+  const hasChatEndpoint = rawEndpoints.some((endpoint) => CHAT_ENDPOINT_HINTS.has(endpoint));
+
   const isRerank =
-    rawLabels.includes("reranking") ||
-    rawLabels.includes("rerank") ||
-    typeStr === "rerank" ||
-    rawEndpoints.includes("rerank") ||
-    modelLeaf.includes("rerank");
+    !hasChatEndpoint &&
+    (rawLabels.includes("reranking") ||
+      rawLabels.includes("rerank") ||
+      typeStr === "rerank" ||
+      rawEndpoints.includes("rerank") ||
+      modelLeaf.includes("rerank"));
 
   const isImage =
+    !hasChatEndpoint &&
     !isRerank &&
     (rawLabels.includes("image") ||
       rawLabels.includes("images") ||
@@ -490,6 +507,7 @@ export function detectModelModality(
       modelLeaf.startsWith("stable-diffusion"));
 
   const isEmbedding =
+    !hasChatEndpoint &&
     !isRerank &&
     !isImage &&
     (rawLabels.includes("embeddings") ||
@@ -569,13 +587,17 @@ export function normalizeDiscoveredModels(
       id;
 
     const modality = detectModelModality(record, providerId);
+    // Only non-chat modalities are stamped on the synced row. Chat models keep the
+    // tip's exact shape (no `modelType`/`supportedInputTypes` defaults) so the
+    // import-mode diff stays stable and existing catalog snapshots do not churn.
     const modelType = modality.isEmbedding
       ? "embedding"
       : modality.isRerank
         ? "rerank"
         : modality.isImage
           ? "image"
-          : "chat";
+          : undefined;
+    const explicitInputTypes = Array.isArray(record.supportedInputTypes);
 
     const supportedEndpoints = Array.isArray(record.supportedEndpoints)
       ? Array.from(
@@ -689,10 +711,10 @@ export function normalizeDiscoveredModels(
       ...(typeof modality.dimensions === "number" && modality.dimensions > 0
         ? { dimensions: modality.dimensions }
         : {}),
-      ...(modality.supportedInputTypes.length > 0
+      ...((modelType || explicitInputTypes) && modality.supportedInputTypes.length > 0
         ? { supportedInputTypes: modality.supportedInputTypes }
         : {}),
-      modelType,
+      ...(modelType ? { modelType } : {}),
     });
   }
 

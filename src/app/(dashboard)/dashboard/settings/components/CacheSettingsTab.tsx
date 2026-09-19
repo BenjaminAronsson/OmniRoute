@@ -28,6 +28,7 @@ interface CacheConfigResponse {
   semanticCacheEnabled?: boolean;
   semanticCacheMaxSize?: number;
   semanticCacheTTL?: number;
+  semanticCacheVectorEnabled?: boolean;
   semanticCacheBackend?: "memory" | "redis";
   semanticCacheThreshold?: number;
   semanticCacheEmbeddingProvider?: string;
@@ -58,6 +59,8 @@ export default function CacheSettingsTab() {
 
   // Semantic Cache State
   const [semEnabled, setSemEnabled] = useState(true);
+  // Vector-similarity layer is opt-in (#14159): off unless the operator turns it on.
+  const [semVectorEnabled, setSemVectorEnabled] = useState(false);
   const [semBackend, setSemBackend] = useState<"memory" | "redis">("memory");
   const [semThreshold, setSemThreshold] = useState(0.8);
   const [semTtlMinutes, setSemTtlMinutes] = useState(30);
@@ -112,6 +115,9 @@ export default function CacheSettingsTab() {
 
         if (config.semanticCacheEnabled !== undefined) {
           setSemEnabled(config.semanticCacheEnabled);
+        }
+        if (config.semanticCacheVectorEnabled !== undefined) {
+          setSemVectorEnabled(config.semanticCacheVectorEnabled);
         }
         if (config.semanticCacheBackend === "redis" || config.semanticCacheBackend === "memory") {
           setSemBackend(config.semanticCacheBackend);
@@ -250,6 +256,7 @@ export default function CacheSettingsTab() {
 
     const payload = {
       semanticCacheEnabled: semEnabled,
+      semanticCacheVectorEnabled: semVectorEnabled,
       semanticCacheBackend: semBackend,
       semanticCacheThreshold: Number(semThreshold),
       semanticCacheTTL: semTtlMinutes * 60000,
@@ -340,8 +347,8 @@ export default function CacheSettingsTab() {
                 </Badge>
               </div>
               <p className="text-sm text-text-muted mt-1">
-                Local vector-similarity cache. Reuses high-confidence matching responses to cut
-                latency and upstream token costs.
+                Exact-match response cache with an optional vector-similarity layer. Reuses matching
+                responses to cut latency and upstream token costs.
               </p>
             </div>
             <Toggle
@@ -353,6 +360,25 @@ export default function CacheSettingsTab() {
 
           {semEnabled && (
             <div className="flex flex-col gap-5">
+              {/* Vector-similarity layer opt-in (default off) */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-text-primary">
+                    Vector Similarity Layer (embeddings)
+                  </p>
+                  <p className="text-xs text-text-muted">
+                    Off by default. When on, every cacheable request is embedded via the provider
+                    below so near-duplicate prompts can reuse a cached answer. Exact-match caching
+                    keeps working without it.
+                  </p>
+                </div>
+                <Toggle
+                  checked={semVectorEnabled}
+                  onChange={setSemVectorEnabled}
+                  ariaLabel="Enable vector similarity layer"
+                />
+              </div>
+
               {/* Provider & Model Selection Row */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>

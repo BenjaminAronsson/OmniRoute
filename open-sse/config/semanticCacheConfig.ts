@@ -11,7 +11,13 @@ export type SemanticCacheBackend = "memory" | "redis";
 export type SemanticCacheType = "direct" | "semantic" | "both";
 
 export interface SemanticCacheConfig {
-  /** Master toggle for semantic caching. */
+  /**
+   * Master toggle for the dual-layer (in-memory/Redis vector) manager. OFF by default:
+   * the legacy SQLite exact-match cache (`semanticCacheEnabled`) keeps working on its
+   * own; this layer is opt-in via the `semanticCacheVectorEnabled` setting or
+   * `OMNIROUTE_SEMANTIC_CACHE_ENABLED=true`, because enabling it calls an embedding
+   * endpoint on every cacheable request (#14159 re-land of #12630).
+   */
   enabled: boolean;
   /** Storage and vector backend. Defaults to "memory". */
   backend: SemanticCacheBackend;
@@ -52,7 +58,7 @@ export interface SemanticCacheConfig {
 }
 
 export const DEFAULT_SEMANTIC_CACHE_CONFIG: SemanticCacheConfig = {
-  enabled: true,
+  enabled: false,
   backend: "memory",
   similarityThreshold: 0.8,
   ttlMs: 1800000, // 30 minutes

@@ -28,7 +28,10 @@ export async function POST(request: Request) {
 
   const validation = validateBody(testEmbeddingSchema, rawBody);
   if (isValidationFailure(validation)) {
-    return validation.response;
+    // `validateBody()` returns `{ success, error }` — there is no `.response`
+    // (that shape belongs to `validatedJsonBody()`); returning `undefined` here
+    // crashed the route on any invalid payload (TS2339 caught by api-typecheck).
+    return NextResponse.json({ error: validation.error }, { status: 400 });
   }
 
   const { provider, model, baseUrl, apiKey } = validation.data;

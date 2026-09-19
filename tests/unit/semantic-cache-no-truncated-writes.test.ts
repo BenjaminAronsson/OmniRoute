@@ -4,7 +4,7 @@
 // a mid-sentence answer that no retry can clear (only a cache flush).
 // Observed live on OmniRoute against github/gemini-3.5-flash: temperature:0 returned
 // finish_reason "length" at 93 completion tokens on every call, while the same request
-// with x-omniroute-no-cache:true returned a complete 239-token response. (#12885)
+// with x-omniroute-no-cache:true returned a complete 239-token response.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
@@ -12,14 +12,15 @@ const { storeSemanticCacheResponse } =
   await import("../../open-sse/handlers/chatCore/semanticCacheStore.ts");
 const { storeStreamingSemanticCacheResponse } =
   await import("../../open-sse/handlers/chatCore/streamingSemanticCacheStore.ts");
-// Real truncation predicate — only the cache backend and the temperature/size
+// Real truncation predicates — only the cache backend and the temperature/size
 // gates are stubbed, so these tests exercise the actual detection logic.
-const { isTruncatedCompletion } = await import("../../src/lib/semanticCache.ts");
+const { isTruncatedCompletion, isTruncatedStreamBody } = await import("@/lib/semanticCache");
 
 function deps(stored: unknown[]) {
   return {
     isCacheableForWrite: () => true,
     isTruncatedCompletion,
+    isTruncatedStreamBody,
     isSmallEnoughForSemanticCache: () => true,
     generateSignature: () => "sig",
     setCachedResponse: (_s: unknown, _m: string, r: unknown, t: number) => stored.push({ r, t }),
@@ -68,6 +69,28 @@ test("does not cache a streaming response truncated by max_tokens", () => {
     {
       enabled: true,
       streamStatus: 200,
+      streamResponseBody:
+        'data: {"choices":[{"finish_reason":"length","delta":{"content":"partial"}}]}\n\ndata: [DONE]\n\n',
+      body: { messages: [{ role: "user", content: "hi" }], temperature: 0 },
+      headers: undefined,
+      model: "gemini-3.5-flash",
+      streamUsage: { prompt_tokens: 10, completion_tokens: 93 },
+    } as never,
+    deps(stored)
+  );
+  assert.equal(stored.length, 0, "truncated streaming response must not be cached");
+});
+
+// #14159 (re-land of #12630): chatCore hands the streaming store the *assembled*
+// body (an object with `choices[].finish_reason`), not raw SSE text. The guard must
+// therefore also work on that shape — otherwise the streaming half of #12885 is a
+// no-op in production. The SSE-string case above is kept as-is (tip contract).
+test("does not cache an assembled streaming body truncated by max_tokens", () => {
+  const stored: unknown[] = [];
+  storeStreamingSemanticCacheResponse(
+    {
+      enabled: true,
+      streamStatus: 200,
       streamResponseBody: {
         choices: [{ finish_reason: "length", message: { content: "partial" } }],
       },
@@ -78,10 +101,10 @@ test("does not cache a streaming response truncated by max_tokens", () => {
     },
     deps(stored)
   );
-  assert.equal(stored.length, 0, "truncated streaming response must not be cached");
+  assert.equal(stored.length, 0, "truncated assembled streaming body must not be cached");
 });
 
-test("still caches a complete streaming response", () => {
+test("still caches a complete assembled streaming body", () => {
   const stored: unknown[] = [];
   storeStreamingSemanticCacheResponse(
     {
