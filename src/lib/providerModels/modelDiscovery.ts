@@ -19,6 +19,26 @@ function toNonEmptyString(value: unknown): string | null {
   return typeof value === "string" && value.trim().length > 0 ? value.trim() : null;
 }
 
+function isZeroPrice(value: unknown): boolean {
+  if (typeof value === "number") return value === 0;
+  if (typeof value !== "string" || value.trim().length === 0) return false;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed === 0;
+}
+
+function hasLiveFreeEvidence(
+  id: string,
+  record: JsonRecord,
+  promptPrice: string | number | undefined,
+  completionPrice: string | number | undefined
+): boolean {
+  return (
+    record.isFree === true ||
+    id.endsWith(":free") ||
+    (isZeroPrice(promptPrice) && isZeroPrice(completionPrice))
+  );
+}
+
 /**
  * Resolve a positive integer token limit from a list of candidate values.
  * Used to fall back across the differently-named context/output fields that
@@ -41,12 +61,26 @@ function modalitiesIncludeImage(value: unknown): boolean {
   );
 }
 
+// #13918: Lemonade Server's GET /v1/models exposes capabilities only through a
+// `labels[]` string array (e.g. ["chat", "vision", "reasoning", "tool-calling"]) —
+// it has none of the modality/architecture fields the other shapes below read.
+// See https://lemonade-server.ai/docs/api/openai/. Exact (case-insensitive,
+// trimmed) membership test only — not a substring match, per the earlier
+// false-positive lesson with bare `gemma` id-fragment matching.
+function labelsIncludeVision(value: unknown): boolean {
+  return (
+    Array.isArray(value) &&
+    value.some((entry) => toNonEmptyString(entry)?.toLowerCase() === "vision")
+  );
+}
+
 /**
  * #4264: detect image-input (vision) capability from a discovered model record.
  * Handles the common upstream shapes: an explicit `supportsVision` flag, the
  * OpenRouter `architecture.input_modalities` array and string `architecture.modality`
- * ("text+image->text" — the input side is everything before "->"), and a top-level
- * `input_modalities` array. Returns false when the upstream exposes no modality info.
+ * ("text+image->text" — the input side is everything before "->"), a top-level
+ * `input_modalities` array, and (#13918) Lemonade Server's `labels[]` array.
+ * Returns false when the upstream exposes no modality info.
  */
 export function detectVisionInput(record: JsonRecord): boolean {
   if (record.supportsVision === true) return true;
@@ -60,6 +94,9 @@ export function detectVisionInput(record: JsonRecord): boolean {
     const [inputPart] = modality.toLowerCase().split("->");
     if ((inputPart || "").includes("image")) return true;
   }
+
+  if (labelsIncludeVision(record.labels)) return true;
+
   return false;
 }
 
@@ -455,6 +492,18 @@ export function normalizeDiscoveredModels(
     // models reached the catalog with no vision flag and vision-capable models
     // (which work at request time) showed up as non-vision after import.
     const supportsVision = detectVisionInput(record);
+    const pricing = asRecord(record.pricing);
+    const promptPrice =
+      typeof pricing.prompt === "string" || typeof pricing.prompt === "number"
+        ? pricing.prompt
+        : undefined;
+    const completionPrice =
+      typeof pricing.completion === "string" || typeof pricing.completion === "number"
+        ? pricing.completion
+        : undefined;
+    // Persist only evidence present in this discovery payload. Static catalog
+    // membership is intentionally not evidence about this connection's economics.
+    const isFree = hasLiveFreeEvidence(id, record, promptPrice, completionPrice);
 
     deduped.set(id, {
       id,
@@ -490,6 +539,7 @@ export function normalizeDiscoveredModels(
       ...(record.alwaysThinking === true ? { alwaysThinking: true } : {}),
       ...(typeof record.supportsTools === "boolean" ? { supportsTools: record.supportsTools } : {}),
       ...(typeof record.supportsVideo === "boolean" ? { supportsVideo: record.supportsVideo } : {}),
+      ...(isFree ? { isFree: true } : {}),
       ...(supportsVision ? { supportsVision: true } : {}),
     });
   }
