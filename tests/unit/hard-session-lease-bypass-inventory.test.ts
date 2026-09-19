@@ -190,7 +190,9 @@ const EXPECTED: Record<InventoryKind, Record<string, number>> = {
     "src/lib/quota/connectionRecovery.ts": 2,
     "src/lib/sync/bundle.ts": 1,
     // #11495: verify-only sweep queries oauth + cookie connections
-    "src/lib/tokenHealthCheck.ts": 2,
+    // #13874: the health check re-reads the row inside the refresh lane to see whether
+    // a Layer 2 refresh already rotated the token before it POSTs a consumed one (2 -> 3).
+    "src/lib/tokenHealthCheck.ts": 3,
     "src/lib/tokenHealthCheckCopilot.ts": 1,
     "src/lib/usage/callLogs.ts": 1,
     "src/lib/usage/codexResetCredits.ts": 1,
