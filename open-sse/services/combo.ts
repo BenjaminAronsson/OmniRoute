@@ -888,7 +888,7 @@ async function handleComboChatInner({
           log,
         });
 
-        if (autoResumeEligibility.eligible) {
+        if (autoResumeEligibility.eligible === true) {
           const selectedAlternate = autoResumeEligibility.selectedTarget;
           log.info(
             "COMBO",
