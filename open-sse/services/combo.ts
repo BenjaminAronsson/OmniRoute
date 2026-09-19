@@ -91,6 +91,7 @@ import {
   applyNativeCodexTurnPin,
   areAllPinnedTargetsModelScopedUnusable,
   canAutoResumeNativeCodexTurn,
+  createPinnedModelUnavailableResponse,
   getNativeCodexTurnPin,
   releaseNativeCodexTurnPin,
 } from "./combo/nativeCodexTurnPin.ts";
@@ -131,6 +132,22 @@ import { evaluateExecuteTargetGates } from "./combo/executeTargetGates.ts";
 import { executeTargetAttempt } from "./combo/executeTargetAttempt.ts";
 import type { AttemptLoopDeps, AttemptLoopState } from "./combo/attemptLoopTypes.ts";
 import { clearStaleLKGP } from "./combo/staleLkgpClear.ts";
+
+// Native Codex auto-resume (#13180) rejection reasons that mean the turn either carries
+// state unsafe to hand to an untested alternate model (pending tool calls, opaque
+// provider-specific continuation state) or has already used its one allowed resume for
+// this logical turn. These must terminate the turn rather than fall through to #13564's
+// plain "release pin and route naturally" fallback. Every other reason (e.g. the request
+// does not use the Responses-API input/messages shape #13180's eligibility check needs)
+// falls through unchanged so non-native-turn-shaped Codex requests keep working exactly
+// as before #13180.
+const NATIVE_CODEX_AUTO_RESUME_UNSAFE_REASONS = new Set([
+  "pending_tool_call",
+  "unsafe_provider_state",
+  "no_alternate_target",
+  "no_healthy_alternate_target",
+  "max_resumes_exceeded",
+]);
 
 export { RESET_WINDOW_NAMES, QUOTA_SOFT_DEPRIORITIZE_FACTOR, setCandidateQuotaSoftPenalty };
 export { scoreAutoTargets, expandAutoComboCandidatePool };
@@ -888,12 +905,26 @@ async function handleComboChatInner({
           orderedTargets = alternateTargets;
           activeNativeTurnPin = null;
           isAutoResuming = true;
+        } else if (NATIVE_CODEX_AUTO_RESUME_UNSAFE_REASONS.has(autoResumeEligibility.reason)) {
+          // These specific rejection reasons mean the turn carries state (pending
+          // tool calls, opaque provider-specific continuation state) or has
+          // already exhausted its resume budget, so handing it to an untested
+          // alternate model via natural combo routing (#13564's plain fallback)
+          // would be unsafe or would violate #13180's "at most one auto-resume
+          // per logical turn" bound. Terminate instead of falling through.
+          targetResolution.quotaShareRelease?.();
+          log.warn(
+            "COMBO",
+            `Native Codex turn cannot continue: pinned model ${activeNativeTurnPin.modelStr} is unavailable (model-scoped); auto-resume rejected (${autoResumeEligibility.reason}); preserving turn pin and terminating turn`
+          );
+          return createPinnedModelUnavailableResponse();
         } else {
-          // Bounded, safety-gated auto-resume declined (pending tool calls, opaque
-          // continuation state, resume budget exhausted, no healthy alternate, ...).
-          // Release the pin and fall through to full combo routing rather than
-          // terminating the turn — matches Claude Code's behavior where no turn
-          // pin allows natural multi-model fallback (#13564).
+          // Every other rejection reason (e.g. the request body does not carry
+          // the Responses-API `input`/`messages` shape #13180's eligibility
+          // check needs) means auto-resume simply cannot be evaluated — it says
+          // nothing about the request being unsafe. Fall back to the plain
+          // release-and-route-naturally behavior (#13564) so non-native-turn or
+          // legacy-shaped Codex requests keep working exactly as before #13180.
           releaseNativeCodexTurnPin(body as Record<string, unknown>, combo.name);
           log.warn(
             "COMBO",
