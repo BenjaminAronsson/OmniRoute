@@ -11465,7 +11465,7 @@
       "detailedPayloadInfo": "Kọ́kọ́ mú ìforúkọsílẹ̀ alálàyé ṣiṣẹ́ bí o bá fẹ́ àfihàn àkóónú client/provider onípele mẹ́rin fún àwọn ìbéèrè tuntun.",
       "copyAll": "Ṣe àdàkọ gbogbo rẹ̀",
       "copiedAll": "A ti ṣe àdàkọ gbogbo rẹ̀",
-      "payloadSizeLimitOmitted": "__MISSING__:Payload omitted — this section exceeded the call log size limit (CALL_LOG_PIPELINE_MAX_SIZE_KB) and was not stored, not a real upstream error."
+      "payloadSizeLimitOmitted": "A fo ẹrù-ìsọfúnni sílẹ̀ — apá yìí kọjá ààlà ìwọ̀n àkọsílẹ̀ ìpè (CALL_LOG_PIPELINE_MAX_SIZE_KB), a kò sì tọ́jú rẹ̀; kì í ṣe àṣìṣe gidi láti ọ̀dọ̀ olùpèsè."
     }
   },
   "proxyLogger": {

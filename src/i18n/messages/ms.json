@@ -11411,7 +11411,7 @@
         "clientResponse": "Tanggapan Klien",
         "pipelineError": "Ralat Saluran"
       },
-      "payloadSizeLimitOmitted": "__MISSING__:Payload omitted — this section exceeded the call log size limit (CALL_LOG_PIPELINE_MAX_SIZE_KB) and was not stored, not a real upstream error.",
+      "payloadSizeLimitOmitted": "Muatan diabaikan — bahagian ini melebihi had saiz log panggilan (CALL_LOG_PIPELINE_MAX_SIZE_KB) dan tidak disimpan; ini bukan ralat huluan yang sebenar.",
       "payloadMissing": "Artifak payload terperinci tidak lagi tersedia untuk entri log ini.",
       "payloadCorrupt": "Artifak payload terperinci tidak dapat dianalisis.",
       "notAvailable": "T/B",

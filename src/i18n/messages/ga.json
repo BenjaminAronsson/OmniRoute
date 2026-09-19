@@ -11465,7 +11465,7 @@
       "detailedPayloadInfo": "Cumasaigh logáil mhionsonraithe ar dtús más mian leat an t-amharc ceithre chéim ar ualaí cliaint/soláthraí le haghaidh iarratais nua.",
       "copyAll": "Cóipeáil go léir",
       "copiedAll": "Cóipeáilte go léir",
-      "payloadSizeLimitOmitted": "__MISSING__:Payload omitted — this section exceeded the call log size limit (CALL_LOG_PIPELINE_MAX_SIZE_KB) and was not stored, not a real upstream error."
+      "payloadSizeLimitOmitted": "Fágadh an pálasta ar lár — sháraigh an rannán seo teorainn mhéid an logchomhaid glaonna (CALL_LOG_PIPELINE_MAX_SIZE_KB) agus níor stóráladh é; ní fíorearráid ón soláthraí é seo."
     }
   },
   "proxyLogger": {

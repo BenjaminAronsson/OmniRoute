@@ -11411,7 +11411,7 @@
         "clientResponse": "Ответ клиента",
         "pipelineError": "Ошибка конвейера"
       },
-      "payloadSizeLimitOmitted": "__MISSING__:Payload omitted — this section exceeded the call log size limit (CALL_LOG_PIPELINE_MAX_SIZE_KB) and was not stored, not a real upstream error.",
+      "payloadSizeLimitOmitted": "Содержимое пропущено — этот раздел превысил ограничение размера журнала вызовов (CALL_LOG_PIPELINE_MAX_SIZE_KB) и не был сохранён; это не реальная ошибка провайдера.",
       "payloadMissing": "Подробный артефакт полезной нагрузки больше недоступен для этой записи журнала.",
       "payloadCorrupt": "Не удалось разобрать детализированный артефакт полезной нагрузки.",
       "notAvailable": "Н/Д",

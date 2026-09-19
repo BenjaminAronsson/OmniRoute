@@ -11411,7 +11411,7 @@
         "clientResponse": "Одговор клијенту",
         "pipelineError": "Грешка тока обраде"
       },
-      "payloadSizeLimitOmitted": "__MISSING__:Payload omitted — this section exceeded the call log size limit (CALL_LOG_PIPELINE_MAX_SIZE_KB) and was not stored, not a real upstream error.",
+      "payloadSizeLimitOmitted": "Садржај изостављен — овај одељак је премашио ограничење величине дневника позива (CALL_LOG_PIPELINE_MAX_SIZE_KB) и није сачуван; није реч о стварној грешци провајдера.",
       "payloadMissing": "Детаљни артефакт корисног садржаја више није доступан за овај унос дневника.",
       "payloadCorrupt": "Детаљни артефакт корисног садржаја није могао бити рашчлањен.",
       "notAvailable": "Н/П",

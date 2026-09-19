@@ -11465,7 +11465,7 @@
       "detailedPayloadInfo": "Da farko, kunna yin cikakken log idan kana son ganin payload na matakai huɗu na abokin ciniki/mai bayarwa don sabbin buƙatu.",
       "copyAll": "Kwafi duka",
       "copiedAll": "An kwafi duka",
-      "payloadSizeLimitOmitted": "__MISSING__:Payload omitted — this section exceeded the call log size limit (CALL_LOG_PIPELINE_MAX_SIZE_KB) and was not stored, not a real upstream error."
+      "payloadSizeLimitOmitted": "An bar abin da aka aika — wannan sashe ya wuce iyakar girman rajistar kira (CALL_LOG_PIPELINE_MAX_SIZE_KB) kuma ba a adana shi ba; wannan ba ainihin kuskuren mai bayarwa ba ne."
     }
   },
   "proxyLogger": {

@@ -11411,7 +11411,7 @@
         "clientResponse": "Odpověď klienta",
         "pipelineError": "Chyba v pipeline"
       },
-      "payloadSizeLimitOmitted": "__MISSING__:Payload omitted — this section exceeded the call log size limit (CALL_LOG_PIPELINE_MAX_SIZE_KB) and was not stored, not a real upstream error.",
+      "payloadSizeLimitOmitted": "Obsah vynechán — tato sekce překročila limit velikosti záznamu volání (CALL_LOG_PIPELINE_MAX_SIZE_KB) a nebyla uložena; nejde o skutečnou chybu poskytovatele.",
       "payloadMissing": "Podrobný artefakt payloadu již není k dispozici pro tento záznam protokolu.",
       "payloadCorrupt": "Podrobný payload artefakt nebyl možné analyzovat.",
       "notAvailable": "Není k dispozici",

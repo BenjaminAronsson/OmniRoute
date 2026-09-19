@@ -11411,7 +11411,7 @@
         "clientResponse": "Odgovor klijenta",
         "pipelineError": "Greška cjevovoda"
       },
-      "payloadSizeLimitOmitted": "__MISSING__:Payload omitted — this section exceeded the call log size limit (CALL_LOG_PIPELINE_MAX_SIZE_KB) and was not stored, not a real upstream error.",
+      "payloadSizeLimitOmitted": "Sadržaj izostavljen — ovaj odjeljak premašio je ograničenje veličine zapisnika poziva (CALL_LOG_PIPELINE_MAX_SIZE_KB) i nije pohranjen; nije riječ o stvarnoj pogrešci pružatelja.",
       "payloadMissing": "Detaljan artefakt sadržaja više nije dostupan za ovaj unos zapisa.",
       "payloadCorrupt": "Detaljan artefakt sadržaja nije bilo moguće raščlaniti.",
       "notAvailable": "Nije primjenjivo",

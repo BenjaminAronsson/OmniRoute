@@ -11465,7 +11465,7 @@
       "detailedPayloadInfo": "ለአዳዲስ ጥያቄዎች ባለአራት-ደረጃ የደንበኛ/አቅራቢ ውሂብ እይታን ከፈለጉ፣ መጀመሪያ ዝርዝር ምዝገባን ያንቁ።",
       "copyAll": "ሁሉንም ቅዳ",
       "copiedAll": "ሁሉም ተቀድቷል",
-      "payloadSizeLimitOmitted": "__MISSING__:Payload omitted — this section exceeded the call log size limit (CALL_LOG_PIPELINE_MAX_SIZE_KB) and was not stored, not a real upstream error."
+      "payloadSizeLimitOmitted": "ጭነት ተትቷል — ይህ ክፍል የጥሪ ምዝግብ መጠን ገደብን (CALL_LOG_PIPELINE_MAX_SIZE_KB) አልፏል እና አልተቀመጠም፤ እውነተኛ የላይኛው ስህተት አይደለም።"
     }
   },
   "proxyLogger": {

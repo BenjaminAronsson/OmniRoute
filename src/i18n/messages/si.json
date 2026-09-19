@@ -11465,7 +11465,7 @@
       "detailedPayloadInfo": "නව ඉල්ලීම් සඳහා අදියර හතරක සේවාලාභී/සපයන්නා දත්ත කොටස් දසුන අවශ්ය නම්, පළමුව සවිස්තරාත්මක ලොග් කිරීම සබල කරන්න.",
       "copyAll": "සියල්ල පිටපත් කරන්න",
       "copiedAll": "සියල්ල පිටපත් කරන ලදී",
-      "payloadSizeLimitOmitted": "__MISSING__:Payload omitted — this section exceeded the call log size limit (CALL_LOG_PIPELINE_MAX_SIZE_KB) and was not stored, not a real upstream error."
+      "payloadSizeLimitOmitted": "අන්තර්ගතය මඟ හැරිණි — මෙම කොටස ඇමතුම් ලොග් ප්‍රමාණ සීමාව (CALL_LOG_PIPELINE_MAX_SIZE_KB) ඉක්මවා ගිය අතර ගබඩා නොකෙරිණි; මෙය සැබෑ සැපයුම්කරු දෝෂයක් නොවේ."
     }
   },
   "proxyLogger": {

@@ -11411,7 +11411,7 @@
         "clientResponse": "Müştəri Cavabı",
         "pipelineError": "Borular Xətası"
       },
-      "payloadSizeLimitOmitted": "__MISSING__:Payload omitted — this section exceeded the call log size limit (CALL_LOG_PIPELINE_MAX_SIZE_KB) and was not stored, not a real upstream error.",
+      "payloadSizeLimitOmitted": "Yük buraxıldı — bu bölmə çağırış jurnalının ölçü limitini (CALL_LOG_PIPELINE_MAX_SIZE_KB) aşdı və saxlanılmadı; bu, real yuxarı axın xətası deyil.",
       "payloadMissing": "Bu log girişinə aid ətraflı yük artefaktı artıq mövcud deyil.",
       "payloadCorrupt": "Ətraflı yük artefaktı təhlil oluna bilmədi.",
       "notAvailable": "Mövcud deyil",

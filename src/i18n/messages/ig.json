@@ -11411,7 +11411,7 @@
         "clientResponse": "Nzaghachi Onye Ahịa",
         "pipelineError": "Njehie Pipeline"
       },
-      "payloadSizeLimitOmitted": "__MISSING__:Payload omitted — this section exceeded the call log size limit (CALL_LOG_PIPELINE_MAX_SIZE_KB) and was not stored, not a real upstream error.",
+      "payloadSizeLimitOmitted": "Ewepụrụ ihe ezigara — akụkụ a gafere oke nha ndekọ oku (CALL_LOG_PIPELINE_MAX_SIZE_KB), a chekwaghịkwa ya; ọ bụghị ezigbo njehie sitere n'aka onye na-enye ọrụ.",
       "payloadMissing": "Nkọwa payload zuru ezu adịkwaghị maka ndekọ a.",
       "payloadCorrupt": "Enweghị ike ịgụ ma nyochaa payload ahụ nwere nkọwa zuru ezu.",
       "notAvailable": "Ọ dịghị",

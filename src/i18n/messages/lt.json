@@ -11411,7 +11411,7 @@
         "clientResponse": "Kliento atsakymas",
         "pipelineError": "Konvejerio klaida"
       },
-      "payloadSizeLimitOmitted": "__MISSING__:Payload omitted — this section exceeded the call log size limit (CALL_LOG_PIPELINE_MAX_SIZE_KB) and was not stored, not a real upstream error.",
+      "payloadSizeLimitOmitted": "Turinys praleistas — ši dalis viršijo iškvietimų žurnalo dydžio limitą (CALL_LOG_PIPELINE_MAX_SIZE_KB) ir nebuvo išsaugota; tai nėra tikra tiekėjo klaida.",
       "payloadMissing": "Išsamus šio žurnalo įrašo duomenų artefaktas nebepasiekiamas.",
       "payloadCorrupt": "Nepavyko išanalizuoti išsamaus duomenų artefakto.",
       "notAvailable": "Nėra duomenų",

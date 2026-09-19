@@ -11411,7 +11411,7 @@
         "clientResponse": "କ୍ଲାଏଣ୍ଟ ପ୍ରତିକ୍ରିୟା",
         "pipelineError": "ପାଇପ୍ଲାଇନ୍ ତ୍ରୁଟି"
       },
-      "payloadSizeLimitOmitted": "__MISSING__:Payload omitted — this section exceeded the call log size limit (CALL_LOG_PIPELINE_MAX_SIZE_KB) and was not stored, not a real upstream error.",
+      "payloadSizeLimitOmitted": "ପେଲୋଡ୍ ଛାଡ଼ି ଦିଆଯାଇଛି — ଏହି ବିଭାଗ କଲ୍ ଲଗ୍ ଆକାର ସୀମା (CALL_LOG_PIPELINE_MAX_SIZE_KB) ଅତିକ୍ରମ କରିଛି ଏବଂ ସଂରକ୍ଷିତ ହୋଇନାହିଁ; ଏହା ପ୍ରକୃତ ଅପଷ୍ଟ୍ରିମ୍ ତ୍ରୁଟି ନୁହେଁ।",
       "payloadMissing": "ଏହି ଲଗ୍ ଏଣ୍ଟ୍ରି ପାଇଁ ବିସ୍ତୃତ ପେଲୋଡ୍ ଆର୍ଟିଫ୍ୟାକ୍ଟ ଆଉ ଉପଲବ୍ଧ ନାହିଁ।",
       "payloadCorrupt": "ବିସ୍ତୃତ ପେଲୋଡ୍ ଆର୍ଟିଫ୍ୟାକ୍ଟକୁ ପାର୍ସ କରାଯାଇପାରିଲା ନାହିଁ।",
       "notAvailable": "ପ୍ରଯୁଜ୍ୟ ନୁହେଁ",

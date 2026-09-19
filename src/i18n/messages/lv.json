@@ -11465,7 +11465,7 @@
       "detailedPayloadInfo": "Vispirms iespējojiet detalizētu žurnalēšanu, ja vēlaties četru posmu klienta/nodrošinātāja derīgās slodzes skatu jauniem pieprasījumiem.",
       "copyAll": "Kopēt visu",
       "copiedAll": "Viss nokopēts",
-      "payloadSizeLimitOmitted": "__MISSING__:Payload omitted — this section exceeded the call log size limit (CALL_LOG_PIPELINE_MAX_SIZE_KB) and was not stored, not a real upstream error."
+      "payloadSizeLimitOmitted": "Saturs izlaists — šī sadaļa pārsniedza izsaukumu žurnāla izmēra ierobežojumu (CALL_LOG_PIPELINE_MAX_SIZE_KB) un netika saglabāta; tā nav īsta pakalpojumu sniedzēja kļūda."
     }
   },
   "proxyLogger": {
