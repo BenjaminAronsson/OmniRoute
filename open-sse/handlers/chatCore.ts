@@ -5577,6 +5577,9 @@ export async function handleChatCore({
         headers: clientRawRequest?.headers,
         translatedResponse,
         model,
+        // The dual-layer manager scopes entries per provider (cacheByProvider);
+        // lookup passes the resolved provider, so the write must too (#14159).
+        provider,
         apiKeyId: apiKeyInfo?.id ?? undefined,
         usage,
         log,
@@ -6081,6 +6084,7 @@ export async function handleChatCore({
       body: bodyForCacheWrite,
       headers: clientRawRequest?.headers,
       model,
+      provider,
       apiKeyId: apiKeyInfo?.id ?? undefined,
       streamUsage,
       log,
