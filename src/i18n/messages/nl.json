@@ -11411,6 +11411,7 @@
         "clientResponse": "Klantreactie",
         "pipelineError": "Pijplijnfout"
       },
+      "payloadSizeLimitOmitted": "Payload weggelaten — deze sectie overschreed de groottelimiet van het aanroeplogboek (CALL_LOG_PIPELINE_MAX_SIZE_KB) en is niet opgeslagen; dit is geen echte upstream-fout.",
       "payloadMissing": "Gedetailleerde payload-artifact is niet langer beschikbaar voor deze logvermelding.",
       "payloadCorrupt": "Gedetailleerde payload-artifact kon niet worden geparsed.",
       "notAvailable": "N.v.t.",

@@ -11464,7 +11464,8 @@
       "correlationIdValue": "ID na Alaƙa: {id}",
       "detailedPayloadInfo": "Da farko, kunna yin cikakken log idan kana son ganin payload na matakai huɗu na abokin ciniki/mai bayarwa don sabbin buƙatu.",
       "copyAll": "Kwafi duka",
-      "copiedAll": "An kwafi duka"
+      "copiedAll": "An kwafi duka",
+      "payloadSizeLimitOmitted": "An bar abin da aka aika — wannan sashe ya wuce iyakar girman rajistar kira (CALL_LOG_PIPELINE_MAX_SIZE_KB) kuma ba a adana shi ba; wannan ba ainihin kuskuren mai bayarwa ba ne."
     }
   },
   "proxyLogger": {

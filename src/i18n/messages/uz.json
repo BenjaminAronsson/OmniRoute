@@ -11411,6 +11411,7 @@
         "clientResponse": "Mijozga javob",
         "pipelineError": "Konveyer xatosi"
       },
+      "payloadSizeLimitOmitted": "Kontent tashlab ketildi — bu boʻlim chaqiruvlar jurnalining hajm chegarasidan (CALL_LOG_PIPELINE_MAX_SIZE_KB) oshib ketdi va saqlanmadi; bu haqiqiy provayder xatosi emas.",
       "payloadMissing": "Bu jurnal yozuvi uchun batafsil foydali yuk artefakti endi mavjud emas.",
       "payloadCorrupt": "Batafsil foydali yuk artefaktini tahlil qilib boʻlmadi.",
       "notAvailable": "Mavjud emas",

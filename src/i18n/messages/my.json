@@ -11411,6 +11411,7 @@
         "clientResponse": "Client တုံ့ပြန်ချက်",
         "pipelineError": "Pipeline အမှား"
       },
+      "payloadSizeLimitOmitted": "ပေးပို့ဒေတာကို ချန်လှပ်ထားသည် — ဤအပိုင်းသည် ခေါ်ဆိုမှုမှတ်တမ်း အရွယ်အစားကန့်သတ်ချက် (CALL_LOG_PIPELINE_MAX_SIZE_KB) ကို ကျော်လွန်သဖြင့် သိမ်းဆည်းမထားပါ။ ဤသည်မှာ အထက်စီးကြောင်းမှ အမှန်တကယ်အမှားမဟုတ်ပါ။",
       "payloadMissing": "ဤမှတ်တမ်းအတွက် အသေးစိတ် payload artifact ကို မရနိုင်တော့ပါ။",
       "payloadCorrupt": "အသေးစိတ် payload artifact ကို ခွဲခြမ်းဖတ်ရှု၍ မရပါ။",
       "notAvailable": "မသက်ဆိုင်ပါ",

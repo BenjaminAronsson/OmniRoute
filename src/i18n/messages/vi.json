@@ -11411,6 +11411,7 @@
         "clientResponse": "Phản hồi client",
         "pipelineError": "Lỗi Pipeline"
       },
+      "payloadSizeLimitOmitted": "Đã bỏ qua payload — phần này vượt quá giới hạn kích thước nhật ký cuộc gọi (CALL_LOG_PIPELINE_MAX_SIZE_KB) nên không được lưu; đây không phải lỗi thực sự từ upstream.",
       "payloadMissing": "Không còn artifact payload chi tiết cho mục nhật ký này.",
       "payloadCorrupt": "Không thể phân tích artifact payload chi tiết.",
       "notAvailable": "Không áp dụng",

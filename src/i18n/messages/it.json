@@ -11415,6 +11415,7 @@
         "clientResponse": "Risposta del Cliente",
         "pipelineError": "Errore della Pipeline"
       },
+      "payloadSizeLimitOmitted": "Contenuto omesso — questa sezione ha superato il limite di dimensione del registro delle chiamate (CALL_LOG_PIPELINE_MAX_SIZE_KB) e non è stata salvata; non si tratta di un vero errore del provider.",
       "payloadMissing": "L'articolo del payload dettagliato non è più disponibile per questa voce di log.",
       "payloadCorrupt": "L'artifact del payload dettagliato non può essere analizzato.",
       "notAvailable": "N/D",

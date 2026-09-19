@@ -11411,6 +11411,7 @@
         "clientResponse": "Răspunsul Clientului",
         "pipelineError": "Eroare de Pipeline"
       },
+      "payloadSizeLimitOmitted": "Conținut omis — această secțiune a depășit limita de dimensiune a jurnalului de apeluri (CALL_LOG_PIPELINE_MAX_SIZE_KB) și nu a fost stocată; nu este o eroare reală a furnizorului.",
       "payloadMissing": "Artifactul detaliat al payload-ului nu mai este disponibil pentru această intrare de jurnal.",
       "payloadCorrupt": "Artifactul detaliat al payload-ului nu a putut fi analizat.",
       "notAvailable": "Indisponibil",

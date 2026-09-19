@@ -11411,6 +11411,7 @@
         "clientResponse": "Réponse du client",
         "pipelineError": "Erreur du pipeline"
       },
+      "payloadSizeLimitOmitted": "Contenu omis — cette section a dépassé la limite de taille du journal d'appels (CALL_LOG_PIPELINE_MAX_SIZE_KB) et n'a pas été enregistrée ; ce n'est pas une véritable erreur du fournisseur.",
       "payloadMissing": "L’artefact de charge utile détaillé n’est plus disponible pour cette entrée de journal.",
       "payloadCorrupt": "L’artefact de charge utile détaillé n’a pas pu être analysé.",
       "notAvailable": "N/D",

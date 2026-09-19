@@ -11411,6 +11411,7 @@
         "clientResponse": "Risposta lill-klijent",
         "pipelineError": "Żball fil-pipeline"
       },
+      "payloadSizeLimitOmitted": "Il-kontenut tħalla barra — din it-taqsima qabżet il-limitu tad-daqs tar-reġistru tas-sejħiet (CALL_LOG_PIPELINE_MAX_SIZE_KB) u ma nħażnitx; dan mhuwiex żball reali tal-fornitur.",
       "payloadMissing": "L-artifatt dettaljat tal-payload m’għadux disponibbli għal din l-entrata tal-log.",
       "payloadCorrupt": "L-artifatt dettaljat tal-payload ma setax jiġi analizzat.",
       "notAvailable": "Mhux applikabbli",

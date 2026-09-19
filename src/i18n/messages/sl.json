@@ -11411,6 +11411,7 @@
         "clientResponse": "Odgovor odjemalcu",
         "pipelineError": "Napaka obdelovalnega cevovoda"
       },
+      "payloadSizeLimitOmitted": "Vsebina izpuščena — ta razdelek je presegel omejitev velikosti dnevnika klicev (CALL_LOG_PIPELINE_MAX_SIZE_KB) in ni bil shranjen; ne gre za dejansko napako ponudnika.",
       "payloadMissing": "Artefakt s podrobno vsebino za ta vnos v dnevniku ni več na voljo.",
       "payloadCorrupt": "Artefakta s podrobno vsebino ni bilo mogoče razčleniti.",
       "notAvailable": "Ni na voljo",
