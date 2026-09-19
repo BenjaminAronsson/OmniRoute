@@ -203,6 +203,10 @@ const IGNORE_FROM_CODE = new Set([
   // Listener-owned self-fetch transport signal. The HTTP/HTTPS launchers set
   // this before application imports; it is not user-configurable product env.
   "OMNIROUTE_INTERNAL_SCHEME",
+  // Runner-owned bind-host signal. scripts/dev/run-next.mjs publishes the
+  // interface it actually binds so the in-process startup guard can name it
+  // (#13695); operators configure HOST / HOSTNAME, never this.
+  "OMNIROUTE_BOUND_HOST",
   // Source typo / placeholder.
   "OMNIROUT",
   // Static config alias path (the canonical var is OMNIROUTE_PAYLOAD_RULES_PATH).
@@ -272,6 +276,10 @@ const DOC_ONLY_ALLOWLIST = new Set([
   // SQL keyword mentioned in the new VACUUM scheduler docs (#4437).
   // The check's regex picks up the bare word in description text.
   "VACUUM",
+  // Source-code constant (open-sse/services/combo/comboPredicates.ts:35 —
+  // `export const COMBO_LOOP_SAFETY_TIMEOUT_MS = 10 * 60 * 1000`), cited in the
+  // comboTimeoutMs narrative added by #13857. Not operator-configurable.
+  "COMBO_LOOP_SAFETY_TIMEOUT_MS",
 ]);
 
 // Vars present in .env.example but intentionally absent from ENVIRONMENT.md.

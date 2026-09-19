@@ -34,7 +34,7 @@ import {
   withCodexFingerprintCredentials,
 } from "../config/codexIdentity.ts";
 import { getAccessToken } from "../services/tokenRefresh.ts";
-import { sanitizeResponsesInputItems } from "../services/responsesInputSanitizer.ts";
+import { sanitizeCodexResponsesInput } from "../services/responsesInputSanitizer.ts";
 import { applyReasoningInputPolicy } from "../services/reasoningInputPolicy.ts";
 import { getForcedReasoningEffort } from "../utils/reasoningRuleContext.ts";
 import { normalizeCodexVerbosity } from "../services/codexVerbosity.ts";
@@ -79,7 +79,7 @@ type WreqWebSocket = {
   close: (code?: number, reason?: string) => void;
   onmessage: ((event: { data: unknown }) => void) | null;
   onerror: ((event: { message?: string }) => void) | null;
-  onclose: (() => void) | null;
+  onclose: ((event?: { code?: number; reason?: string }) => void) | null;
 };
 type WebsocketFn = (url: string, opts?: Record<string, unknown>) => Promise<WreqWebSocket>;
 type ResponsesMessageInput = { role?: unknown; phase?: unknown; content?: unknown };
@@ -973,8 +973,9 @@ export class CodexExecutor extends BaseExecutor {
       }
     };
 
-    const failController = (code: string, _message: string) => {
+    const failController = (code: string, message: string) => {
       if (closed) return;
+      nextInput.log?.warn?.("CODEX", `WebSocket stream failed (${code}): ${message}`);
       const controller = streamController;
       const payload = JSON.stringify({
         type: "response.failed",
@@ -987,6 +988,7 @@ export class CodexExecutor extends BaseExecutor {
       try {
         controller?.enqueue(encoder.encode(`event: response.failed\ndata: ${payload}\n\n`));
       } catch {
+        console.warn("[codex] failController: failed to enqueue response.failed");
         // Downstream closed before the failure could be delivered.
       }
       finishStream({ reason: "upstream_failed" });
@@ -1043,8 +1045,19 @@ export class CodexExecutor extends BaseExecutor {
               event.message || "Codex upstream WebSocket error"
             );
           };
-          ws.onclose = () => {
-            finishStream({ reason: "upstream_closed", closeSocket: false });
+          ws.onclose = (event) => {
+            // A close after a terminal event already finished the stream — no-op.
+            // A close before any terminal event means the upstream died mid-response:
+            // emit a terminal response.failed instead of ending the client stream as
+            // if it completed normally (silent truncation).
+            if (closed) return;
+            const closeDetail = event
+              ? ` (code ${event.code ?? "unknown"}${event.reason ? `: ${event.reason}` : ""})`
+              : "";
+            failController(
+              "upstream_websocket_closed",
+              `Codex upstream WebSocket closed before a terminal response event${closeDetail}`
+            );
           };
           if (!closed) {
             await prl.captureCurrentProviderBody(url, headers, bodyString, nextInput.log);
@@ -1293,11 +1306,7 @@ export class CodexExecutor extends BaseExecutor {
 
     normalizeCodexResponsesInput(body);
 
-    if (Array.isArray(body.input)) {
-      body.input = sanitizeResponsesInputItems(body.input, false, {
-        dropInternalAssistantMessages: !nativeCodexPassthrough,
-      });
-    }
+    sanitizeCodexResponsesInput(body, nativeCodexPassthrough);
     stripOrphanedCodexFunctionCallOutputs(body);
     repairMissingCodexToolCallOutputs(body);
 
@@ -1399,12 +1408,17 @@ export class CodexExecutor extends BaseExecutor {
     // explicit model selection, so they must override client-injected defaults such
     // as OpenCode's automatic reasoning.effort=medium for GPT-5-family requests.
     // A server-selected force rule is stronger than either source.
+    // OpenRouter-style `enabled: false` asks for reasoning to be off. It
+    // wins over the connection default but still loses to any per-request
+    // effort selection (model suffix, reasoning.effort, or flat
+    // reasoning_effort).
+    const clientDisabledReasoning = reasoningRecord?.enabled === false;
     const rawEffort =
       getForcedReasoningEffort(credentials) ||
       modelEffort ||
       explicitReasoning ||
       requestReasoningEffort ||
-      fallbackReasoningEffort;
+      (clientDisabledReasoning ? "none" : fallbackReasoningEffort);
 
     if (rawEffort) {
       const clampedEffort = clampEffort(cleanModel, rawEffort);
@@ -1413,6 +1427,24 @@ export class CodexExecutor extends BaseExecutor {
         // Ultra coordinates delegation in Codex clients; the upstream wire effort is Max.
         effort: clampedEffort === "ultra" ? "max" : clampedEffort,
       };
+    }
+
+    // The Codex Responses API accepts only `effort` and `summary` inside
+    // `reasoning`. Client ecosystems send OpenRouter-style keys (`enabled`,
+    // `max_tokens`, `exclude`, ...) that the upstream rejects with HTTP 400
+    // "Unknown parameter: 'reasoning.<key>'", so whitelist the object before
+    // it reaches the wire. This must run even when no effort was resolved,
+    // because the client's original object is forwarded unchanged in that
+    // case.
+    const wireReasoning =
+      body.reasoning && typeof body.reasoning === "object" && !Array.isArray(body.reasoning)
+        ? (body.reasoning as Record<string, unknown>)
+        : null;
+    if (wireReasoning) {
+      for (const key of Object.keys(wireReasoning)) {
+        if (key !== "effort" && key !== "summary") delete wireReasoning[key];
+      }
+      if (Object.keys(wireReasoning).length === 0) delete body.reasoning;
     }
     ensureCodexReasoningSummary(body);
     if (isCompactRequest) {

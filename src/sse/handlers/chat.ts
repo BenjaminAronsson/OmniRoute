@@ -139,6 +139,7 @@ import { classify429FromError, type FailureKind } from "@/shared/utils/classify4
 import { isSubscriptionQuotaText } from "@omniroute/open-sse/services/quotaTextCooldowns.ts";
 import { resolveUseUpstream429BreakerHints } from "@/shared/utils/providerHints";
 import { isFeatureFlagEnabled } from "@/shared/utils/featureFlags";
+import * as agyLease from "../services/antigravityLeaseLifecycle";
 import { shouldIsolateProbeFailures } from "@/shared/utils/probeOrigin";
 import { getCircuitBreaker, isLocalStreamLifecycleError } from "../../shared/utils/circuitBreaker";
 import { markAccountExhaustedFrom429 } from "../../domain/quotaCache";
@@ -1430,7 +1431,7 @@ async function handleSingleModelChat(
   } = {},
   comboStrategy: string | null = null,
   isCombo: boolean = false
-) {
+): Promise<Response> {
   // 1. Resolve model → provider/model
   const resolved = await resolveModelOrError(
     modelStr,
@@ -1528,24 +1529,13 @@ async function handleSingleModelChat(
     customModelTargetFormat,
     extendedContext,
     apiFormat,
+    resolvedThinkingEffort,
   } = resolved;
-  // Prefer the combo target's providerId when available — the model string's
-  // provider prefix may differ from the credential provider ID (e.g. model
-  // "xiaomi/mimo-v2-flash" resolves to provider "xiaomi" but the combo target
-  // may specify providerId: "opengate" for credential lookup).
-  // Guard: if runtimeOptions.providerId is merely the prefix already encoded in
-  // the model string (e.g. "p2" from "p2/test-model"), and resolveModelOrError
-  // expanded it to a full custom-node ID (e.g. "openai-compatible-chat-e2e-p2"),
-  // trust resolvedProvider so the executor receives the full node ID and can
-  // correctly resolve the custom baseUrl. (#3058 follow-up)
+  // Use explicit credential redirects, but preserve resolved node IDs for implicit prefixes.
   const provider = (() => {
     if (!runtimeOptions.providerId) return resolvedProvider;
-    // If the override is identical to resolvedProvider, no-op.
     if (runtimeOptions.providerId === resolvedProvider) return resolvedProvider;
-    // If the model string already encodes runtimeOptions.providerId as its prefix,
-    // the override is implicit (not an intentional redirect) — use resolvedProvider.
     if (modelStr.startsWith(runtimeOptions.providerId + "/")) return resolvedProvider;
-    // Intentional override (e.g. providerId points to a different credential pool).
     return runtimeOptions.providerId;
   })();
   const forceLiveComboTest = runtimeOptions.forceLiveComboTest === true;
@@ -1676,9 +1666,12 @@ async function handleSingleModelChat(
   const occupancySessionKey =
     runtimeOptions.sessionAffinityKey ?? runtimeOptions.sessionId ?? `request:${randomUUID()}`;
   let initialPreselectedCredentials = runtimeOptions.preselectedCredentials;
+  // ANTIGRAVITY_ACCOUNT_LEASE_ENABLED (#10011 re-land): off ⇒ every `agy.*` branch is inert
+  // and selection/dispatch behave exactly as before. `attempted` survives a loop restart.
+  const agy = agyLease.startAntigravityLeaseRequest(provider, runtimeOptions.correlationId);
 
   requestAttemptLoop: while (true) {
-    const excludedConnectionIds = new Set<string>();
+    const excludedConnectionIds = new Set<string>(agy.on ? agy.attempted : []);
     let lastError = requestRetryLastError;
     let lastStatus = requestRetryLastStatus;
     let lastCooldownMs = requestRetryLastCooldownMs;
@@ -1687,7 +1680,7 @@ async function handleSingleModelChat(
 
     while (true) {
       const credentials =
-        preselectedCredentials && excludedConnectionIds.size === 0
+        preselectedCredentials && excludedConnectionIds.size === 0 && !agy.on
           ? preselectedCredentials
           : await getProviderCredentialsWithQuotaPreflight(
               provider,
@@ -1698,6 +1691,9 @@ async function handleSingleModelChat(
                 sessionKey: occupancySessionKey,
                 reserveOAuthSession: true,
                 excludeConnectionIds: Array.from(excludedConnectionIds),
+                ...(agy.on
+                  ? { reserveAntigravityLease: true, routingRequestId: agy.requestId }
+                  : {}),
                 ...(runtimeOptions.allowRateLimitedConnection
                   ? { allowRateLimitedConnections: true }
                   : {}),
@@ -1730,6 +1726,12 @@ async function handleSingleModelChat(
             );
       preselectedCredentials = null;
 
+      if (credentials && "leaseUnavailable" in credentials && credentials.leaseUnavailable) {
+        excludedConnectionIds.add(agyLease.trackAntigravityLeaseBusy(agy, credentials));
+        if (!hasForcedConnection) continue;
+        return agyLease.buildAntigravityPoolBusyResponse(agy.earliestRetryHintAtMs ?? Date.now());
+      }
+
       if (runtimeOptions.managedLease && credentials) {
         const leaseError = buildManagedLeaseSelectionErrorResponse(credentials);
         if (leaseError) return leaseError;
@@ -1745,6 +1747,8 @@ async function handleSingleModelChat(
         !credentials.connectionId
       ) {
         if (earlyEofOriginal) return earlyEofOriginal;
+        if (!credentials?.allRateLimited && agy.earliestRetryHintAtMs !== null)
+          return agyLease.buildAntigravityPoolBusyResponse(agy.earliestRetryHintAtMs);
         if (credentials?.allRateLimited) {
           const retryDecision = getCooldownAwareRetryDecision({
             retryAfter: credentials.retryAfter,
@@ -1835,6 +1839,9 @@ async function handleSingleModelChat(
 
       const accountId = credentials.connectionId.slice(0, 8);
       const releaseOAuthSession = credentials.releaseOAuthSession ?? (() => {});
+      // Undefined whenever the lease flag is off, which makes every release/hold below a no-op.
+      const leaseId: string | undefined = credentials.routing?.leaseId;
+      if (agy.on) agy.attempted.add(credentials.connectionId);
       // #10348: redact the account prefix by default. Gated on the narrow
       // AUTH_LOG_INCLUDE_ACCOUNT_ID flag (default off) rather than the broad
       // `debugMode` setting — `debugMode` is a general dashboard-visibility
@@ -1878,9 +1885,10 @@ async function handleSingleModelChat(
           reasoningIntent: runtimeOptions.reasoningIntent,
           reasoningDecision: runtimeOptions.reasoningDecision,
           requestRoutingTags: runtimeOptions.reasoningRequestTags,
-        });
+        }).catch(agyLease.releasingRethrow(leaseId));
         if (connectionRouting.response) {
           releaseOAuthSession();
+          agyLease.release(leaseId);
           return connectionRouting.response;
         }
         requestBody = connectionRouting.body;
@@ -1909,7 +1917,9 @@ async function handleSingleModelChat(
       }
       let refreshedCredentials;
       try {
-        refreshedCredentials = await checkAndRefreshToken(provider, credentials);
+        refreshedCredentials = await checkAndRefreshToken(provider, credentials).catch(
+          agyLease.releasingRethrow(leaseId)
+        );
       } catch (error) {
         releaseOAuthSession();
         throw error;
@@ -1950,7 +1960,7 @@ async function handleSingleModelChat(
           apiKeyInfo?.id,
           provider,
           comboName
-        );
+        ).catch(agyLease.releasingRethrow(leaseId));
       } catch (error) {
         releaseOAuthSession();
         throw error;
@@ -1986,10 +1996,11 @@ async function handleSingleModelChat(
               runtimeOptions.comboExecutionKey ?? runtimeOptions.comboStepId ?? null,
             extendedContext,
             modelApiFormat: apiFormat,
-            // Only a model's explicit DB override may cross this boundary as
-            // modelInfo.targetFormat. The effective targetFormat above was
-            // resolved without credentials; forwarding it would let a stale
-            // provider-id fallback override the credential-aware resolution.
+            resolvedThinkingEffort:
+              effectiveModel === model && provider === resolvedProvider
+                ? resolvedThinkingEffort
+                : undefined,
+            // Forward only the DB override, not the credential-blind format fallback.
             modelTargetFormat: customModelTargetFormat,
             providerProfile,
             cachedSettings: runtimeOptions.cachedSettings,
@@ -2008,14 +2019,24 @@ async function handleSingleModelChat(
         );
       } catch (error) {
         releaseOAuthSession();
+        agyLease.release(leaseId);
         throw error;
       }
       if (telemetry) telemetry.endPhase();
       if ("localResourcePressureResult" in execution) {
+        agyLease.release(leaseId);
         return execution.localResourcePressureResult.response;
       }
       const { result, tlsFingerprintUsed } = execution;
       if (!result.success) releaseOAuthSession();
+      // Hand the lease to the SSE body's terminal lifecycle; anything else frees it now.
+      if (result.success && agyLease.isStreamingAntigravityResponse(result.response))
+        result.response = agyLease.holdAntigravityLeaseThroughResponse(
+          result.response,
+          leaseId,
+          clientRawRequest?.signal
+        );
+      else agyLease.release(leaseId);
 
       const proxyLatency = Date.now() - proxyStartTime;
       const providerAlias = PROVIDER_ID_TO_ALIAS[provider] || provider;

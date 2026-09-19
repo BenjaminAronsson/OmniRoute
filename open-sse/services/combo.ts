@@ -90,8 +90,8 @@ export {
 import {
   applyNativeCodexTurnPin,
   areAllPinnedTargetsModelScopedUnusable,
-  createPinnedModelUnavailableResponse,
   getNativeCodexTurnPin,
+  releaseNativeCodexTurnPin,
 } from "./combo/nativeCodexTurnPin.ts";
 import {
   pinIsDurablyUnhealthy,
@@ -840,37 +840,40 @@ async function handleComboChatInner({
   if (activeNativeTurnPin) {
     const pinnedTargets = applyNativeCodexTurnPin(orderedTargets, activeNativeTurnPin);
     if (pinnedTargets.length === 0) {
-      //#11371: quota-share ordering reserved a winner slot; release on
-      //early exit (idempotent).
-      targetResolution.quotaShareRelease?.();
+      // Pinned model no longer exists in the combo — release pin and fall through
+      // to full combo routing so the turn can continue with a healthy model.
+      releaseNativeCodexTurnPin(body as Record<string, unknown>, combo.name);
       log.warn(
         "COMBO",
-        `Native Codex turn cannot continue: pinned model ${activeNativeTurnPin.modelStr} unavailable (target not in combo); preserving turn pin and terminating turn`
+        `Native Codex turn pin released: pinned model ${activeNativeTurnPin.modelStr} no longer in combo; falling back to full combo routing`
       );
-      return createPinnedModelUnavailableResponse();
-    }
-    const allPinnedUnusable = await areAllPinnedTargetsModelScopedUnusable({
-      pinnedTargets,
-      resilienceSettings,
-      quotaCutoffResetWindowConfig,
-      comboName: combo.name,
-      body: body as Record<string, unknown>,
-      log,
-      isModelAvailable,
-    });
-    if (allPinnedUnusable) {
-      targetResolution.quotaShareRelease?.();
-      log.warn(
-        "COMBO",
-        `Native Codex turn cannot continue: pinned model ${activeNativeTurnPin.modelStr} is unavailable (model-scoped); preserving turn pin and terminating turn`
-      );
-      return createPinnedModelUnavailableResponse();
     } else {
-      orderedTargets = pinnedTargets;
-      log.info(
-        "COMBO",
-        `Native Codex turn pinned to ${activeNativeTurnPin.modelStr} on connection ${activeNativeTurnPin.connectionId.slice(0, 8)}`
-      );
+      const allPinnedUnusable = await areAllPinnedTargetsModelScopedUnusable({
+        pinnedTargets,
+        resilienceSettings,
+        quotaCutoffResetWindowConfig,
+        comboName: combo.name,
+        body: body as Record<string, unknown>,
+        log,
+        isModelAvailable,
+      });
+      if (allPinnedUnusable) {
+        // All pinned provider+model targets are model-scoped unusable — release
+        // the pin and fall through to full combo routing so the turn can try
+        // other models in the combo pool. This matches Claude Code's behavior
+        // where no turn pin allows natural multi-model fallback.
+        releaseNativeCodexTurnPin(body as Record<string, unknown>, combo.name);
+        log.warn(
+          "COMBO",
+          `Native Codex turn pin released: pinned model ${activeNativeTurnPin.modelStr} model-scoped unavailable; falling back to full combo routing`
+        );
+      } else {
+        orderedTargets = pinnedTargets;
+        log.info(
+          "COMBO",
+          `Native Codex turn pinned to ${activeNativeTurnPin.modelStr} on connection ${activeNativeTurnPin.connectionId.slice(0, 8)}`
+        );
+      }
     }
   }
 
