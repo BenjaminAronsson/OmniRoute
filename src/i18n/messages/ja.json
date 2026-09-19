@@ -11418,6 +11418,7 @@
         "clientResponse": "クライアントの応答",
         "pipelineError": "パイプラインエラー"
       },
+      "payloadSizeLimitOmitted": "ペイロードは省略されました — このセクションは呼び出しログのサイズ上限（CALL_LOG_PIPELINE_MAX_SIZE_KB）を超えたため保存されませんでした。実際のアップストリームエラーではありません。",
       "payloadMissing": "このログエントリの詳細なペイロードアーティファクトはもはや利用できません。",
       "payloadCorrupt": "詳細なペイロードアーティファクトを解析できませんでした。",
       "notAvailable": "該当なし",

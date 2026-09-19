@@ -11418,6 +11418,7 @@
         "clientResponse": "תגובה מהלקוח",
         "pipelineError": "שגיאת צינור"
       },
+      "payloadSizeLimitOmitted": "התוכן הושמט — מקטע זה חרג ממגבלת הגודל של יומן הקריאות (CALL_LOG_PIPELINE_MAX_SIZE_KB) ולא נשמר; אין מדובר בשגיאה אמיתית מהספק.",
       "payloadMissing": "פרטי העמסה מפורטים אינם זמינים יותר עבור רשומת הלוג הזו.",
       "payloadCorrupt": "לא ניתן לנתח את הארטיפקט של העומס המפורט.",
       "notAvailable": "לא זמין",

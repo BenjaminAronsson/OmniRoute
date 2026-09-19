@@ -11418,6 +11418,7 @@
         "clientResponse": "Kliendi vastus",
         "pipelineError": "Töötluskonveieri viga"
       },
+      "payloadSizeLimitOmitted": "Sisu jäeti välja — see jaotis ületas kõnelogi suurusepiirangu (CALL_LOG_PIPELINE_MAX_SIZE_KB) ja seda ei salvestatud; tegemist ei ole tegeliku ülesvoolu veaga.",
       "payloadMissing": "Selle logikirje üksikasjaliku andmekoormuse artefakt pole enam saadaval.",
       "payloadCorrupt": "Üksikasjaliku andmekoormuse artefakti ei saanud sõeluda.",
       "notAvailable": "Pole kohaldatav",

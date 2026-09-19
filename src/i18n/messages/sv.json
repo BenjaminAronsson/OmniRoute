@@ -11418,6 +11418,7 @@
         "clientResponse": "Klientens Svar",
         "pipelineError": "Pipeline-fel"
       },
+      "payloadSizeLimitOmitted": "Innehåll utelämnat — det här avsnittet överskred storleksgränsen för anropsloggen (CALL_LOG_PIPELINE_MAX_SIZE_KB) och sparades inte; det är inte ett verkligt uppströmsfel.",
       "payloadMissing": "Den detaljerade nyttolasten artefakt är inte längre tillgänglig för denna loggpost.",
       "payloadCorrupt": "Detaljerad payload-artikel kunde inte tolkas.",
       "notAvailable": "Ej tillämpligt",

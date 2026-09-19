@@ -11418,6 +11418,7 @@
         "clientResponse": "Odpowiedź Klienta",
         "pipelineError": "Błąd potoku"
       },
+      "payloadSizeLimitOmitted": "Zawartość pominięta — ta sekcja przekroczyła limit rozmiaru dziennika wywołań (CALL_LOG_PIPELINE_MAX_SIZE_KB) i nie została zapisana; to nie jest rzeczywisty błąd dostawcy.",
       "payloadMissing": "Szczegółowy ładunek artefaktu nie jest już dostępny dla tego wpisu dziennika.",
       "payloadCorrupt": "Szczegółowy ładunek artefaktu nie mógł zostać sparsowany.",
       "notAvailable": "N/D",

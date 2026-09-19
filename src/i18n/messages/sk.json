@@ -11418,6 +11418,7 @@
         "clientResponse": "Odpoveď Klienta",
         "pipelineError": "Chyba v pipeline"
       },
+      "payloadSizeLimitOmitted": "Obsah vynechaný — táto sekcia prekročila limit veľkosti záznamu volaní (CALL_LOG_PIPELINE_MAX_SIZE_KB) a nebola uložená; nejde o skutočnú chybu poskytovateľa.",
       "payloadMissing": "Podrobný payload artefakt už nie je k dispozícii pre tento záznam protokolu.",
       "payloadCorrupt": "Podrobný payload artefakt sa nedal analyzovať.",
       "notAvailable": "N/A",

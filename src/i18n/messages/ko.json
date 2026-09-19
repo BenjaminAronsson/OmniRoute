@@ -11418,6 +11418,7 @@
         "clientResponse": "클라이언트 응답",
         "pipelineError": "파이프라인 오류"
       },
+      "payloadSizeLimitOmitted": "페이로드가 생략되었습니다 — 이 섹션은 호출 로그 크기 제한(CALL_LOG_PIPELINE_MAX_SIZE_KB)을 초과하여 저장되지 않았습니다. 실제 업스트림 오류가 아닙니다.",
       "payloadMissing": "이 로그 항목에 대한 상세 페이로드 아티팩트가 더 이상 사용 가능하지 않습니다.",
       "payloadCorrupt": "상세 페이로드 아티팩트를 구문 분석할 수 없습니다.",
       "notAvailable": "해당 없음",

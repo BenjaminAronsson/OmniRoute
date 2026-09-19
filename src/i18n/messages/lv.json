@@ -11471,7 +11471,8 @@
       "correlationIdValue": "Korelācijas ID: {id}",
       "detailedPayloadInfo": "Vispirms iespējojiet detalizētu žurnalēšanu, ja vēlaties četru posmu klienta/nodrošinātāja derīgās slodzes skatu jauniem pieprasījumiem.",
       "copyAll": "Kopēt visu",
-      "copiedAll": "Viss nokopēts"
+      "copiedAll": "Viss nokopēts",
+      "payloadSizeLimitOmitted": "Saturs izlaists — šī sadaļa pārsniedza izsaukumu žurnāla izmēra ierobežojumu (CALL_LOG_PIPELINE_MAX_SIZE_KB) un netika saglabāta; tā nav īsta pakalpojumu sniedzēja kļūda."
     }
   },
   "proxyLogger": {
