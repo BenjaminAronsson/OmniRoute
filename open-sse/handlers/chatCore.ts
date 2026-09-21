@@ -2372,6 +2372,7 @@ export async function handleChatCore({
             preserveCacheControl,
             copilotClient: copilotCompatibleReasoning,
             reasoningCacheScope,
+            videoTranscriptSensitive: videoBridgeObserved,
           }
         );
       }
@@ -2589,6 +2590,7 @@ export async function handleChatCore({
           signatureNamespace: connectionId,
           copilotClient: copilotCompatibleReasoning,
           reasoningCacheScope,
+          videoTranscriptSensitive: videoBridgeObserved,
           onReasoningReplayHistory: (messages) => {
             reasoningReplayHistory = messages;
           },
