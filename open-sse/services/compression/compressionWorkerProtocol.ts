@@ -46,11 +46,22 @@ export function isStrictlySerializable(value: unknown, seen = new Set<object>())
   ) {
     return typeof value !== "number" || Number.isFinite(value);
   }
+  if (value === undefined) return true;
   if (typeof value !== "object") return false;
   if (seen.has(value)) return false;
   seen.add(value);
   try {
     if (Array.isArray(value)) return value.every((entry) => isStrictlySerializable(entry, seen));
+    // Date/Map/Set/RegExp are copied natively by structuredClone (not walked as plain
+    // objects), so they are always structured-clone-safe regardless of their contents.
+    if (
+      value instanceof Date ||
+      value instanceof Map ||
+      value instanceof Set ||
+      value instanceof RegExp
+    ) {
+      return true;
+    }
     if (!isPlainObject(value)) return false;
     return Object.values(value).every((entry) => isStrictlySerializable(entry, seen));
   } finally {
