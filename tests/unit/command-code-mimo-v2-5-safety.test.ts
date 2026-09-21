@@ -38,11 +38,12 @@ for (const [modelId, desc, expected] of MIMO_V25_CASES) {
 test("mimo-v2.5 heuristic is correct (no false positive from mimo-vl fragment)", () => {
   // mimo-vl matches "mimo-vl-a3b", not "mimo-v2.5"
   assert.equal(isVisionModelId("mimo-vl-a3b"), true, "mimo-vl must be detected as vision");
-  assert.equal(
-    isVisionModelId("mimo-v2.5"),
-    false,
-    "mimo-v2.5 must NOT match the mimo-vl heuristic"
-  );
-  // But getResolvedModelCapabilities still returns true via ModelSpec
+  assert.equal("mimo-v2.5".includes("mimo-vl"), false, "mimo-vl fragment must not cover mimo-v2.5");
+  // #13863 (issue #13847) added an explicit "mimo-v2.5" fragment to the shared
+  // heuristic so provider-qualified and `-free` aliases keep their vision flag.
+  // The bare id is therefore vision by heuristic now — on purpose, not via mimo-vl.
+  assert.equal(isVisionModelId("mimo-v2.5"), true, "mimo-v2.5 is multimodal by heuristic (#13863)");
+  assert.equal(isVisionModelId("mimo-v2.5-pro"), false, "Pro text-only sibling stays excluded");
+  // And getResolvedModelCapabilities still returns true via ModelSpec
   assert.equal(getResolvedModelCapabilities("mimo-v2.5").supportsVision, true);
 });
