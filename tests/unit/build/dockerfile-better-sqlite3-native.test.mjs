@@ -5,11 +5,13 @@ import test from "node:test";
 const dockerfile = readFileSync(new URL("../../../Dockerfile", import.meta.url), "utf8");
 
 test("Node runner copies better-sqlite3 and refuses to ship without the native addon", () => {
-  assert.match(dockerfile, /COPY --from=builder \/app\/node_modules\/better-sqlite3/);
+  // #14010: the runner COPYs carry `--chown=node:node` (ownership set at copy time
+  // instead of a second 2 GB `chown -R` layer), so tolerate the flag before --from.
   assert.match(
     dockerfile,
-    /node-gyp\.js rebuild --force_build=1/
+    /COPY (?:--chown=node:node )?--from=builder \/app\/node_modules\/better-sqlite3/
   );
+  assert.match(dockerfile, /node-gyp\.js rebuild --force_build=1/);
   assert.match(
     dockerfile,
     /&& test -f node_modules\/better-sqlite3\/build\/Release\/better_sqlite3\.node/
