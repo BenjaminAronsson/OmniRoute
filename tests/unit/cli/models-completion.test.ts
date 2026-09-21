@@ -13,11 +13,19 @@ async function invoke(args: string[], dataDir: string) {
     [
       "--input-type=module",
       "--eval",
-      `const {Command}=await import('commander'); const {registerCompletion}=await import(process.argv[1]); const program=new Command().option('--base-url <url>'); registerCompletion(program); await program.parseAsync(JSON.parse(process.argv[2]),{from:'user'});`,
+      `const {Command}=await import('commander'); const {registerCompletion}=await import(process.argv[1]); const program=new Command().option('--base-url <url>').option('--api-key <key>', '', 'fixture-model-api-key'); registerCompletion(program); await program.parseAsync(JSON.parse(process.argv[2]),{from:'user'});`,
       moduleUrl,
       JSON.stringify(args),
     ],
-    { env: { ...process.env, DATA_DIR: dataDir, OMNIROUTE_CLI_TOKEN: "fixture" } }
+    {
+      env: {
+        ...process.env,
+        DATA_DIR: dataDir,
+        OMNIROUTE_CLI_TOKEN: "fixture",
+        OMNIROUTE_API_KEY: "ambient-not-used",
+        OMNIROUTE_BASE_URL: "http://127.0.0.1:1",
+      },
+    }
   );
   let out = "";
   let err = "";

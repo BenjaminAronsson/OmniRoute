@@ -36,12 +36,19 @@ async function capture(opts: Record<string, unknown>, argv?: string[]) {
     [
       "--input-type=module",
       "--eval",
-      `const {runModelsCommand, registerModels} = await import(process.argv[1]); const args = JSON.parse(process.argv[3]); if (args) { const {Command} = await import('commander'); const program = new Command().option('--base-url <url>').option('--output <format>'); registerModels(program); await program.parseAsync(args, {from:'user'}); } else { process.exitCode = await runModelsCommand(undefined, JSON.parse(process.argv[2])); }`,
+      `const {runModelsCommand, registerModels} = await import(process.argv[1]); const args = JSON.parse(process.argv[3]); if (args) { const {Command} = await import('commander'); const program = new Command().option('--base-url <url>').option('--output <format>').option('--api-key <key>', '', 'fixture-model-api-key'); registerModels(program); await program.parseAsync(args, {from:'user'}); } else { process.exitCode = await runModelsCommand(undefined, JSON.parse(process.argv[2])); }`,
       moduleUrl,
-      JSON.stringify(opts),
+      JSON.stringify({ ...opts, apiKey: "fixture-model-api-key" }),
       JSON.stringify(argv ?? null),
     ],
-    { env: { ...process.env, OMNIROUTE_CLI_TOKEN: "fixture" } }
+    {
+      env: {
+        ...process.env,
+        OMNIROUTE_CLI_TOKEN: "fixture",
+        OMNIROUTE_API_KEY: "ambient-not-used",
+        OMNIROUTE_BASE_URL: "http://127.0.0.1:1",
+      },
+    }
   );
   let output = "";
   let error = "";

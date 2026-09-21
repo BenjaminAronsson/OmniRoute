@@ -6,7 +6,7 @@ import { modifyManualModel } from "../../../bin/cli/commands/model-crud.mjs";
 type Model = Record<string, unknown>;
 async function fixture(
   run: (
-    opts: { baseUrl: string; cliToken: string },
+    opts: { baseUrl: string; cliToken: string; headers: { authorization: string } },
     state: { models: Model[]; calls: string[]; ignoreWrite: boolean }
   ) => Promise<void>
 ) {
@@ -48,7 +48,14 @@ async function fixture(
   const address = server.address();
   assert.ok(address && typeof address !== "string");
   try {
-    await run({ baseUrl: `http://127.0.0.1:${address.port}`, cliToken: "fixture" }, state);
+    await run(
+      {
+        baseUrl: `http://127.0.0.1:${address.port}`,
+        cliToken: "fixture",
+        headers: { authorization: "Bearer fixture-model-api-key" },
+      },
+      state
+    );
   } finally {
     server.closeAllConnections();
     await new Promise<void>((resolve) => server.close(() => resolve()));

@@ -1,1 +1,0 @@
-- **feat(cli):** Add remote/context-aware manual model CRUD with metadata validation, dry-run, protected override removal and persistence readback; prefer the public model catalog and keep JSON/JSONL complete. Manual models remain inference-unverified.
