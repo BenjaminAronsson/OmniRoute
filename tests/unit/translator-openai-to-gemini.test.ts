@@ -20,6 +20,12 @@ const { clearGeminiThoughtSignatures } =
 type UnknownRecord = Record<string, unknown>;
 type GeminiRequestWithConfig = { generationConfig: UnknownRecord };
 type GeminiRequestWithSystem = { systemInstruction: { role?: unknown; parts?: unknown } };
+type GeminiToolPart = {
+  text?: string;
+  functionCall?: { name?: string };
+  functionResponse?: { name?: string; response?: { result?: unknown } };
+};
+type GeminiRequestWithContents = { contents: Array<{ role?: string; parts?: GeminiToolPart[] }> };
 
 test.beforeEach(() => {
   clearGeminiThoughtSignatures();
@@ -1609,7 +1615,7 @@ test("OpenAI -> Gemini skips thinkingConfig for model with thinkingBudgetCap=0",
       thinking: { type: "enabled", budget_tokens: 5000 },
     },
     false
-  ) as any;
+  ) as GeminiRequestWithConfig;
   assert.equal(
     result.generationConfig.thinkingConfig,
     undefined,
@@ -1630,7 +1636,7 @@ test("OpenAI -> Gemini clamps reasoning_effort thinkingConfig to 0 for model wit
       reasoning_effort: "high",
     },
     false
-  ) as any;
+  ) as GeminiRequestWithConfig;
   assert.equal(result.generationConfig.thinkingConfig.thinkingBudget, 0);
   assert.equal(result.generationConfig.thinkingConfig.includeThoughts, false);
 });
@@ -1644,7 +1650,7 @@ test("OpenAI -> Gemini allows thinkingConfig for unknown model (no spec)", () =>
       thinking: { type: "enabled", budget_tokens: 5000 },
     },
     false
-  ) as any;
+  ) as GeminiRequestWithConfig;
   assert.equal(result.generationConfig.thinkingConfig.thinkingBudget, 5000);
   assert.equal(result.generationConfig.thinkingConfig.includeThoughts, true);
 });
@@ -1692,23 +1698,23 @@ test("OpenAI -> Gemini pairs tool calls and responses per turn without cross-tur
       ],
     },
     false
-  ) as any;
+  ) as GeminiRequestWithContents;
 
   // Verify Turn 1 functionCall and functionResponse
-  const turn1Model = result.contents.find((c: any) =>
-    c.parts?.some((p: any) => p.functionCall?.name === "read_file")
+  const turn1Model = result.contents.find((c) =>
+    c.parts?.some((p) => p.functionCall?.name === "read_file")
   );
   assert.ok(turn1Model, "Turn 1 model functionCall must be read_file");
 
-  const turn1User = result.contents.find((c: any) =>
+  const turn1User = result.contents.find((c) =>
     c.parts?.some(
-      (p: any) =>
+      (p) =>
         p.functionResponse?.response?.result === "file content from turn 1" ||
         p.functionResponse?.name === "read_file"
     )
   );
   assert.ok(turn1User, "Turn 1 user functionResponse must exist");
-  const turn1Resp = turn1User.parts.find((p: any) => p.functionResponse);
+  const turn1Resp = turn1User.parts.find((p) => p.functionResponse);
   assert.equal(
     turn1Resp.functionResponse.name,
     "read_file",
@@ -1721,15 +1727,15 @@ test("OpenAI -> Gemini pairs tool calls and responses per turn without cross-tur
   );
 
   // Verify Turn 2 functionCall and functionResponse
-  const turn2User = result.contents.find((c: any) =>
+  const turn2User = result.contents.find((c) =>
     c.parts?.some(
-      (p: any) =>
+      (p) =>
         p.functionResponse?.response?.result === "terminal output from turn 2" ||
         p.functionResponse?.name === "run_terminal_command"
     )
   );
   assert.ok(turn2User, "Turn 2 user functionResponse must exist");
-  const turn2Resp = turn2User.parts.find((p: any) => p.functionResponse);
+  const turn2Resp = turn2User.parts.find((p) => p.functionResponse);
   assert.equal(
     turn2Resp.functionResponse.name,
     "run_terminal_command",
@@ -1787,11 +1793,11 @@ test("OpenAI -> Gemini pairs tool calls and responses in context mode without ID
     false,
     null,
     { signaturelessToolCallMode: "context" }
-  ) as any;
+  ) as GeminiRequestWithContents;
 
   // In context mode without thought signatures, tool responses are emitted as context text
-  const textParts = result.contents.flatMap((c: any) =>
-    (c.parts || []).filter((p: any) => typeof p.text === "string").map((p: any) => p.text)
+  const textParts = result.contents.flatMap((c) =>
+    (c.parts || []).filter((p) => typeof p.text === "string").map((p) => p.text)
   );
   assert.ok(
     textParts.some(
