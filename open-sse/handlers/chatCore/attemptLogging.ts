@@ -24,6 +24,8 @@ import { isEstimatedUsage } from "../../utils/usageTracking.ts";
 import { cloneBoundedChatLogPayload, truncateForLog } from "./logTruncation.ts";
 import { attachLogMeta } from "./cacheUsageMeta.ts";
 
+const OMITTED_VIDEO_TRANSCRIPT_REQUEST = { _omniroute_omitted: "video-transcript" };
+
 /**
  * Apply the video-bridge redaction shadow (P1a's `meta.videoBridgeLogRedaction`,
  * threaded here via `PersistAttemptLogsContext.videoBridgeLogRedaction`) to a
@@ -63,13 +65,20 @@ import { attachLogMeta } from "./cacheUsageMeta.ts";
  * the other, never both) and uses `String.prototype.replaceAll` against the
  * trusted `fullText` literal to swap every occurrence — see
  * `tests/unit/video-bridge-derived-prompt-redaction.test.ts`.
+ * When persisting an observed video request, every shadow entry must match:
+ * a partial match can otherwise leave another video's transcript in the log.
  */
 export function applyVideoBridgeLogRedaction(
   body: unknown,
-  redaction: VideoBridgeLogRedactionEntry[] | null | undefined
+  redaction: VideoBridgeLogRedactionEntry[] | null | undefined,
+  failClosedOnMiss = false
 ): unknown {
-  if (!redaction || redaction.length === 0) return body;
-  if (!body || typeof body !== "object") return body;
+  if (!redaction || redaction.length === 0) {
+    return failClosedOnMiss ? OMITTED_VIDEO_TRANSCRIPT_REQUEST : body;
+  }
+  if (!body || typeof body !== "object") {
+    return failClosedOnMiss ? OMITTED_VIDEO_TRANSCRIPT_REQUEST : body;
+  }
 
   const source = body as Record<string, unknown>;
   let rootClone: Record<string, unknown> | null = null;
@@ -79,9 +88,16 @@ export function applyVideoBridgeLogRedaction(
 
   for (const entry of redaction) {
     const { container, fullText, redactedText } = entry;
-    if (typeof fullText !== "string" || fullText.length === 0) continue;
+    if (typeof fullText !== "string" || fullText.length === 0) {
+      if (failClosedOnMiss) return OMITTED_VIDEO_TRANSCRIPT_REQUEST;
+      continue;
+    }
     const originalContainer = source[container];
-    if (!Array.isArray(originalContainer)) continue;
+    if (!Array.isArray(originalContainer)) {
+      if (failClosedOnMiss) return OMITTED_VIDEO_TRANSCRIPT_REQUEST;
+      continue;
+    }
+    let matchedEntry = false;
     // Mirrors the exact `type` replaceVideoParts() writes for this container
     // (videoBridgeHelpers.ts) — a stronger anchor than a loose "text-like"
     // check, at zero extra cost.
@@ -130,6 +146,7 @@ export function applyVideoBridgeLogRedaction(
           typeof messageClone.content === "string" ? messageClone.content : originalContent;
         messageClone.content = currentText.replaceAll(fullText, redactedText);
         redacted = true;
+        matchedEntry = true;
         continue;
       }
       if (!Array.isArray(originalContent)) continue;
@@ -166,8 +183,10 @@ export function applyVideoBridgeLogRedaction(
         const contentClone = messageClone.content as unknown[];
         contentClone[partIndex] = { ...partRecord, text: redactedText };
         redacted = true;
+        matchedEntry = true;
       }
     }
+    if (failClosedOnMiss && !matchedEntry) return OMITTED_VIDEO_TRANSCRIPT_REQUEST;
   }
 
   return redacted && rootClone ? rootClone : body;
@@ -391,13 +410,18 @@ export function persistAttemptLogs(args: PersistAttemptLogsArgs, ctx: PersistAtt
   // including errors and SSE chunks. There is no trustworthy structured
   // response-side cue boundary to redact, so retained copies are omitted as
   // a whole. The provider response and client-visible reply remain unchanged.
-  const redactedRequest = applyVideoBridgeLogRedaction(body, videoBridgeLogRedaction);
+  const redactedRequest = applyVideoBridgeLogRedaction(
+    body,
+    videoBridgeLogRedaction,
+    videoContentRemoved
+  );
   // The observed signal and its per-part shadow normally arrive together.
-  // If the shadow is missing or matches nothing after request mutations, do
-  // not let the retained request fall back to the original transcript.
+  // If the shadow is missing or even one entry fails to match after request
+  // mutations, do not retain a partially redacted transcript. The identity
+  // fallback also covers an unchanged body with no applicable entries.
   const retainedRequest =
     videoContentRemoved && redactedRequest === body
-      ? { _omniroute_omitted: "video-transcript" }
+      ? OMITTED_VIDEO_TRANSCRIPT_REQUEST
       : redactedRequest;
   const retainedResponse = videoContentRemoved
     ? { _omniroute_omitted: "video-transcript" }

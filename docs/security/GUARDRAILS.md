@@ -502,8 +502,9 @@ string prompts synthesized by pipeline stages and context handoff are redacted
 at the persisted-request-body sink. The persisted `video_content_removed` marker
 makes `previous_response_id` continuation fail closed rather than reconstruct
 text that was intentionally discarded. If an observed request loses its
-per-part redaction shadow before logging, the retained request body is omitted
-entirely instead of falling back to the unredacted original.
+per-part redaction shadow before logging, or even one of several video shadows
+fails to match after later request mutations, the retained request body is
+omitted entirely instead of retaining a partially redacted transcript.
 
 For an observed request, a model response might quote any portion of the
 transcript without a structured cue boundary. Its persisted call-log

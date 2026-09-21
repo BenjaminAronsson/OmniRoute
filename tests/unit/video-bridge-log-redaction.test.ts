@@ -333,7 +333,57 @@ test("observed video logs omit the whole request when only some shadow entries m
   assert.ok(row);
   assert.equal((row.requestBody as Record<string, unknown>)._omniroute_omitted, "video-transcript");
   assert.equal(JSON.stringify(row.requestBody).includes(secondSecret), false);
-  assert.equal(JSON.stringify(body).includes(secondSecret), true, "live model request is unchanged");
+  assert.equal(
+    JSON.stringify(body).includes(secondSecret),
+    true,
+    "live model request is unchanged"
+  );
+});
+
+test("observed video logs keep a redacted request when every video shadow matches", async () => {
+  const id = "video-complete-shadow-1";
+  const secondSecret = "another private transcript";
+  const secondFullText = `[Video 2]: transcript[00:02-00:04]: ${secondSecret}`;
+  const body = videoBody();
+  const content = body.messages[1].content;
+  assert.ok(Array.isArray(content));
+  content.push({ type: "text", text: secondFullText });
+
+  persistAttemptLogs(
+    { status: 200 },
+    baseCtx({
+      pendingRequestId: id,
+      body,
+      videoContentRemoved: true,
+      videoBridgeLogRedaction: [
+        {
+          container: "messages",
+          messageIndex: 1,
+          partIndex: 1,
+          fullText: FULL_TEXT,
+          redactedText: PLACEHOLDER_TEXT,
+        },
+        {
+          container: "messages",
+          messageIndex: 1,
+          partIndex: 2,
+          fullText: secondFullText,
+          redactedText: "[redacted-video-transcript]",
+        },
+      ],
+    })
+  );
+
+  const row = await pollForCallLog(id);
+  assert.ok(row);
+  assert.equal((row.requestBody as Record<string, unknown>)._omniroute_omitted, undefined);
+  assert.equal(persistedPartText(row.requestBody), PLACEHOLDER_TEXT);
+  assert.equal(JSON.stringify(row.requestBody).includes(secondSecret), false);
+  assert.equal(
+    JSON.stringify(body).includes(secondSecret),
+    true,
+    "live model request is unchanged"
+  );
 });
 
 test("the caller's body object is never mutated by the redaction", async () => {
