@@ -641,7 +641,9 @@ export function normalizeDiscoveredModels(
       record.max_model_len,
       record.maxModelLen,
       record.max_context_window,
-      record.max_tokens,
+      // `max_tokens` is deliberately NOT read here: on a model record it is the
+      // maximum output length (the request parameter's meaning), not the window.
+      // Reading it turned a 128K model into a 4K one at sync time (#14318).
       topProvider.context_length
     );
     const isVertexProvider = providerId === "vertex" || providerId === "vertex-partner";

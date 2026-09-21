@@ -1,0 +1,1 @@
+- fix(discovery): stop reading a model record's `max_tokens` as its context window — it is the output cap, and a catalog exposing only that field synced a 128K model as a 4K one, so the combo context-window filter skipped it for any longer prompt (#14318)
