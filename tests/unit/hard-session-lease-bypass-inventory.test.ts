@@ -135,6 +135,11 @@ const EXPECTED: Record<InventoryKind, Record<string, number>> = {
     "src/app/api/providers/test-batch/route.ts": 2,
     "src/app/api/rate-limits/route.ts": 1,
     "src/app/api/services/dario/admin/import-from-omniroute/route.ts": 2,
+    // v3.8.51 #14159 (re-land of #12630, 7a921299): the semantic-cache settings
+    // page lists embedding providers/models for its dropdown. Read-only
+    // getProviderConnections() listing (same shape as the qdrant embedding-models
+    // route below) — never selects a connection to serve a request, class C.
+    "src/app/api/settings/cache-config/embeddingOptions.ts": 1,
     "src/app/api/settings/export-json/route.ts": 1,
     "src/app/api/settings/qdrant/embedding-models/route.ts": 1,
     "src/app/api/settings/route.ts": 1,
@@ -189,8 +194,11 @@ const EXPECTED: Record<InventoryKind, Record<string, number>> = {
     "src/lib/proxyEgress.ts": 1,
     "src/lib/quota/connectionRecovery.ts": 2,
     "src/lib/sync/bundle.ts": 1,
-    // #11495: verify-only sweep queries oauth + cookie connections
-    "src/lib/tokenHealthCheck.ts": 2,
+    // #11495: verify-only sweep queries oauth + cookie connections.
+    // v3.8.51 #13874 (a100e2c90): third site re-reads the row by id after an
+    // unrecoverable refresh error to detect credentials rotated by a concurrent
+    // Layer 2 refresh before deactivating — a state read, not dispatch; stays C.
+    "src/lib/tokenHealthCheck.ts": 3,
     "src/lib/tokenHealthCheckCopilot.ts": 1,
     "src/lib/usage/callLogs.ts": 1,
     "src/lib/usage/codexResetCredits.ts": 1,
