@@ -34,6 +34,8 @@ process.env.DATA_DIR = testDataDir;
 const coreDb = await import("../../src/lib/db/core.ts");
 const { getCallLogById } = await import("../../src/lib/usage/callLogs.ts");
 const { persistAttemptLogs } = await import("../../open-sse/handlers/chatCore/attemptLogging.ts");
+const { recordEarlyKeepaliveBytes, takeEarlyKeepaliveBytes } =
+  await import("../../open-sse/utils/earlyKeepaliveByteBuffer.ts");
 
 const SECRET = "secret words";
 const FULL_TEXT = `[Video 1]: A person talks. transcript[00:00-00:02]: ${SECRET}`;
@@ -251,6 +253,27 @@ test("non-video requests retain their response body as before", async () => {
   const row = await pollForCallLog(id);
   assert.ok(row);
   assert.equal(JSON.stringify(row.responseBody).includes(SECRET), true);
+});
+
+test("observed video attempts discard early keepalive bytes instead of retaining them in memory", async () => {
+  const id = "video-early-keepalive-retention-1";
+  const correlationId = "video-early-keepalive-retention-corr-1";
+  recordEarlyKeepaliveBytes(correlationId, SECRET);
+
+  persistAttemptLogs(
+    { status: 200 },
+    baseCtx({
+      pendingRequestId: id,
+      correlationId,
+      detailedLoggingEnabled: true,
+      videoContentRemoved: true,
+    })
+  );
+
+  assert.deepEqual(takeEarlyKeepaliveBytes(correlationId), []);
+  const row = await pollForCallLog(id);
+  assert.ok(row);
+  assert.equal(JSON.stringify(row).includes(SECRET), false);
 });
 
 test("the caller's body object is never mutated by the redaction", async () => {
