@@ -501,7 +501,9 @@ rejected-request log structurally replace transcript fields in video parts;
 string prompts synthesized by pipeline stages and context handoff are redacted
 at the persisted-request-body sink. The persisted `video_content_removed` marker
 makes `previous_response_id` continuation fail closed rather than reconstruct
-text that was intentionally discarded.
+text that was intentionally discarded. If an observed request loses its
+per-part redaction shadow before logging, the retained request body is omitted
+entirely instead of falling back to the unredacted original.
 
 For an observed request, a model response might quote any portion of the
 transcript without a structured cue boundary. Its persisted call-log
@@ -509,8 +511,10 @@ transcript without a structured cue boundary. Its persisted call-log
 pipeline artifact (which can include upstream/client bodies and stream chunks)
 is not retained. Semantic, idempotency, and reasoning-replay caches bypass
 reads and writes for that request. The provider request and client-visible
-response remain unchanged. Kiro's malformed EventStream warning reports only
-the payload byte count, never its contents or the JSON parser's raw error.
+response remain unchanged. Early keepalive bytes are drained from the temporary
+buffer when the detailed artifact is omitted. Kiro's malformed EventStream
+warning reports only the payload byte count, never its contents or the JSON
+parser's raw error.
 This does not claim that every unrelated provider/plugin diagnostic has been
 audited; the broader retained-sink sweep is tracked in #11658.
 

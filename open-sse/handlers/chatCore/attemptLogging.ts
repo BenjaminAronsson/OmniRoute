@@ -391,6 +391,14 @@ export function persistAttemptLogs(args: PersistAttemptLogsArgs, ctx: PersistAtt
   // including errors and SSE chunks. There is no trustworthy structured
   // response-side cue boundary to redact, so retained copies are omitted as
   // a whole. The provider response and client-visible reply remain unchanged.
+  const redactedRequest = applyVideoBridgeLogRedaction(body, videoBridgeLogRedaction);
+  // The observed signal and its per-part shadow normally arrive together.
+  // If the shadow is missing or matches nothing after request mutations, do
+  // not let the retained request fall back to the original transcript.
+  const retainedRequest =
+    videoContentRemoved && redactedRequest === body
+      ? { _omniroute_omitted: "video-transcript" }
+      : redactedRequest;
   const retainedResponse = videoContentRemoved
     ? { _omniroute_omitted: "video-transcript" }
     : responseBody;
@@ -441,6 +449,13 @@ export function persistAttemptLogs(args: PersistAttemptLogsArgs, ctx: PersistAtt
       : capturedPipeline?.routeDecision
         ? { routeDecision: capturedPipeline.routeDecision }
         : null;
+
+  // The external keepalive buffer can contain error frames that quote a
+  // transcript. Since this attempt omits the pipeline artifact, drop those
+  // buffered bytes now instead of keeping them until the TTL expires.
+  if (videoContentRemoved && correlationId) {
+    takeEarlyKeepaliveBytes(correlationId);
+  }
 
   if (pipelinePayloads) {
     if (providerRequest !== undefined && !pipelinePayloads.providerRequest) {
@@ -493,15 +508,10 @@ export function persistAttemptLogs(args: PersistAttemptLogsArgs, ctx: PersistAtt
     duration: Date.now() - startTime,
     tokens: tokens || {},
     requestBody: cloneBoundedChatLogPayload(
-      attachLogMeta(
-        truncateForLog(
-          applyVideoBridgeLogRedaction(body, videoBridgeLogRedaction) as Record<string, unknown>
-        ),
-        {
-          ...accountRotationMeta,
-          claudePromptCache: claudeCacheMeta,
-        }
-      )
+      attachLogMeta(truncateForLog(retainedRequest as Record<string, unknown>), {
+        ...accountRotationMeta,
+        claudePromptCache: claudeCacheMeta,
+      })
     ),
     responseBody: cloneBoundedChatLogPayload(
       attachLogMeta(truncateForLog(retainedResponse as Record<string, unknown>), {
