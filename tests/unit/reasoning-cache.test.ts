@@ -676,6 +676,31 @@ describe("Reasoning Replay Cache — Translator Replay", () => {
       { videoTranscriptSensitive: true }
     );
     assert.equal(JSON.stringify(claude).includes(cached), false, "Claude should not replay");
+
+    const scope = "api-key:test:video-replay";
+    const messages = [
+      { role: "user", content: "describe this video" },
+      { role: "assistant", content: "A brief scene description" },
+      { role: "user", content: "continue" },
+    ];
+    cacheReasoningByKey(
+      buildAssistantMessageCacheKey(scope, messages, 1),
+      "deepseek",
+      "deepseek-v4-flash",
+      cached
+    );
+    const plain = translateRequest(
+      FORMATS.OPENAI,
+      FORMATS.OPENAI,
+      "deepseek-v4-flash",
+      { messages },
+      false,
+      null,
+      "deepseek",
+      null,
+      { reasoningCacheScope: scope, videoTranscriptSensitive: true }
+    );
+    assert.equal(JSON.stringify(plain).includes(cached), false, "plain turn should not replay");
     assert.equal(getReasoningCacheServiceStats().replays, 0);
   });
 
