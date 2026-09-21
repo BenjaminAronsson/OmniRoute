@@ -61,6 +61,8 @@ export interface CavemanRule {
   category?: "filler" | "context" | "structural" | "dedup" | "terse" | "ultra";
   description?: string;
   minIntensity?: CavemanIntensity;
+  /** Language pack the rule was loaded from (file-based rules only). */
+  language?: string;
 }
 
 export interface CavemanConfig {
