@@ -45,7 +45,10 @@ test("cliRuntime enumerates qodercli.cmd under %APPDATA%\\npm on Windows", () =>
   process.env.APPDATA = appData;
 
   const candidates = cliRuntime.getKnownToolPaths("qoder");
-  const expected = path.join(appData, "npm", "qodercli.cmd");
+  // #12565: Windows candidates are built with `path.win32` so they stay
+  // Windows-shaped even when `process.platform` is mocked on a POSIX runner
+  // (identical to `path.join` on a real Windows host).
+  const expected = path.win32.join(appData, "npm", "qodercli.cmd");
 
   assert.ok(
     candidates.includes(expected),
