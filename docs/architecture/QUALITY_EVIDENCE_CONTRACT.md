@@ -38,14 +38,17 @@ a different revision.
 | One matching required `PASS`, with exit code zero                       | Eligible evidence for that gate, subject to the rest of the report validation       |
 | Required `FAIL` with a positive exit code                               | Failed execution; causality still requires comparison with the exact base           |
 | Missing record, duplicate instance, unknown status or identity mismatch | Incomplete or conflicting evidence; never `VERIFIED`                                |
-| `PASS` with a nonzero or absent exit, or `FAIL` with exit zero          | Inconsistent producer result; treated as `INFRA_ERROR`                              |
-| Required `SKIPPED` or `INFRA_ERROR`                                     | `UNVERIFIED`, unless a separate valid required failure already establishes `FAILED` |
+| `PASS` with a nonzero or absent exit, or `FAIL` with exit zero          | Inconsistent producer result; treated as an infrastructure error                    |
+| Required skip or infrastructure error                                   | `UNVERIFIED`, unless a separate valid required failure already establishes `FAILED` |
 | Empty required-gate set                                                 | `UNVERIFIED`                                                                        |
 
 The final verdict is `VERIFIED`, `FAILED` or `UNVERIFIED`. The CLI exits 0, 1 or 2,
 respectively. These values describe validation evidence, not contributor blame.
 A failure in an artifact prerequisite propagates to its dependents with a `cause`;
 infrastructure uncertainty must not become a fabricated test failure.
+Infrastructure errors use the status value INFRA_ERROR declared in
+[the acceptance status definitions](../../scripts/quality/release-acceptance/types.mjs);
+this is a result status, not an environment variable.
 
 ## Freshness, compatibility and rollout
 
