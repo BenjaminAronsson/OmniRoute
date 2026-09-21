@@ -1,7 +1,9 @@
 import {
   deleteModelAlias,
+  getManagedModelAliasNames,
   getModelAliases,
   getModelIsHidden,
+  markManagedModelAlias,
   setModelAlias,
 } from "@/lib/db/models";
 import { getProviderNodeById } from "@/lib/db/providers";
@@ -109,6 +111,11 @@ export async function syncManagedAvailableModelAliases(
       return typeof value === "string";
     })
   );
+  // Provenance marker (#11836): only alias names OmniRoute itself generated/adopted are
+  // eligible for the prune passes below — a hand-created custom alias that happens to
+  // already point at a model's full id must never be deleted just because that model
+  // transiently drops out of the sync's target set.
+  const managedAliasNames = await getManagedModelAliasNames();
 
   const targetModelIds = normalizeModelIds(modelIds);
   const targetFullModels = new Set(targetModelIds.map((modelId) => `${storagePrefix}/${modelId}`));
@@ -116,11 +123,13 @@ export async function syncManagedAvailableModelAliases(
 
   if (pruneMissing) {
     for (const [alias, value] of Object.entries(workingAliases)) {
+      if (!managedAliasNames.has(alias)) continue;
       if (!value.startsWith(`${storagePrefix}/`)) continue;
       if (targetFullModels.has(value)) continue;
 
       await deleteModelAlias(alias);
       delete workingAliases[alias];
+      managedAliasNames.delete(alias);
       removedAliases.push(alias);
     }
   }
@@ -131,9 +140,10 @@ export async function syncManagedAvailableModelAliases(
     if (getModelIsHidden(providerId, modelId)) {
       const fullModel = `${storagePrefix}/${modelId}`;
       for (const [alias, value] of Object.entries(workingAliases)) {
-        if (value !== fullModel) continue;
+        if (value !== fullModel || !managedAliasNames.has(alias)) continue;
         await deleteModelAlias(alias);
         delete workingAliases[alias];
+        managedAliasNames.delete(alias);
         removedAliases.push(alias);
       }
       continue;
@@ -149,9 +159,17 @@ export async function syncManagedAvailableModelAliases(
 
     if (!alias) continue;
 
+    // Only an alias OmniRoute itself writes here is eligible for the prune passes above
+    // (#11836) — an alias that already carries the right value (whether it is a genuinely
+    // managed alias from a prior sync, or a hand-created custom alias that happens to
+    // coincide with `fullModel`) is left exactly as-is and its provenance is never changed.
     if (workingAliases[alias] !== fullModel) {
       await setModelAlias(alias, fullModel);
       workingAliases[alias] = fullModel;
+      if (!managedAliasNames.has(alias)) {
+        await markManagedModelAlias(alias);
+        managedAliasNames.add(alias);
+      }
     }
 
     assignedAliases.push(alias);
