@@ -6,7 +6,7 @@ import type {
   CompressionStats,
 } from "./types.ts";
 import { DEFAULT_CAVEMAN_CONFIG } from "./types.ts";
-import { getRulesForContext } from "./cavemanRules.ts";
+import { CAVEMAN_RULES, getRulesForContext } from "./cavemanRules.ts";
 import { extractPreservedBlocks, restorePreservedBlocks } from "./preservation.ts";
 import { createCompressionStats, estimateCompressionTokens } from "./stats.ts";
 import { validateCompression } from "./validation.ts";
@@ -173,13 +173,14 @@ function shouldAttemptRule(rule: CavemanRule, lowerText: string): boolean {
 
   if (!keywords) return true;
 
-  // Non-English language packs reuse English rule names (e.g. hu/redundant_because)
-  // but carry localized regexes, so the English keyword prefilter must not gate
-  // them. Do NOT pre-test the rule's own pattern against `lowerText` instead:
-  // `lowerText` is the ORIGINAL message, and anchored rules such as
-  // `leader_phrases` (`^i will …`) only match after earlier rules stripped a
-  // prefix (`Sure, `) — the pre-test skipped them (#12825 regression).
-  if (rule.language && rule.language !== "en") return true;
+  // File-based language packs have their own localized regexes.
+  // Do not block them using the English-only keyword prefilter.
+  if (!CAVEMAN_RULES.includes(rule)) {
+    rule.pattern.lastIndex = 0;
+    const matches = rule.pattern.test(lowerText);
+    rule.pattern.lastIndex = 0;
+    return matches;
+  }
 
   return keywords.some((keyword) => lowerText.includes(keyword));
 }
@@ -189,10 +190,20 @@ export function applyRulesToText(
   rules: CavemanRule[]
 ): { text: string; appliedRules: string[] } {
   let result = text;
-  const lowerResult = text.toLowerCase();
+  // Keyword prefilters only need the original text (a keyword an earlier rule removed
+  // cannot reappear). The #12825 regex prefilter for file-pack rules is different: an
+  // anchored pattern such as leader_phrases' `^(?:i will|…)` only matches once
+  // pleasantries has stripped the leading "Sure, ", so it must be tested against the
+  // text as the rules so far have left it — not a snapshot taken before any ran.
+  let lowerResult = text.toLowerCase();
+  let lowerResultSource = text;
   const appliedRules: string[] = [];
 
   for (const rule of rules) {
+    if (lowerResultSource !== result) {
+      lowerResult = result.toLowerCase();
+      lowerResultSource = result;
+    }
     if (!shouldAttemptRule(rule, lowerResult)) continue;
 
     const before = result;

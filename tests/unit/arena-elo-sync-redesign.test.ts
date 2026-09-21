@@ -71,6 +71,7 @@ function makeLeaderboardData(
 ): ArenaLeaderboardData {
   return { meta: { leaderboard: category, model_count: models.length }, models };
 }
+
 let testAdapter: SqliteAdapter;
 function createTestAdapter(): SqliteAdapter {
   const patchedSql = MIGRATION_SQL.replace(

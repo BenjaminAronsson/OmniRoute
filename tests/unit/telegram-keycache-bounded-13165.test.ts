@@ -36,6 +36,7 @@ before(async () => {
     "getApiKeysCount",
     "getExclusiveLeaseConnectionIds",
     "isModelAllowedForKey",
+    "isModelBlockedByPatterns",
     "pickApiKeyForInternalUse",
     "regenerateApiKey",
     "resetApiKeyState",
@@ -51,10 +52,6 @@ before(async () => {
       globalThis.__mintedKeys.push(name);
       return { key: "sk-omni-" + "x".repeat(32) + "-" + name };
     }
-    // #13861: comboTargetKeyPolicy imports this predicate (blocked-model patterns in
-    // all-access mode). The real one returns a boolean; nothing here has blocked
-    // models, so "not blocked" is the honest stub.
-    export async function isModelBlockedByPatterns() { return false; }
     ${dbExports.map((n) => `export async function ${n}() { return null; }`).join("\n")}
   `;
   const machineStub = `

@@ -89,7 +89,7 @@ function getRulesDir(): string {
   return rulesDirCache;
 }
 
-function compileRule(rule: FileRule, source: string, language: string): CavemanRule {
+function compileRule(rule: FileRule, source: string): CavemanRule {
   try {
     const flags = getRuleFlags(rule);
     return {
@@ -100,7 +100,6 @@ function compileRule(rule: FileRule, source: string, language: string): CavemanR
       category: rule.category ?? "filler",
       minIntensity: rule.minIntensity ?? "lite",
       description: rule.description,
-      language,
     };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
@@ -212,7 +211,7 @@ export function loadRulePack(
     return [];
   }
 
-  const rules = pack.rules.map((rule) => compileRule(rule, `${language}/${category}`, language));
+  const rules = pack.rules.map((rule) => compileRule(rule, `${language}/${category}`));
   cache.set(key, rules);
   return rules;
 }

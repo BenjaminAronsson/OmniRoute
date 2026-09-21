@@ -40,12 +40,6 @@ export const APP_STAGING_ALLOWED_EXACT_PATHS: string[] = [
   // published 3.8.47 crashed with ERR_MODULE_NOT_FOUND (same class as tls-options/3.8.41).
   "head-response-guard.cjs",
   "http-method-guard.cjs",
-  // #14064 (re-land of #13636): dist/server-ws.mjs imports ./httpClientAbortGuard.mjs
-  // (process crash guard). assembleStandalone copies the shared implementation under
-  // this name; without this bare entry the prepublish prune deletes it and every
-  // `omniroute serve` boot of the tarball dies with ERR_MODULE_NOT_FOUND (#7065 class,
-  // enforced by tests/unit/pack-artifact-server-ws-closure.test.ts).
-  "httpClientAbortGuard.mjs",
   "open-sse/mcp-server/server.js",
   "open-sse/vendor/codex-chatgpt-web/adapters/chatgpt-web/mcp-server.js",
   // LLMLingua ONNX worker — esbuild'd standalone .js spawned via worker_threads
@@ -56,6 +50,11 @@ export const APP_STAGING_ALLOWED_EXACT_PATHS: string[] = [
   "src/lib/db/healthCheckWorker.js",
   "package.json",
   "peer-stamp.mjs",
+  // #13636/#14064: server-ws.mjs imports ./httpClientAbortGuard.mjs (process crash
+  // guard); assembleStandalone copies it from src/shared/utils. Without this entry
+  // the prepublish prune deletes it and every boot of the published package dies
+  // with ERR_MODULE_NOT_FOUND — the 3.8.47 head-response-guard class.
+  "httpClientAbortGuard.mjs",
   "main-server-timeouts.mjs",
   // server-ws.mjs import (sd_notify helper) — enforced by the closure test
   // tests/unit/pack-artifact-server-ws-closure.test.ts.
@@ -105,6 +104,9 @@ export const PACK_ARTIFACT_ROOT_ALLOWED_EXACT_PATHS: string[] = [
   "config/release/wreq-js-rust-license-inventory.json",
   "config/release/wreq-js-rust-notices.md",
   "bin/aliasResolver.mjs",
+  // #14006: Antigravity MITM bridge (operator tool for the Antigravity IDE/CLI).
+  // Pure node:* imports, shipped via package.json "files": ["bin/"].
+  "bin/antigravity-bridge.mjs",
   "bin/chatgpt-web-codex-mcp.mjs",
   // #7808: ESM loader hook split out of bin/aliasResolver.mjs to silence CodeQL
   // js/incomplete-url-substring-sanitization (the old code built a
@@ -207,14 +209,14 @@ export const PACK_ARTIFACT_REQUIRED_PATHS: string[] = [
   "dist/main-server-timeouts.mjs",
   // server-ws.mjs import (sd_notify helper) — enforced by the closure test.
   "dist/systemd-notify.mjs",
+  // server-ws.mjs import (process crash guard, #13636/#14064) — enforced by the closure test.
+  "dist/httpClientAbortGuard.mjs",
   "dist/http-method-guard.cjs",
   // #5452: regression guard — make check:pack-artifact fail loudly if the TLS
   // opt-in sidecar (imported by dist/server-ws.mjs) ever vanishes from the tarball.
   "dist/tls-options.mjs",
   // #7065: regression guard for the HEAD response guard (dist/server-ws.mjs import).
   "dist/head-response-guard.cjs",
-  // #14064: regression guard for the process crash guard (dist/server-ws.mjs import).
-  "dist/httpClientAbortGuard.mjs",
   "dist/webdav-handler.mjs",
   "bin/cli/program.mjs",
   // Direct imports of bin/omniroute.mjs — bin/cli/ is only an allowlist PREFIX, so a

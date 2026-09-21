@@ -18,8 +18,7 @@ test("T28: gemini AI Studio catalog includes current preview models", () => {
   assert.ok(geminiIds.includes("gemini-3.7-flash"));
   assert.ok(geminiIds.includes("gemini-2.5-flash"));
   assert.ok(geminiIds.includes("gemini-2.5-pro"));
-  // #12663 (issue #12638) registered Gemini 3.8 Flash at the head of the AI Studio
-  // fallback catalog as the current Flash default; 3.7 stays listed below it.
+  // #12663 registered gemini-3.8-flash at the head of the catalog as the new default.
   assert.equal(geminiIds[0], "gemini-3.8-flash", "use the current Gemini Flash default");
 });
 

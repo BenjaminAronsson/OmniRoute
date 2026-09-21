@@ -87,12 +87,11 @@ export async function loadRerankProviderNodes(): Promise<DynamicRerankProvider[]
   let nodes: RerankProviderNodeRow[] = [];
   try {
     const rows = await getCachedProviderNodes();
-    // The cache hands back `Record<string, unknown> | null`; an interface with only
-    // optional members is not assignable to an index-signature type, so the predicate
-    // narrows to the non-null record and the row shape is asserted afterwards (TS2677).
-    nodes = (Array.isArray(rows) ? rows : []).filter(
-      (n): n is Record<string, unknown> => n !== null && typeof n === "object"
-    ) as RerankProviderNodeRow[];
+    // The cached row type is not assignable to RerankProviderNodeRow, so a predicate
+    // on it is a TS2677 (#13866). Narrow to a non-null object first, then project.
+    nodes = (Array.isArray(rows) ? rows : [])
+      .filter((n): n is NonNullable<typeof n> => n !== null && typeof n === "object")
+      .map((n) => n as unknown as RerankProviderNodeRow);
   } catch {
     // Non-critical — continue with cloud providers only
     return [];
