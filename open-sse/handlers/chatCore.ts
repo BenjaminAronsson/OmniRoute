@@ -3200,7 +3200,8 @@ export async function handleChatCore({
                           upstreamExtraHeaders: buildUpstreamHeadersForExecute(modelToCall),
                           clientHeaders: buildExecutorClientHeaders(
                             clientRawRequest?.headers,
-                            userAgent
+                            userAgent,
+                            { provider, body }
                           ),
                           clientResponseFormat,
                           onCredentialsRefreshed,
@@ -3387,7 +3388,8 @@ export async function handleChatCore({
                               upstreamExtraHeaders: buildUpstreamHeadersForExecute(modelToCall),
                               clientHeaders: buildExecutorClientHeaders(
                                 clientRawRequest?.headers,
-                                userAgent
+                                userAgent,
+                                { provider, body }
                               ),
                               clientResponseFormat,
                               onCredentialsRefreshed,
@@ -4499,7 +4501,9 @@ export async function handleChatCore({
                 log,
                 extendedContext,
                 upstreamExtraHeaders: buildUpstreamHeadersForExecute(retryModelId),
-                clientHeaders: buildExecutorClientHeaders(clientRawRequest?.headers, userAgent),
+                clientHeaders: buildExecutorClientHeaders(clientRawRequest?.headers, userAgent, {
+                  provider, body,
+                }),
                 clientResponseFormat,
                 onCredentialsRefreshed,
                 skipUpstreamRetry: isCombo,

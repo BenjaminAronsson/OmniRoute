@@ -1,6 +1,10 @@
 import { createHash, randomBytes, randomUUID } from "crypto";
 import { setUserAgentHeader } from "../executors/base.ts";
 import { generateSessionId } from "../services/sessionManager.ts";
+import {
+  resolveOpencodeSessionIdentity,
+  type OpencodeSessionBody,
+} from "./opencodeSessionIdentity.ts";
 
 /**
  * Default synthesized User-Agent. The upstream only parses the version, so this literal
@@ -35,13 +39,10 @@ export function satisfiesOpencodeUserAgentContract(userAgent: string | null | un
  * follows it differ — including in their tool list, which is the very thing being joined.
  */
 export function clientSuppliedOpencodeSession(
-  clientHeaders: Record<string, string> | null | undefined
+  clientHeaders: Record<string, string> | null | undefined,
+  body?: unknown
 ): string | undefined {
-  if (!clientHeaders) return undefined;
-  const value =
-    findHeader(clientHeaders, "x-opencode-session") ?? findHeader(clientHeaders, "x-session-id");
-  const trimmed = value?.trim();
-  return trimmed ? trimmed : undefined;
+  return resolveOpencodeSessionIdentity(clientHeaders, body);
 }
 
 /**
@@ -155,13 +156,7 @@ export function forwardOpencodeClientHeaders(
   options?: {
     synthesizeRequestId?: boolean;
     cliDefaults?: { userAgent: string; client: string; project: string };
-    sessionBody?: {
-      model?: string;
-      system?: unknown;
-      messages?: Array<{ role?: string; content?: unknown }>;
-      input?: Array<{ role?: string; content?: unknown }>;
-      tools?: Array<{ name?: string; function?: { name?: string } }>;
-    };
+    sessionBody?: OpencodeSessionBody;
   }
 ): void {
   // 1. Forward User-Agent
@@ -187,9 +182,8 @@ export function forwardOpencodeClientHeaders(
   }
 
   // 3. OpencodeExecutor-only: synthesize session/request id from fallback headers
-  if (options?.synthesizeRequestId && !headers["x-opencode-session"]) {
-    const sessionAffinity =
-      findHeader(clientHeaders, "x-session-affinity") || findHeader(clientHeaders, "x-session-id");
+  if ((options?.synthesizeRequestId || options?.cliDefaults) && !headers["x-opencode-session"]) {
+    const sessionAffinity = resolveOpencodeSessionIdentity(clientHeaders, options.sessionBody);
     if (sessionAffinity) {
       // Kept as-is here. When identity synthesis is on, applyCliDefaults renders it in the
       // canonical shape below; with the synthesis opted out this path stays byte-identical
@@ -221,13 +215,7 @@ export function forwardOpencodeClientHeaders(
 function applyCliDefaults(
   headers: Record<string, string>,
   cliDefaults: { userAgent: string; client: string; project: string },
-  sessionBody?: {
-    model?: string;
-    system?: unknown;
-    messages?: Array<{ role?: string; content?: unknown }>;
-    input?: Array<{ role?: string; content?: unknown }>;
-    tools?: Array<{ name?: string; function?: { name?: string } }>;
-  }
+  sessionBody?: OpencodeSessionBody
 ): void {
   // A client User-Agent is kept only when it already satisfies the upstream contract.
   // The previous rule kept anything starting with `opencode-cli/`, which carries no
