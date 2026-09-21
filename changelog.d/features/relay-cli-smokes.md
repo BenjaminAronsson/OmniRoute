@@ -1,0 +1,1 @@
+- test(cli): add isolated real-binary smoke contracts with local sentinel authentication, response receipts, and bounded process-group cleanup.
