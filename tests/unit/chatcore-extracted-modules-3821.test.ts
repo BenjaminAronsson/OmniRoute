@@ -122,6 +122,29 @@ test("checkIdempotencyCache returns a hit Response reusing the same key after a 
   assert.equal(result.hit!.response.headers.get("X-OmniRoute-Idempotent"), "true");
 });
 
+test("transcript-observed requests bypass idempotency reads and writes", async () => {
+  const rawKey = "idem-private-video-3821";
+  const key = composeIdempotencyKey({
+    rawKey,
+    provider: "openai",
+    model: "gpt-4.1",
+    messages: undefined,
+  })!;
+  saveIdempotency(key, { content: "PRIVATE_IDEMPOTENCY_TRANSCRIPT_SENTINEL" }, 200);
+  const observed = { videoTranscriptSensitive: true };
+  const result = await checkIdempotencyCache({
+    clientRawRequest: { headers: new Headers({ "idempotency-key": rawKey }) },
+    provider: "openai",
+    model: "gpt-4.1",
+    effectiveServiceTier: undefined,
+    startTime: 0,
+    log: undefined,
+    ...observed,
+  });
+  assert.equal(result.hit, null);
+  assert.equal(result.idempotencyKey, null, "the save site must have no key to write");
+});
+
 test("checkIdempotencyCache resolves a null key when no idempotency headers are present", async () => {
   const result = await checkIdempotencyCache({
     clientRawRequest: { headers: new Headers() },

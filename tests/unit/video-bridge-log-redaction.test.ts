@@ -203,6 +203,56 @@ test("control: without a redaction map the persisted requestBody keeps the origi
   );
 });
 
+test("observed requests never retain an echoed transcript in the response or detailed pipeline artifact", async () => {
+  const id = "video-response-retention-1";
+  const responseBody = { choices: [{ message: { content: SECRET } }] };
+  const detailedPayloads = {
+    providerResponse: responseBody,
+    streamChunks: { client: [SECRET], provider: [SECRET] },
+  };
+  persistAttemptLogs(
+    {
+      status: 200,
+      responseBody,
+      providerRequest: { messages: [{ role: "user", content: FULL_TEXT }] },
+      providerResponse: responseBody,
+      clientResponse: responseBody,
+    },
+    baseCtx({
+      pendingRequestId: id,
+      detailedLoggingEnabled: true,
+      reqLogger: { getPipelinePayloads: () => detailedPayloads },
+      videoContentRemoved: true,
+      videoBridgeLogRedaction: [
+        {
+          container: "messages",
+          messageIndex: 1,
+          partIndex: 1,
+          fullText: FULL_TEXT,
+          redactedText: PLACEHOLDER_TEXT,
+        },
+      ],
+    })
+  );
+
+  const row = await pollForCallLog(id);
+  assert.ok(row);
+  assert.equal(JSON.stringify(row).includes(SECRET), false);
+  assert.equal(JSON.stringify(row).includes(FULL_TEXT), false);
+  assert.equal(JSON.stringify(responseBody).includes(SECRET), true, "client response stays live");
+});
+
+test("non-video requests retain their response body as before", async () => {
+  const id = "video-response-retention-control-1";
+  persistAttemptLogs(
+    { status: 200, responseBody: { choices: [{ message: { content: SECRET } }] } },
+    baseCtx({ pendingRequestId: id })
+  );
+  const row = await pollForCallLog(id);
+  assert.ok(row);
+  assert.equal(JSON.stringify(row.responseBody).includes(SECRET), true);
+});
+
 test("the caller's body object is never mutated by the redaction", async () => {
   const id = "video-nomutate-1";
   const body = videoBody();
