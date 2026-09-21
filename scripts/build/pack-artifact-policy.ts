@@ -40,6 +40,12 @@ export const APP_STAGING_ALLOWED_EXACT_PATHS: string[] = [
   // published 3.8.47 crashed with ERR_MODULE_NOT_FOUND (same class as tls-options/3.8.41).
   "head-response-guard.cjs",
   "http-method-guard.cjs",
+  // #14064 (re-land of #13636): dist/server-ws.mjs imports ./httpClientAbortGuard.mjs
+  // (process crash guard). assembleStandalone copies the shared implementation under
+  // this name; without this bare entry the prepublish prune deletes it and every
+  // `omniroute serve` boot of the tarball dies with ERR_MODULE_NOT_FOUND (#7065 class,
+  // enforced by tests/unit/pack-artifact-server-ws-closure.test.ts).
+  "httpClientAbortGuard.mjs",
   "open-sse/mcp-server/server.js",
   "open-sse/vendor/codex-chatgpt-web/adapters/chatgpt-web/mcp-server.js",
   // LLMLingua ONNX worker — esbuild'd standalone .js spawned via worker_threads
@@ -207,6 +213,8 @@ export const PACK_ARTIFACT_REQUIRED_PATHS: string[] = [
   "dist/tls-options.mjs",
   // #7065: regression guard for the HEAD response guard (dist/server-ws.mjs import).
   "dist/head-response-guard.cjs",
+  // #14064: regression guard for the process crash guard (dist/server-ws.mjs import).
+  "dist/httpClientAbortGuard.mjs",
   "dist/webdav-handler.mjs",
   "bin/cli/program.mjs",
   // Direct imports of bin/omniroute.mjs — bin/cli/ is only an allowlist PREFIX, so a
