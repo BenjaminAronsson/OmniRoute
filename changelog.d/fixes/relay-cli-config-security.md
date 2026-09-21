@@ -1,0 +1,1 @@
+- **CLI configuration security:** redact generated previews and existing profile credentials, reject credentials in preview URLs, validate requests, and use private atomic configuration/backup writes without weakening the container write guard.
