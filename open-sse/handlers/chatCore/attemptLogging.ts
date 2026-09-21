@@ -387,6 +387,15 @@ export function persistAttemptLogs(args: PersistAttemptLogsArgs, ctx: PersistAtt
     finalConnectionId
   );
 
+  // The upstream response can quote a video transcript in arbitrary prose,
+  // including errors and SSE chunks. There is no trustworthy structured
+  // response-side cue boundary to redact, so retained copies are omitted as
+  // a whole. The provider response and client-visible reply remain unchanged.
+  const retainedResponse = videoContentRemoved
+    ? { _omniroute_omitted: "video-transcript" }
+    : responseBody;
+  const retainedError = videoContentRemoved && error ? "[omitted: video transcript]" : error;
+
   const providerWarnings = extractProviderWarnings(providerResponse, clientResponse, responseBody);
   if (providerWarnings.length > 0) {
     logAuditEvent({
@@ -401,11 +410,15 @@ export function persistAttemptLogs(args: PersistAttemptLogsArgs, ctx: PersistAtt
         model,
         connectionId: finalConnectionId,
         httpStatus: status,
-        warnings: providerWarnings,
+        warnings: videoContentRemoved
+          ? providerWarnings.map(() => "[omitted: video transcript]")
+          : providerWarnings,
       },
     });
   }
 
+  // Detect against the live response, but omit provider-supplied tool names
+  // from the durable audit detail when they might echo a video transcript.
   maybeLogToolCallSpecViolation({
     responseBody,
     provider,
@@ -413,14 +426,21 @@ export function persistAttemptLogs(args: PersistAttemptLogsArgs, ctx: PersistAtt
     connectionId: finalConnectionId,
     httpStatus: status,
     requestId: skillRequestId,
+    redactViolationDetail: videoContentRemoved,
   });
 
-  const capturedPipeline = reqLogger?.getPipelinePayloads?.() ?? null;
-  const pipelinePayloads = detailedLoggingEnabled
-    ? (capturedPipeline ?? {})
-    : capturedPipeline?.routeDecision
-      ? { routeDecision: capturedPipeline.routeDecision }
-      : null;
+  // The detailed artifact mixes provider/client responses, raw wire chunks
+  // and transformed requests. None is safe to persist for observed video.
+  const capturedPipeline = videoContentRemoved
+    ? null
+    : (reqLogger?.getPipelinePayloads?.() ?? null);
+  const pipelinePayloads = videoContentRemoved
+    ? null
+    : detailedLoggingEnabled
+      ? (capturedPipeline ?? {})
+      : capturedPipeline?.routeDecision
+        ? { routeDecision: capturedPipeline.routeDecision }
+        : null;
 
   if (pipelinePayloads) {
     if (providerRequest !== undefined && !pipelinePayloads.providerRequest) {
@@ -432,12 +452,12 @@ export function persistAttemptLogs(args: PersistAttemptLogsArgs, ctx: PersistAtt
     if (clientResponse !== undefined) {
       pipelinePayloads.clientResponse = clientResponse as Record<string, unknown>;
     }
-    if (error) {
+    if (retainedError) {
       pipelinePayloads.error = {
         ...(typeof pipelinePayloads.error === "object" && pipelinePayloads.error
           ? (pipelinePayloads.error as Record<string, unknown>)
           : {}),
-        message: error,
+        message: retainedError,
       };
     }
     // withEarlyStreamKeepalive writes keepalive/startup/error frames directly
@@ -484,7 +504,7 @@ export function persistAttemptLogs(args: PersistAttemptLogsArgs, ctx: PersistAtt
       )
     ),
     responseBody: cloneBoundedChatLogPayload(
-      attachLogMeta(truncateForLog(responseBody as Record<string, unknown>), {
+      attachLogMeta(truncateForLog(retainedResponse as Record<string, unknown>), {
         ...accountRotationMeta,
         claudePromptCache: claudeCacheMeta
           ? {
@@ -499,7 +519,7 @@ export function persistAttemptLogs(args: PersistAttemptLogsArgs, ctx: PersistAtt
         usageEstimated: isEstimatedUsage(tokens) ? true : null,
       })
     ),
-    error: error || null,
+    error: retainedError || null,
     sourceFormat,
     targetFormat,
     comboName,
@@ -527,7 +547,7 @@ export function persistAttemptLogs(args: PersistAttemptLogsArgs, ctx: PersistAtt
     const lifecycle = resolveRequestLifecycleEvent({
       traceId,
       status,
-      error,
+      error: retainedError,
       model,
       provider,
       comboName,

@@ -732,6 +732,7 @@ export async function handleChatCore({
     effectiveServiceTier,
     startTime,
     log,
+    videoTranscriptSensitive: videoBridgeObserved,
   });
   if (idempotencyHit) {
     return idempotencyHit;
@@ -1289,6 +1290,7 @@ export async function handleChatCore({
     apiKeyId: apiKeyInfo?.id ?? undefined,
     cacheDefaultMode: (apiKeyInfo as { cacheDefaultMode?: "legacy" | "bypass" } | null)
       ?.cacheDefaultMode,
+    videoTranscriptSensitive: videoBridgeObserved,
   });
   if (cacheHit) {
     return cacheHit;
@@ -5079,6 +5081,7 @@ export async function handleChatCore({
         requestToolIdentityMap,
         reasoningCacheScope,
         reasoningReplayHistory,
+        videoTranscriptSensitive: videoBridgeObserved,
         clientHeaders: clientRawRequest?.headers ?? null,
         isClaudeCodeCompatible,
         log,
@@ -5252,6 +5255,7 @@ export async function handleChatCore({
                 requestToolIdentityMap,
                 reasoningCacheScope,
                 reasoningReplayHistory,
+                videoTranscriptSensitive: videoBridgeObserved,
                 clientHeaders: clientRawRequest?.headers ?? null,
                 isClaudeCodeCompatible,
                 log,
@@ -5583,6 +5587,7 @@ export async function handleChatCore({
         apiKeyId: apiKeyInfo?.id ?? undefined,
         usage,
         log,
+        videoTranscriptSensitive: videoBridgeObserved,
       });
 
       // ── Phase 9.2: Save for idempotency ──
@@ -5912,6 +5917,7 @@ export async function handleChatCore({
           cacheReasoningFromAssistantMessage(msg, provider, model, {
             scope: reasoningCacheScope,
             historyMessages: Array.isArray(historyMessages) ? historyMessages : [],
+            videoTranscriptSensitive: videoBridgeObserved,
           });
         }
       } catch {
@@ -6088,6 +6094,7 @@ export async function handleChatCore({
       apiKeyId: apiKeyInfo?.id ?? undefined,
       streamUsage,
       log,
+      videoTranscriptSensitive: videoBridgeObserved,
     });
 
     // Plugin onStreamComplete hook — fire-and-forget, fail-open (#9571)

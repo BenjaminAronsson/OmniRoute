@@ -188,7 +188,13 @@ test("transcript-observed non-streaming replies bypass reasoning cache without c
             role: "assistant",
             content: "visible client reply",
             reasoning_content: sentinel,
-            tool_calls: [{ id: "call_video_nonstream", type: "function", function: { name: "f", arguments: "{}" } }],
+            tool_calls: [
+              {
+                id: "call_video_nonstream",
+                type: "function",
+                function: { name: "f", arguments: "{}" },
+              },
+            ],
           },
           finish_reason: "tool_calls",
         },
