@@ -1,0 +1,1 @@
+- fix(api): combo builder emits the provider-node routing prefix in qualifiedModel instead of the raw connection id, so custom embeddings/chat connections built from the dashboard are resolvable by /v1/embeddings and combo routing (#13931)

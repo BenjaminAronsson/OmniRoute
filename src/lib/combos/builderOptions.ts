@@ -707,7 +707,13 @@ export async function getComboBuilderOptions(): Promise<ComboBuilderOptionsPaylo
     // #2901 follow-up: a configured OpenCode connection shadows the no-auth
     // entry below, so it must receive the same `oc/` routing prefix. The raw
     // `opencode/` prefix is reserved by model parsing for the api-key tier.
-    const routingPrefix = providerId === "opencode" ? providerVisual.alias : providerId;
+    // #13931: any other provider backed by a provider_nodes row with its own
+    // routing `prefix` (e.g. a custom OpenAI-compatible embeddings connection)
+    // must use that prefix too — otherwise the builder emits a raw connection
+    // id that /v1/embeddings (and combo routing generally) can never resolve.
+    const nodePrefix = toStringOrNull(providerNode?.prefix);
+    const routingPrefix =
+      providerId === "opencode" ? providerVisual.alias : nodePrefix || providerId;
     rewriteQualifiedModelPrefix(modelMap, providerId, routingPrefix);
 
     const normalizedConnections =
