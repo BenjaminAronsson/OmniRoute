@@ -17,7 +17,8 @@ test("Devin transports expose the same curated catalog without duplicate ids", (
     devin_cli_agenticProvider.models.map((model) => model.id),
     catalogIds
   );
-  assert.equal(catalogIds.length, 110);
+  // +4 for the swe-2 family added in #13691 (swe-2, swe-2-medium, swe-2-high, swe-2-max).
+  assert.equal(catalogIds.length, 114);
   assert.equal(new Set(catalogIds).size, catalogIds.length);
   assert.ok(catalogIds.every((id) => !id.toLowerCase().includes("byok")));
 });
@@ -39,6 +40,8 @@ test("Devin catalog contains only the operator-selected model families", () => {
     "glm-5-3-flash-max",
     "swe-1-7",
     "swe-1-7-lightning",
+    "swe-2",
+    "swe-2-max",
     "adaptive",
     "grok-4-6-xhigh",
     "inkling-max",

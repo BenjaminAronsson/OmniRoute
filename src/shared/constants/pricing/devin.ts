@@ -93,6 +93,13 @@ export const DEVIN_MODEL_PRICING: Record<string, DevinTokenPricing> = {
     cached: 1,
     output: 12.5,
   }),
+  // swe-2 family (#13691): same rate as swe-1-7 pending a confirmed live-catalog
+  // price for the newer tier — kept provider-bound like the rest of this table.
+  ...priced(["swe-2", "swe-2-medium", "swe-2-high", "swe-2-max"], {
+    input: 0.5,
+    cached: 0.2,
+    output: 2.5,
+  }),
   adaptive: { input: 0.5, cached: 0.1, output: 2 },
   ...priced(variantIds("grok-4-6", ["xhigh", "high", "medium", "low"]), {
     input: 2,
