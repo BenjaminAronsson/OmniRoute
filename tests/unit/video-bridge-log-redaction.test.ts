@@ -267,6 +267,15 @@ test("observed video attempts discard early keepalive bytes instead of retaining
       correlationId,
       detailedLoggingEnabled: true,
       videoContentRemoved: true,
+      videoBridgeLogRedaction: [
+        {
+          container: "messages",
+          messageIndex: 1,
+          partIndex: 1,
+          fullText: FULL_TEXT,
+          redactedText: PLACEHOLDER_TEXT,
+        },
+      ],
     })
   );
 
@@ -274,6 +283,16 @@ test("observed video attempts discard early keepalive bytes instead of retaining
   const row = await pollForCallLog(id);
   assert.ok(row);
   assert.equal(JSON.stringify(row).includes(SECRET), false);
+});
+
+test("observed video logs omit the request when the per-part redaction shadow cannot be applied", async () => {
+  const id = "video-missing-shadow-1";
+  persistAttemptLogs({ status: 200 }, baseCtx({ pendingRequestId: id, videoContentRemoved: true }));
+
+  const row = await pollForCallLog(id);
+  assert.ok(row);
+  assert.equal(JSON.stringify(row.requestBody).includes(SECRET), false);
+  assert.equal((row.requestBody as Record<string, unknown>)._omniroute_omitted, "video-transcript");
 });
 
 test("the caller's body object is never mutated by the redaction", async () => {
