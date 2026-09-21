@@ -295,6 +295,47 @@ test("observed video logs omit the request when the per-part redaction shadow ca
   assert.equal((row.requestBody as Record<string, unknown>)._omniroute_omitted, "video-transcript");
 });
 
+test("observed video logs omit the whole request when only some shadow entries match", async () => {
+  const id = "video-partial-shadow-1";
+  const secondSecret = "second private transcript";
+  const secondFullText = `[Video 2]: transcript[00:02-00:04]: ${secondSecret}`;
+  const body = videoBody();
+  const content = body.messages[1].content;
+  assert.ok(Array.isArray(content));
+  content.push({ type: "text", text: `${secondFullText} modified after preCall` });
+
+  persistAttemptLogs(
+    { status: 200 },
+    baseCtx({
+      pendingRequestId: id,
+      body,
+      videoContentRemoved: true,
+      videoBridgeLogRedaction: [
+        {
+          container: "messages",
+          messageIndex: 1,
+          partIndex: 1,
+          fullText: FULL_TEXT,
+          redactedText: PLACEHOLDER_TEXT,
+        },
+        {
+          container: "messages",
+          messageIndex: 1,
+          partIndex: 2,
+          fullText: secondFullText,
+          redactedText: "[redacted-video-transcript]",
+        },
+      ],
+    })
+  );
+
+  const row = await pollForCallLog(id);
+  assert.ok(row);
+  assert.equal((row.requestBody as Record<string, unknown>)._omniroute_omitted, "video-transcript");
+  assert.equal(JSON.stringify(row.requestBody).includes(secondSecret), false);
+  assert.equal(JSON.stringify(body).includes(secondSecret), true, "live model request is unchanged");
+});
+
 test("the caller's body object is never mutated by the redaction", async () => {
   const id = "video-nomutate-1";
   const body = videoBody();
