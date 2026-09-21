@@ -1,1 +1,0 @@
-- fix(opencode): preserve explicit native and Claude conversation IDs before request translation, keeping the existing canonical session shape and fingerprint fallback.
