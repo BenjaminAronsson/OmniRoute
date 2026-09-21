@@ -1310,8 +1310,12 @@ test("DefaultExecutor.refreshCredentials swallows refresh errors and logs them",
   };
 
   try {
+    // #13874: the Layer 2 (no connectionId) path now records rotations too, so a
+    // refresh token the previous test already rotated ("refresh-me") is served from
+    // the rotation map without a network POST. Use a token nobody rotated so the
+    // upstream call — and its failure — actually happens.
     const result = await executor.refreshCredentials(
-      { refreshToken: "refresh-me" },
+      { refreshToken: "refresh-me-network-down" },
       { error: (tag, message) => messages.push({ tag, message }) }
     );
     assert.equal(result, null);
