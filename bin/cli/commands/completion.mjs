@@ -5,6 +5,7 @@ import { t } from "../i18n.mjs";
 import { apiFetch } from "../api.mjs";
 import { resolveDataDir } from "../data-dir.mjs";
 import { listManifestTargets } from "../cli-manifest.mjs";
+import { loadModelCatalog, ModelCommandError } from "./model-api.mjs";
 
 // Target lists shared with `omniroute run` / `omniroute configure` — always
 // derived from the canonical manifest so the completion scripts cannot drift.
@@ -30,14 +31,14 @@ function readCache() {
 }
 
 async function refreshCache(opts = {}) {
+  // Fail before replacing the cache when the selected catalog is unavailable.
+  const models = (await loadModelCatalog(opts)).map((model) => model.id);
   let combos = [],
-    providers = [],
-    models = [];
+    providers = [];
   try {
-    const [cr, pr, mr] = await Promise.allSettled([
+    const [cr, pr] = await Promise.allSettled([
       apiFetch("/api/combos", opts),
       apiFetch("/api/providers", opts),
-      apiFetch("/api/models", opts),
     ]);
     if (cr.status === "fulfilled" && cr.value.ok) {
       const j = await cr.value.json();
@@ -46,10 +47,6 @@ async function refreshCache(opts = {}) {
     if (pr.status === "fulfilled" && pr.value.ok) {
       const j = await pr.value.json();
       providers = (j.providers || j.items || []).map((p) => p.id || p.name).filter(Boolean);
-    }
-    if (mr.status === "fulfilled" && mr.value.ok) {
-      const j = await mr.value.json();
-      models = (Array.isArray(j) ? j : j.data || []).map((m) => m.id).filter(Boolean);
     }
   } catch (err) {
     if (process.env.OMNIROUTE_DEBUG_COMPLETION) {
@@ -177,6 +174,7 @@ _omniroute() {
             '--max-tokens[Max tokens]:' ;;
         open)
           _arguments '1:resource:(combos providers api-manager cli-tools agents settings logs memory skills evals audit cost resilience)' ;;
+        models) _arguments '1:subcommand:(manual add edit remove)' ;;
         completion) _arguments '1:subcommand:(zsh bash fish install refresh)' ;;
         config) _arguments '1:subcommand:(list get set validate contexts)' ;;
         contexts) _arguments '1:subcommand:(list add use current show remove rename export import migrate)' ;;
@@ -231,6 +229,7 @@ _omniroute() {
   cmds="setup doctor status logs providers config test update serve stop restart keys models combo chat stream completion dashboard open backup restore health quota cache mcp a2a tunnel env memory skills connect contexts configure launch launch-codex run runtime repair"
 
   case "\${prev}" in
+    models)      COMPREPLY=($(compgen -W "manual add edit remove" -- "\${cur}")); return 0 ;;
     combo)       COMPREPLY=($(compgen -W "list switch create delete show suggest" -- "\${cur}")); return 0 ;;
     keys)        COMPREPLY=($(compgen -W "add list remove regenerate revoke reveal usage" -- "\${cur}")); return 0 ;;
     providers)   COMPREPLY=($(compgen -W "available list test test-all validate rotate status add import auth remove edit metrics metric" -- "\${cur}")); return 0 ;;
@@ -273,6 +272,7 @@ for cmd in $commands
 end
 
 # Subcommands
+complete -c omniroute -n '__fish_seen_subcommand_from models' -a 'manual add edit remove'
 complete -c omniroute -n '__fish_seen_subcommand_from combo' -a 'list switch create delete show suggest'
 complete -c omniroute -n '__fish_seen_subcommand_from keys' -a 'add list remove regenerate revoke reveal usage'
 complete -c omniroute -n '__fish_seen_subcommand_from providers' -a 'available list test test-all validate rotate status add import auth remove edit metrics metric'
@@ -351,7 +351,18 @@ export function registerCompletion(program) {
     .option("--quiet", "Suppress output")
     .action(async (opts, cmd) => {
       const globalOpts = cmd.optsWithGlobals();
-      const data = await refreshCache(globalOpts);
+      let data;
+      try {
+        data = await refreshCache(globalOpts);
+      } catch (error) {
+        console.error(
+          error instanceof ModelCommandError
+            ? error.message
+            : "Unable to refresh model completions."
+        );
+        process.exitCode = error.exitCode || 1;
+        return;
+      }
       if (!opts.quiet && !globalOpts.quiet) {
         process.stdout.write(
           `Cached: ${data.combos.length} combos, ${data.providers.length} providers, ${data.models.length} models\n`
