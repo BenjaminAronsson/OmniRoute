@@ -264,6 +264,14 @@ export function orderHeaders(
 /**
  * Internal request-body markers that are NOT `_omniroute*`-prefixed and must be
  * removed key-by-key. Everything else is caught by INTERNAL_BODY_FIELD_PREFIX.
+ *
+ * Unlike the `_omniroute*` class, these four are consumed by the EXECUTORS
+ * themselves (CodexExecutor/XaiExecutor `transformRequest` read
+ * `_native*Passthrough`; base.ts reads `_claudeCodeRequiresLowercaseToolNames`),
+ * so they may only be removed at the executor-egress boundary — after
+ * `transformRequest` has run. Stripping them earlier silently demotes a native
+ * Responses passthrough to the translated path. Use
+ * `stripInternalOmnirouteMarkers()` for any pre-executor call site.
  */
 const INTERNAL_BODY_FIELDS: readonly string[] = [
   "_claudeCodeRequiresLowercaseToolNames",
@@ -287,8 +295,29 @@ const INTERNAL_BODY_FIELDS: readonly string[] = [
 const INTERNAL_BODY_FIELD_PREFIX = "_omniroute";
 
 /**
- * Remove omniroute-internal markers from a request body before it is serialized
- * for an upstream. Mutates and returns the same object.
+ * Remove ONLY the `_omniroute*` markers from a request body. Those are consumed
+ * by routing before dispatch, so they are safe to drop at any point of the
+ * pipeline — including the shared pre-executor boundary (#14252), where the full
+ * `stripInternalBodyFields()` must NOT be used: it also deletes the
+ * executor-consumed markers listed in INTERNAL_BODY_FIELDS, which at that point
+ * have not been read yet. Mutates and returns the same object.
+ */
+export function stripInternalOmnirouteMarkers(body: unknown): unknown {
+  if (!body || typeof body !== "object" || Array.isArray(body)) return body;
+
+  const record = body as Record<string, unknown>;
+  for (const key of Object.keys(record)) {
+    if (key.startsWith(INTERNAL_BODY_FIELD_PREFIX)) {
+      delete record[key];
+    }
+  }
+  return body;
+}
+
+/**
+ * Remove every omniroute-internal marker from a request body before it is
+ * serialized for an upstream. Executor-egress only — see INTERNAL_BODY_FIELDS.
+ * Mutates and returns the same object.
  */
 export function stripInternalBodyFields(body: unknown): unknown {
   if (!body || typeof body !== "object" || Array.isArray(body)) return body;
@@ -297,12 +326,7 @@ export function stripInternalBodyFields(body: unknown): unknown {
   for (const field of INTERNAL_BODY_FIELDS) {
     delete record[field];
   }
-  for (const key of Object.keys(record)) {
-    if (key.startsWith(INTERNAL_BODY_FIELD_PREFIX)) {
-      delete record[key];
-    }
-  }
-  return body;
+  return stripInternalOmnirouteMarkers(body);
 }
 
 export function applyFingerprint(

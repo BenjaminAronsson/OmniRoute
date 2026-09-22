@@ -15,7 +15,7 @@ import {
   type ConnectionCacheOverride,
 } from "../../utils/cacheControlPolicy.ts";
 import { FORMATS } from "../../translator/formats.ts";
-import { stripInternalBodyFields } from "../../config/cliFingerprints.ts";
+import { stripInternalOmnirouteMarkers } from "../../config/cliFingerprints.ts";
 import { sanitizeRequestForResolvedTarget } from "../../services/targetRequestSanitizer.ts";
 import { normalizeThinkingForModel } from "@/shared/constants/modelSpecs.ts";
 import {
@@ -264,7 +264,17 @@ function normalizeAttemptBody(opts: PrepareUpstreamBodyOptions): Body {
   // All models, including universal/context-handoff summary models, pass through
   // this shared pre-executor boundary. Remove OmniRoute-only routing markers here
   // so custom executors that serialize their own request bodies cannot leak them.
-  stripInternalBodyFields(bodyToSend);
+  //
+  // Prefix-only on purpose. #14252 called the full stripInternalBodyFields() here,
+  // which ALSO deleted the executor-consumed markers (`_nativeCodexPassthrough`,
+  // `_nativeXaiResponsesPassthrough`, `_nativeOpenAICompatibleResponsesPassthrough`,
+  // `_claudeCodeRequiresLowercaseToolNames`) — this boundary runs BEFORE
+  // executor.transformRequest(), so every native Responses passthrough was silently
+  // demoted to the translated path (Codex lost client `metadata`, took the Responses
+  // allowlist and the translated instructions). Those markers are already removed at
+  // the executor-egress boundary (base.ts / dario.ts / ninerouter.ts), which is after
+  // they have been read.
+  stripInternalOmnirouteMarkers(bodyToSend);
   return bodyToSend;
 }
 
