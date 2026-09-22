@@ -15,7 +15,7 @@ import {
   type ConnectionCacheOverride,
 } from "../../utils/cacheControlPolicy.ts";
 import { FORMATS } from "../../translator/formats.ts";
-import { stripInternalBodyFields } from "../../config/cliFingerprints.ts";
+import { stripRoutingBodyFields } from "../../config/cliFingerprints.ts";
 import { sanitizeRequestForResolvedTarget } from "../../services/targetRequestSanitizer.ts";
 import { normalizeThinkingForModel } from "@/shared/constants/modelSpecs.ts";
 import {
@@ -264,7 +264,9 @@ function normalizeAttemptBody(opts: PrepareUpstreamBodyOptions): Body {
   // All models, including universal/context-handoff summary models, pass through
   // this shared pre-executor boundary. Remove OmniRoute-only routing markers here
   // so custom executors that serialize their own request bodies cannot leak them.
-  stripInternalBodyFields(bodyToSend);
+  // Native passthrough/tool-casing controls must survive until their executor
+  // consumes them; final egress sanitation still strips every internal field.
+  stripRoutingBodyFields(bodyToSend);
   return bodyToSend;
 }
 

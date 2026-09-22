@@ -287,21 +287,28 @@ const INTERNAL_BODY_FIELDS: readonly string[] = [
 const INTERNAL_BODY_FIELD_PREFIX = "_omniroute";
 
 /**
- * Remove omniroute-internal markers from a request body before it is serialized
- * for an upstream. Mutates and returns the same object.
+ * Remove consumed routing markers before executor-specific request transforms.
+ * Executor controls (native passthrough and tool casing) still have consumers;
+ * stripInternalBodyFields removes them at the final serialization boundary.
  */
-export function stripInternalBodyFields(body: unknown): unknown {
+export function stripRoutingBodyFields(body: unknown): unknown {
   if (!body || typeof body !== "object" || Array.isArray(body)) return body;
 
   const record = body as Record<string, unknown>;
-  for (const field of INTERNAL_BODY_FIELDS) {
-    delete record[field];
-  }
   for (const key of Object.keys(record)) {
     if (key.startsWith(INTERNAL_BODY_FIELD_PREFIX)) {
       delete record[key];
     }
   }
+  return body;
+}
+
+/** Remove every internal field immediately before upstream serialization. */
+export function stripInternalBodyFields(body: unknown): unknown {
+  stripRoutingBodyFields(body);
+  if (!body || typeof body !== "object" || Array.isArray(body)) return body;
+  const record = body as Record<string, unknown>;
+  for (const field of INTERNAL_BODY_FIELDS) delete record[field];
   return body;
 }
 

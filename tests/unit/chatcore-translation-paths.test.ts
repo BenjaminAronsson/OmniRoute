@@ -575,6 +575,7 @@ test("chatCore keeps Responses-native Codex payloads in native passthrough mode"
       instructions: "custom system prompt",
       store: true,
       metadata: { source: "codex-client" },
+      _omnirouteQualityProbe: true,
       stream: false,
     },
     responseFormat: "openai-responses",
@@ -588,6 +589,8 @@ test("chatCore keeps Responses-native Codex payloads in native passthrough mode"
   assert.equal(call.body.instructions, "custom system prompt");
   assert.equal(call.body.store, false);
   assert.deepEqual(call.body.metadata, { source: "codex-client" });
+  assert.equal(call.body._nativeCodexPassthrough, undefined);
+  assert.equal(call.body._omnirouteQualityProbe, undefined);
   assert.equal("messages" in call.body, false);
 });
 test("chatCore honors providerSpecificData.apiType for legacy openai-compatible providers", async () => {

@@ -166,6 +166,38 @@ test("DefaultExecutor.execute never serializes _omniroute* markers into the upst
   }
 });
 
+test("pre-executor preparation retains executor controls until final wire sanitation", async () => {
+  const { prepareUpstreamBody } = await import("../../open-sse/handlers/chatCore/upstreamBody.ts");
+  const controls = {
+    _nativeCodexPassthrough: true,
+    _nativeXaiResponsesPassthrough: true,
+    _nativeOpenAICompatibleResponsesPassthrough: true,
+    _claudeCodeRequiresLowercaseToolNames: true,
+  };
+  const original = {
+    model: "gpt-5.6-sol",
+    input: "hello",
+    metadata: { source: "test" },
+    _omnirouteSkipContextRelay: true,
+    ...controls,
+  };
+  const prepared = await prepareUpstreamBody({
+    translatedBody: original,
+    modelToCall: "gpt-5.6-sol",
+    provider: "codex",
+    targetFormat: "openai-responses",
+    credentials: {},
+  });
+  for (const key of Object.keys(controls)) {
+    assert.equal(prepared[key], true, `${key} must reach its executor consumer`);
+  }
+  assert.equal(prepared._omnirouteSkipContextRelay, undefined);
+  assert.equal(original._omnirouteSkipContextRelay, true, "attempt preparation must stay isolated");
+  stripInternalBodyFields(prepared);
+  for (const key of Object.keys(controls)) assert.equal(prepared[key], undefined);
+  assert.deepEqual(prepared.metadata, { source: "test" });
+});
+
 // Cross-layer production regression: universal-handoff itself must reach the common
 // executor egress boundary before serialization. Its internal control markers are
 // deliberately present while the dispatcher runs, but must be absent from fetch.
