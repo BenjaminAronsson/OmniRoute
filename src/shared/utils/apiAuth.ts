@@ -44,10 +44,10 @@ export interface AuthRequiredOptions {
   loopback?: boolean;
 }
 
-function hasConfiguredPassword(settings: Record<string, unknown>): boolean {
+export function hasConfiguredPassword(settings: Record<string, unknown>): boolean {
   return typeof settings.password === "string" && settings.password.length > 0;
 }
-function hasConfiguredOidc(settings: Record<string, unknown>): boolean {
+export function hasConfiguredOidc(settings: Record<string, unknown>): boolean {
   return (
     settings.oidcEnabled === true &&
     typeof settings.oidcIssuer === "string" &&
