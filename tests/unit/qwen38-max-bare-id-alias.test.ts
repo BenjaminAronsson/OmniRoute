@@ -47,9 +47,20 @@ test("the alias target carries the real 1M window, not the 128k fallback", () =>
   const spec = MODEL_SPECS[CANONICAL];
   assert.ok(spec, `MODEL_SPECS is missing ${CANONICAL}`);
   assert.equal(spec.contextWindow, 1_000_000);
-  // The bare id must NOT gain its own spec entry — a second source of truth for the
-  // same model is what lets the two ids drift apart again.
-  assert.equal(MODEL_SPECS[BARE], undefined);
+
+  // This used to assert `MODEL_SPECS[BARE] === undefined`, guarding against a second
+  // source of truth for what was then the SAME model under two ids. That premise
+  // expired in #14181/#14242 (83a6e9a): opencode-go ships a GA `qwen3.8-max` that 401s
+  // on the `-preview` id, so the two ids are now two DISTINCT models and the GA one
+  // carries its own row instead of an `aliases: ["qwen3.8-max"]` entry on the preview.
+  // What this file exists to prove still holds and is what we pin now: NEITHER id may
+  // fall through to contextManager's `default: 128000`.
+  const bareSpec = MODEL_SPECS[BARE];
+  assert.ok(bareSpec, `MODEL_SPECS is missing the GA ${BARE} row added by #14181`);
+  assert.equal(bareSpec.contextWindow, 1_000_000);
+  // The preview spec must not re-declare the bare id as an alias — that is what would
+  // let the GA row and the preview row silently collapse back into one.
+  assert.ok(!(spec.aliases || []).includes(BARE));
 });
 
 // The catalogs have since split. `qwen-cloud-token-plan` now lists the BARE

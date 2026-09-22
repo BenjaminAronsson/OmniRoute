@@ -7,6 +7,16 @@ import path from "node:path";
 const TEST_DATA_DIR = fs.mkdtempSync(path.join(os.tmpdir(), "omniroute-specialty-catalog-"));
 process.env.DATA_DIR = TEST_DATA_DIR;
 process.env.API_KEY_SECRET = process.env.API_KEY_SECRET || "specialty-catalog-test-secret";
+// `resetStorage()` clears the catalog cache before every case, so each route GET below
+// is a COLD build of the full catalog. That path is bounded by CATALOG_BUILD_TIMEOUT_MS
+// (#12627, 8s by default) and a cold tsx build already costs ~7s on an idle box — when
+// the bound trips the route answers 503 `catalog_build_timeout` and `listedIds()` dies
+// on its `assert.equal(response.status, 200)` before a single catalog-shape assertion
+// runs. Build latency is not what this file covers, so pin it out of the way exactly
+// like tests/unit/{9147-catalog-eventloop-yield,
+// 12058-models-catalog-canonical-self-aliased,models-catalog-route}.test.ts do.
+// Every assertion below is unchanged.
+process.env.CATALOG_BUILD_TIMEOUT_MS = "120000";
 
 const core = await import("../../src/lib/db/core.ts");
 const providersDb = await import("../../src/lib/db/providers.ts");
@@ -65,9 +75,13 @@ test("image catalog GET uses the unified active-credential model list", async ()
 
   const ids = await listedIds(imageRoute, "/v1/images/generations");
 
+  // #14216 (4970f5f) gave the three Codex GPT-5.6 image models their own PUBLIC catalog
+  // ids (`catalogId: "gpt-5.6-<name>-image"`) because the callable upstream id collides
+  // with the chat surface of the same model; `parseImageModel` maps the catalog id back
+  // to the callable one on dispatch. Same three models, new public ids.
   assert.deepEqual(
     ids.filter((id) => id.startsWith("codex/")),
-    ["codex/gpt-5.6-sol", "codex/gpt-5.6-terra", "codex/gpt-5.6-luna"]
+    ["codex/gpt-5.6-sol-image", "codex/gpt-5.6-terra-image", "codex/gpt-5.6-luna-image"]
   );
   assert.ok(!ids.includes("openai/gpt-image-2"));
 });

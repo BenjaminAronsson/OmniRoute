@@ -25,6 +25,16 @@ import path from "node:path";
 const TEST_DATA_DIR = fs.mkdtempSync(path.join(os.tmpdir(), "omniroute-image-chat-6457-"));
 process.env.DATA_DIR = TEST_DATA_DIR;
 process.env.API_KEY_SECRET = process.env.API_KEY_SECRET || "catalog-test-secret-6457";
+// Every case here resets the catalog cache, so each `getUnifiedModelsResponse()` is a
+// COLD build of the full catalog. That path is bounded by CATALOG_BUILD_TIMEOUT_MS
+// (#12627, 8s by default) and a cold tsx build already costs ~7s on an idle box — when
+// the bound trips, `getUnifiedModelsResponse` answers 503 `catalog_build_timeout` and
+// the `assert.equal(response.status, 200)` below aborts the case before a single
+// catalog-shape assertion runs. Build latency is not what #6457 covers, so pin it out
+// of the way exactly like tests/unit/{9147-catalog-eventloop-yield,
+// 12058-models-catalog-canonical-self-aliased,models-catalog-route}.test.ts do.
+// Every assertion below is unchanged.
+process.env.CATALOG_BUILD_TIMEOUT_MS = "120000";
 
 const core = await import("../../src/lib/db/core.ts");
 const providersDb = await import("../../src/lib/db/providers.ts");
@@ -102,6 +112,12 @@ test("#6457 image/diffusion model discovered via live sync is NOT listed as a ch
   }
 });
 
+// #14216 (4970f5f) gave the Codex GPT-5.6 image models their own PUBLIC catalog id
+// (`catalogId: "gpt-5.6-sol-image"`) precisely because the callable upstream id
+// collides with the chat surface of the same model. The two entries therefore no
+// longer share one id — but the invariant this case was written for (#7004: a
+// registered image model whose synced metadata advertises chat/responses must NOT be
+// skipped by the chat-catalog loop) is unchanged, so both rows still have to be there.
 test("registered image model with explicit chat endpoints keeps both catalog entries", async () => {
   const connection = await seedProviderConnection("codex");
 
@@ -121,16 +137,23 @@ test("registered image model with explicit chat endpoints keeps both catalog ent
   const body = (await response.json()) as {
     data: Array<{ id: string; type?: string; supported_endpoints?: string[] }>;
   };
-  const entries = body.data.filter((model) => model.id.endsWith("/gpt-5.6-sol"));
+  const chatEntries = body.data.filter((model) => model.id.endsWith("/gpt-5.6-sol"));
+  const imageEntries = body.data.filter((model) => model.id.endsWith("/gpt-5.6-sol-image"));
 
   assert.ok(
-    entries.some(
+    chatEntries.some(
       (model) => model.type !== "image" && model.supported_endpoints?.includes("responses")
     ),
     "explicit responses support must keep the synced chat entry"
   );
   assert.ok(
-    entries.some((model) => model.type === "image"),
-    "the registered image entry must remain available under the same model id"
+    imageEntries.some((model) => model.type === "image"),
+    "the registered image entry must remain available under its #14216 catalog id"
+  );
+  // The whole point of the #14216 split: the image row must not reappear under the
+  // chat id, which is what made the two surfaces collide in the first place.
+  assert.ok(
+    !chatEntries.some((model) => model.type === "image"),
+    "the image row must not be listed under the bare chat id any more (#14216)"
   );
 });
