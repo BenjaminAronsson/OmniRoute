@@ -94,8 +94,6 @@ const parsedTools = rawManifest.tools as Record<string, CliIntegrationEntry>;
 const parsedRuntime = rawManifest.runtime as CliRuntimeManifest;
 validateManifest(parsedTools, parsedRuntime);
 
-export const CLI_INTEGRATION_MANIFEST_VERSION = rawManifest.version;
-
 export const CLI_INTEGRATION_MANIFEST: Readonly<Record<string, CliIntegrationEntry>> =
   Object.freeze(parsedTools);
 
