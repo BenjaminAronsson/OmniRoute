@@ -26,6 +26,39 @@ import { attachLogMeta } from "./cacheUsageMeta.ts";
 
 const OMITTED_VIDEO_TRANSCRIPT_REQUEST = { _omniroute_omitted: "video-transcript" };
 
+interface VideoLogCloneState {
+  source: Record<string, unknown>;
+  rootClone: Record<string, unknown> | null;
+  containers: Map<string, unknown[]>;
+  messages: Map<string, Record<string, unknown>>;
+}
+
+function mutableVideoLogMessage(
+  state: VideoLogCloneState,
+  container: string,
+  messageIndex: number,
+  originalContainer: unknown[],
+  originalMessage: Record<string, unknown>,
+  originalContent: unknown
+): Record<string, unknown> {
+  if (!state.rootClone) state.rootClone = { ...state.source };
+  let containerClone = state.containers.get(container);
+  if (!containerClone) {
+    containerClone = [...originalContainer];
+    state.containers.set(container, containerClone);
+    state.rootClone[container] = containerClone;
+  }
+  const messageKey = `${container}:${messageIndex}`;
+  let messageClone = state.messages.get(messageKey);
+  if (!messageClone) {
+    messageClone = { ...originalMessage };
+    if (Array.isArray(originalContent)) messageClone.content = [...originalContent];
+    state.messages.set(messageKey, messageClone);
+    containerClone[messageIndex] = messageClone;
+  }
+  return messageClone;
+}
+
 /**
  * Apply the video-bridge redaction shadow (P1a's `meta.videoBridgeLogRedaction`,
  * threaded here via `PersistAttemptLogsContext.videoBridgeLogRedaction`) to a
@@ -81,10 +114,13 @@ export function applyVideoBridgeLogRedaction(
   }
 
   const source = body as Record<string, unknown>;
-  let rootClone: Record<string, unknown> | null = null;
+  const cloneState: VideoLogCloneState = {
+    source,
+    rootClone: null,
+    containers: new Map(),
+    messages: new Map(),
+  };
   let redacted = false;
-  const clonedContainers = new Map<string, unknown[]>();
-  const clonedMessages = new Map<string, Record<string, unknown>>();
 
   for (const entry of redaction) {
     const { container, fullText, redactedText } = entry;
@@ -120,21 +156,14 @@ export function applyVideoBridgeLogRedaction(
 
         // Same lazy clone-on-write as the array branch: root -> container
         // array -> this message. Siblings keep referencing the originals.
-        if (!rootClone) rootClone = { ...source };
-        let containerClone = clonedContainers.get(container);
-        if (!containerClone) {
-          containerClone = [...originalContainer];
-          clonedContainers.set(container, containerClone);
-          rootClone[container] = containerClone;
-        }
-
-        const messageKey = `${container}:${messageIndex}`;
-        let messageClone = clonedMessages.get(messageKey);
-        if (!messageClone) {
-          messageClone = { ...(originalMessage as Record<string, unknown>) };
-          clonedMessages.set(messageKey, messageClone);
-          containerClone[messageIndex] = messageClone;
-        }
+        const messageClone = mutableVideoLogMessage(
+          cloneState,
+          container,
+          messageIndex,
+          originalContainer,
+          originalMessage as Record<string, unknown>,
+          originalContent
+        );
 
         // Re-read from the (possibly already-cloned) message so a second
         // redaction entry matching the same string content composes with the
@@ -161,24 +190,14 @@ export function applyVideoBridgeLogRedaction(
         // Content-address match — clone the path down to this part lazily
         // (root -> container array -> this message -> its content array),
         // leaving every other sibling on the original references.
-        if (!rootClone) rootClone = { ...source };
-        let containerClone = clonedContainers.get(container);
-        if (!containerClone) {
-          containerClone = [...originalContainer];
-          clonedContainers.set(container, containerClone);
-          rootClone[container] = containerClone;
-        }
-
-        const messageKey = `${container}:${messageIndex}`;
-        let messageClone = clonedMessages.get(messageKey);
-        if (!messageClone) {
-          messageClone = {
-            ...(originalMessage as Record<string, unknown>),
-            content: [...originalContent],
-          };
-          clonedMessages.set(messageKey, messageClone);
-          containerClone[messageIndex] = messageClone;
-        }
+        const messageClone = mutableVideoLogMessage(
+          cloneState,
+          container,
+          messageIndex,
+          originalContainer,
+          originalMessage as Record<string, unknown>,
+          originalContent
+        );
 
         const contentClone = messageClone.content as unknown[];
         contentClone[partIndex] = { ...partRecord, text: redactedText };
@@ -189,7 +208,7 @@ export function applyVideoBridgeLogRedaction(
     if (failClosedOnMiss && !matchedEntry) return OMITTED_VIDEO_TRANSCRIPT_REQUEST;
   }
 
-  return redacted && rootClone ? rootClone : body;
+  return redacted && cloneState.rootClone ? cloneState.rootClone : body;
 }
 
 /**
