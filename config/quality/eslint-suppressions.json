@@ -3415,11 +3415,6 @@
       "count": 4
     }
   },
-  "tests/unit/correctness/goldenSnapshot.test.ts": {
-    "@typescript-eslint/no-unused-vars": {
-      "count": 1
-    }
-  },
   "tests/unit/cursor-agent-session.test.ts": {
     "@typescript-eslint/no-unused-vars": {
       "count": 1
