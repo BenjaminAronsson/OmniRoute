@@ -235,17 +235,21 @@ describe("OpencodeExecutor", () => {
       assert.deepEqual(fetchCalls[0].options.headers, result.headers);
     });
 
-    it("omits accept header when stream is false", async () => {
+    it("omits accept for paid JSON requests while retaining endpoint-specific auth", async () => {
       // A paid model carries the client's non-streaming expectation through. A free-tier
       // model does not: the gated tier only answers streamed requests, so the executor
       // announces the event stream and the JSON body is rebuilt from it.
-      const result = await zenExecutor.execute(createInput("gpt-5.6-luna", false));
-
-      assert.deepEqual(result.headers, {
-        Authorization: "Bearer test-key",
-        "Content-Type": "application/json",
-      });
-      assert.deepEqual(fetchCalls[0].options.headers, result.headers);
+      for (const [index, [model, authHeader, authValue]] of [
+        ["gpt-5.6-luna", "x-api-key", "test-key"],
+        ["gpt-5-nano", "Authorization", "Bearer test-key"],
+      ].entries()) {
+        const result = await zenExecutor.execute(createInput(model, false));
+        assert.deepEqual(result.headers, {
+          [authHeader]: authValue,
+          "Content-Type": "application/json",
+        });
+        assert.deepEqual(fetchCalls[index].options.headers, result.headers);
+      }
     });
 
     it("announces the event stream for a free-tier model even when the client wants JSON", async () => {
