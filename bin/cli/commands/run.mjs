@@ -240,7 +240,7 @@ function genericEnv(baseEnv, kind, baseUrl, authToken, model, options = {}) {
 
   const token = (authToken && String(authToken).trim()) || NO_AUTH_SENTINEL;
   if (kind === "aider") {
-    env.OPENAI_API_BASE = baseUrl;
+    env.OPENAI_API_BASE = ensureV1BaseUrl(baseUrl);
     env.OPENAI_API_KEY = token;
   } else if (kind === "goose") {
     env.GOOSE_PROVIDER = "openai";

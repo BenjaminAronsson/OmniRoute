@@ -34,47 +34,53 @@ async function waitForFile(file: string, timeoutMs = 3000): Promise<void> {
   assert.ok(existsSync(file), `timed out waiting for ${file}`);
 }
 
-test("run executes a generic target with isolated env and propagates its exit code", async (t) => {
-  if (process.platform === "win32") {
-    t.skip("POSIX fake executable; Windows shim behavior is covered by launch tests");
-    return;
-  }
+for (const remote of [
+  "https://relay.example.test",
+  "https://relay.example.test/",
+  "https://relay.example.test/v1",
+  "https://relay.example.test/v1/",
+]) {
+  test(`run Aider uses one /v1 API suffix for ${remote} and preserves exit code`, async (t) => {
+    if (process.platform === "win32") {
+      t.skip("POSIX fake executable; Windows shim behavior is covered by launch tests");
+      return;
+    }
 
-  const capture = await mkdtemp(path.join(os.tmpdir(), "omniroute-run-capture-"));
-  const capturePath = path.join(capture, "aider.json");
-  const fake = await makeFakeCli(
-    "aider",
-    `const fs = await import("node:fs");
+    const capture = await mkdtemp(path.join(os.tmpdir(), "omniroute-run-capture-"));
+    const capturePath = path.join(capture, "aider.json");
+    const fake = await makeFakeCli(
+      "aider",
+      `const fs = await import("node:fs");
 fs.writeFileSync(${JSON.stringify(capturePath)}, JSON.stringify({
   argv: process.argv.slice(2),
   base: process.env.OPENAI_API_BASE,
   key: process.env.OPENAI_API_KEY,
 }));
 process.exit(7);`
-  );
-  process.env.PATH = `${fake.dir}${path.delimiter}${originalPath || ""}`;
-
-  try {
-    const code = await withReachableOmniRoute(() =>
-      runCliTarget(
-        "aider",
-        { remote: "https://relay.example.test", apiKey: "sk_private", model: "glm/glm-5.2" },
-        ["--message", "reply OK"]
-      )
     );
-    assert.equal(code, 7);
-    const result = JSON.parse(await readFile(capturePath, "utf8"));
-    assert.deepEqual(result.argv.slice(0, 2), ["--model", "openai/glm/glm-5.2"]);
-    assert.deepEqual(result.argv.slice(2), ["--message", "reply OK"]);
-    assert.equal(result.base, "https://relay.example.test");
-    assert.equal(result.key, "sk_private");
-  } finally {
-    if (originalPath === undefined) delete process.env.PATH;
-    else process.env.PATH = originalPath;
-    await rm(fake.dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
-    await rm(capture, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
-  }
-});
+    process.env.PATH = `${fake.dir}${path.delimiter}${originalPath || ""}`;
+
+    try {
+      const code = await withReachableOmniRoute(() =>
+        runCliTarget("aider", { remote, apiKey: "sk_private", model: "glm/glm-5.2" }, [
+          "--message",
+          "reply OK",
+        ])
+      );
+      assert.equal(code, 7);
+      const result = JSON.parse(await readFile(capturePath, "utf8"));
+      assert.deepEqual(result.argv.slice(0, 2), ["--model", "openai/glm/glm-5.2"]);
+      assert.deepEqual(result.argv.slice(2), ["--message", "reply OK"]);
+      assert.equal(result.base, "https://relay.example.test/v1");
+      assert.equal(result.key, "sk_private");
+    } finally {
+      if (originalPath === undefined) delete process.env.PATH;
+      else process.env.PATH = originalPath;
+      await rm(fake.dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+      await rm(capture, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+    }
+  });
+}
 
 test("run gives Gemini an isolated GEMINI_CLI_HOME forcing api-key auth and removes it", async (t) => {
   if (process.platform === "win32") {
