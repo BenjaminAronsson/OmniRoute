@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { buildOpenAIResponse } from "../helpers/chatCoreResponseFixtures.ts";
 const TEST_ROOT = fs.mkdtempSync(path.join(os.tmpdir(), "omniroute-chatcore-translation-"));
 const TEST_DATA_DIR = path.join(TEST_ROOT, "data");
 const TEST_PLUGINS_DIR = path.join(TEST_ROOT, "plugins");
@@ -88,44 +89,6 @@ function toPlainHeaders(headers) {
   if (headers instanceof Headers) return Object.fromEntries(headers.entries());
   return Object.fromEntries(
     Object.entries(headers).map(([key, value]) => [key, value == null ? "" : String(value)])
-  );
-}
-function buildOpenAIResponse(stream, text = "ok") {
-  if (stream) {
-    return new Response(
-      `data: ${JSON.stringify({
-        id: "chatcmpl-stream",
-        object: "chat.completion.chunk",
-        choices: [{ index: 0, delta: { role: "assistant", content: text } }],
-      })}\n\ndata: [DONE]\n\n`,
-      {
-        status: 200,
-        headers: { "Content-Type": "text/event-stream" },
-      }
-    );
-  }
-  return new Response(
-    JSON.stringify({
-      id: "chatcmpl-json",
-      object: "chat.completion",
-      model: "gpt-4o-mini",
-      choices: [
-        {
-          index: 0,
-          message: { role: "assistant", content: text },
-          finish_reason: "stop",
-        },
-      ],
-      usage: {
-        prompt_tokens: 4,
-        completion_tokens: 2,
-        total_tokens: 6,
-      },
-    }),
-    {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    }
   );
 }
 function buildClaudeResponse(stream, text = "ok") {
