@@ -365,11 +365,13 @@ test("quotaCache covers empty quotas, invalid dates and fallback percentage norm
   quotaCache.setQuotaCache("quota-invalid-reset", "cursor", {
     daily: { remainingPercentage: Number.POSITIVE_INFINITY, resetAt: "not-a-date" },
   });
+  // Same rule as quota-zero-total: an Infinity percentage is not a reportable fraction,
+  // so the window is unknown and must not reach the threshold (#14276).
   assert.deepEqual(quotaCache.getQuotaWindowStatus("quota-invalid-reset", "daily", 10), {
     remainingPercentage: 0,
     usedPercentage: 100,
     resetAt: "not-a-date",
-    reachedThreshold: true,
+    reachedThreshold: false,
   });
 
   quotaCache.setQuotaCache("quota-invalid-exhausted", "cursor", {
