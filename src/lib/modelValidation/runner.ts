@@ -34,9 +34,14 @@ async function selectStrictCredentials(
     !credentials ||
     !("connectionId" in credentials) ||
     !("provider" in credentials) ||
+    (!("apiKey" in credentials) && !("accessToken" in credentials)) ||
     credentials.connectionId !== input.connectionId ||
     credentials.provider !== input.provider
   )
+    proofFailed();
+  const apiKey = "apiKey" in credentials ? credentials.apiKey : undefined;
+  const accessToken = "accessToken" in credentials ? credentials.accessToken : undefined;
+  if (![apiKey, accessToken].some((token) => typeof token === "string" && token.trim()))
     proofFailed();
   if (await isConnectionUnavailableToAuxiliaryActivity(input.connectionId)) {
     throw new ModelValidationError(

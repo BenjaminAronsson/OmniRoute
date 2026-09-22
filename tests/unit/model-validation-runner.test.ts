@@ -159,6 +159,51 @@ test("only a successful chat-core envelope can provide a proof response", () => 
   assert.equal(requireProofResponse({ success: true, response }), response);
 });
 
+test("a lease-selection status without credentials cannot become a proof", async () => {
+  const connection = await createProviderConnection({
+    provider: "openai",
+    authType: "apikey",
+    apiKey: "fake-selection-status",
+    isActive: true,
+  });
+  const input = {
+    provider: "openai",
+    modelId: "selection-status-proof",
+    connectionId: String(connection.id),
+    allowInference: true as const,
+    apiFormat: "chat-completions" as const,
+  };
+  const leaseOwnerId = `vlo_${"D".repeat(43)}`;
+  const apiKeyId = "selection-status-owner";
+  const claimed = acquireExclusiveConnectionLease({ ...input, leaseOwnerId, apiKeyId });
+  assert.equal(claimed.kind, "ACQUIRED");
+  if (claimed.kind !== "ACQUIRED") throw new Error("fixture lease was not acquired");
+  releaseExclusiveConnectionLease({ leaseOwnerId, apiKeyId, generation: claimed.lease.generation });
+  let dispatched = 0;
+  globalThis.fetch = async () => {
+    dispatched++;
+    throw new Error("unexpected dispatch");
+  };
+  for (const tokens of [{}, { apiKey: "", accessToken: " \t" }]) {
+    const run = await createProofRunner(
+      input,
+      createValidationSnapshot(input),
+      new AbortController().signal,
+      async () => ({
+        ...tokens,
+        reactivatedFromInactive: true as const,
+        exclusiveLease: claimed.lease,
+        connectionId: input.connectionId,
+        provider: input.provider,
+      })
+    );
+    await assert.rejects(() => run([{ role: "user", content: "test" }], false), {
+      code: "MODEL_VALIDATION_PROOF_FAILED",
+    });
+  }
+  assert.equal(dispatched, 0);
+});
+
 test("a lease acquired during selection blocks the fresh credential lookup itself", async (context) => {
   const connection = await createProviderConnection({
     provider: "openai",
