@@ -12,7 +12,7 @@ interface ManifestTarget {
   description: string;
   configure: boolean;
   run: boolean;
-  runModel?: { required?: boolean } | null;
+  runModel?: Readonly<{ flag: string; prefix?: string; required?: boolean }> | null;
 }
 
 export function projectCompanionTargets(
