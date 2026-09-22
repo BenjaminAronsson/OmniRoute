@@ -43,6 +43,7 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-node@v7
         with:
+          package-manager-cache: false
           node-version: ${{ env.CI_NODE_VERSION }}
       - name: Validate gate inventory
         run: npm run check:gate-manifest
@@ -80,9 +81,12 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@v7
         with:
+          package-manager-cache: false
           node-version: ${{ env.CI_NODE_VERSION }}
-          cache: npm
       - uses: ./.github/actions/npm-ci-retry
+        with:
+          # PR acceleration is not release-candidate provenance.
+          cache: ${{ github.event_name == 'pull_request' }}
       # One walk of src/app/api for openapi-routes + docs-symbols (both still fail independently).
       - run: npm run check:api-docs-refs
       - name: Docs accuracy (fabricated-docs + i18n mirrors, strict)
@@ -124,11 +128,15 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@v7
         with:
+          package-manager-cache: false
           node-version: ${{ env.CI_NODE_VERSION }}
-          cache: npm
       - uses: ./.github/actions/npm-ci-retry
+        with:
+          # PR acceleration is not release-candidate provenance.
+          cache: ${{ github.event_name == 'pull_request' }}
       - name: Restore ESLint file cache
-        uses: actions/cache@v6
+        if: github.event_name == 'pull_request'
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
           path: |
             .eslintcache
@@ -384,9 +392,12 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@v7
         with:
+          package-manager-cache: false
           node-version: ${{ env.CI_NODE_VERSION }}
-          cache: npm
       - uses: ./.github/actions/npm-ci-retry
+        with:
+          # PR acceleration is not release-candidate provenance.
+          cache: ${{ github.event_name == 'pull_request' }}
       # WS5.2/5.3: JUnit feeds Trunk Flaky Tests — the fast-path runs on EVERY PR,
       # which is where flaky-detection volume actually comes from (ci.yml's heavy
       # jobs only run on the release PR). Advisory upload, own-origin only.
@@ -436,9 +447,12 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@v7
         with:
+          package-manager-cache: false
           node-version: ${{ env.CI_NODE_VERSION }}
-          cache: npm
       - uses: ./.github/actions/npm-ci-retry
+        with:
+          # PR acceleration is not release-candidate provenance.
+          cache: ${{ github.event_name == 'pull_request' }}
       # QW-d: fonte única — o mesmo npm script do CI pesado/local. Fecha dois drifts do
       # comando inline antigo: os dirs `memory` e `usage` estavam FORA do glob (testes
       # silenciosamente não rodavam no fast path) e o setupPolyfill não era importado.
@@ -476,11 +490,15 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@v7
         with:
+          package-manager-cache: false
           node-version: ${{ env.CI_NODE_VERSION }}
-          cache: npm
       - uses: ./.github/actions/npm-ci-retry
+        with:
+          # PR acceleration is not release-candidate provenance.
+          cache: ${{ github.event_name == 'pull_request' }}
       - name: Restore ESLint file cache
-        uses: actions/cache@v6
+        if: github.event_name == 'pull_request'
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
           path: |
             .eslintcache
@@ -545,9 +563,12 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
         with:
+          package-manager-cache: false
           node-version: ${{ env.CI_NODE_VERSION }}
-          cache: npm
       - uses: ./.github/actions/npm-ci-retry
+        with:
+          # PR acceleration is not release-candidate provenance.
+          cache: ${{ github.event_name == 'pull_request' }}
       - name: CHANGELOG integrity (nenhum bullet da base pode sumir no merge-result)
         run: npm run check:changelog-integrity
       - name: Agent-skills generator sync (SKILL.md gerado ≡ catálogo)
@@ -567,12 +588,13 @@ jobs:
       - lint-guard
       - merge-integrity
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ github.sha }}
           persist-credentials: false
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
+          package-manager-cache: false
           node-version: ${{ env.CI_NODE_VERSION }}
       - name: Evaluate exact-candidate admission
         env:
@@ -580,7 +602,7 @@ jobs:
         run: node scripts/quality/admission-verdict.mjs quality
       - name: Retain admission receipt
         if: ${{ always() }}
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: quality-admission-${{ github.run_id }}-${{ github.run_attempt }}
           path: .artifacts/quality-admission.json
