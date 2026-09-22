@@ -5018,6 +5018,8 @@
     "failedSetPassword": "Parolni o‘rnatib bo‘lmadi. Qayta urinib ko‘ring.",
     "failedAddProvider": "Provayderni qo‘shib bo‘lmadi. Qayta urinib ko‘ring.",
     "connectionError": "Ulanishda xatolik yuz berdi. Qayta urinib ko‘ring.",
+    "bootstrapTokenLabel": "Boshlang‘ich sozlash tokeni",
+    "bootstrapTokenHelp": "Bu ulanish mahalliy ulanish sifatida tanilmadi (Docker port yo‘naltirishi ortida bu odatiy hol). Davom etish uchun server/konteyner jurnalidan bir martalik boshlang‘ich sozlash tokenini topib, uni yuqoridagi maydonga kiriting.",
     "provider": "Provayder",
     "apiKeyHelp": "API kaliti — AI xizmatlari uchun parol. Uni provayderingiz veb-saytidan oling (masalan, platform.openai.com, console.anthropic.com).",
     "tier": {

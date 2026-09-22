@@ -5018,6 +5018,8 @@
     "failedSetPassword": "Das Passwort konnte nicht festgelegt werden. Versuchen Sie es erneut.",
     "failedAddProvider": "Anbieter konnte nicht hinzugefügt werden. Versuchen Sie es erneut.",
     "connectionError": "Verbindungsfehler. Bitte versuchen Sie es erneut.",
+    "bootstrapTokenLabel": "Bootstrap-Token",
+    "bootstrapTokenHelp": "Diese Verbindung wird nicht als lokal erkannt (häufig bei Docker-Portweiterleitungen). Suchen Sie im Server-/Containerprotokoll nach einem einmalig verwendbaren Bootstrap-Token und fügen Sie ihn oben ein, um fortzufahren.",
     "provider": "Anbieter",
     "apiKeyHelp": "Ein API-Schlüssel ist ein Passwort für KI-Dienste. Holen Sie sich eines von der Website Ihres Anbieters (z. B. platform.openai.com, console.anthropic.com).",
     "tier": {

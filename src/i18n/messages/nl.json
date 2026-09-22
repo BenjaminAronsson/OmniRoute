@@ -5018,6 +5018,8 @@
     "failedSetPassword": "Kan wachtwoord niet instellen. Probeer het opnieuw.",
     "failedAddProvider": "Kan provider niet toevoegen. Probeer het opnieuw.",
     "connectionError": "Verbindingsfout. Probeer het opnieuw.",
+    "bootstrapTokenLabel": "Bootstrap-token",
+    "bootstrapTokenHelp": "Deze verbinding wordt niet als lokaal herkend (vaak voorkomend bij Docker-poortdoorschakeling). Controleer het server-/containerlogboek op een eenmalig bootstrap-token en plak dit hierboven om door te gaan.",
     "provider": "Aanbieder",
     "apiKeyHelp": "Een API-sleutel is een wachtwoord voor AI-diensten. Haal er een op via de website van uw provider (bijvoorbeeld platform.openai.com, console.anthropic.com).",
     "tier": {

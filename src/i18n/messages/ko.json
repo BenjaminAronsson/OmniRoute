@@ -5018,6 +5018,8 @@
     "failedSetPassword": "비밀번호를 설정하지 못했습니다. 다시 시도해 보세요.",
     "failedAddProvider": "공급자를 추가하지 못했습니다. 다시 시도해 보세요.",
     "connectionError": "연결 오류입니다. 다시 시도해 주세요.",
+    "bootstrapTokenLabel": "부트스트랩 토큰",
+    "bootstrapTokenHelp": "이 연결은 로컬 연결로 인식되지 않습니다(Docker 포트 포워딩 사용 시 흔히 발생함). 서버/컨테이너 로그에서 일회용 부트스트랩 토큰을 확인한 후 위에 붙여 넣어 계속하세요.",
     "provider": "공급자",
     "apiKeyHelp": "API 키는 AI 서비스의 비밀번호입니다. 공급자의 웹사이트(예: platform.openai.com, console.anthropic.com)에서 하나를 받으세요.",
     "tier": {

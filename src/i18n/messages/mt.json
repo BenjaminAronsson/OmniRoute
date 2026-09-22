@@ -5018,6 +5018,8 @@
     "failedSetPassword": "Ma rnexxilniex nissettjaw il-password. Erġa' pprova.",
     "failedAddProvider": "Ma rnexxilniex inżidu l-fornitur. Erġa' pprova.",
     "connectionError": "Żball fil-konnessjoni. Jekk jogħġbok erġa' pprova.",
+    "bootstrapTokenLabel": "Token tal-bootstrap",
+    "bootstrapTokenHelp": "Din il-konnessjoni mhijiex rikonoxxuta bħala lokali (ħaġa komuni meta jintuża l-port-forwarding ta’ Docker). Iċċekkja l-log tas-server/container għal token tal-bootstrap li jintuża darba biss u waħħlu hawn fuq biex tkompli.",
     "provider": "Fornitur",
     "apiKeyHelp": "Ċavetta API hija password għas-servizzi tal-IA. Ikseb waħda mis-sit web tal-fornitur tiegħek (eż., platform.openai.com, console.anthropic.com).",
     "tier": {

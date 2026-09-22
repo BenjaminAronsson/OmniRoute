@@ -5018,6 +5018,8 @@
     "failedSetPassword": "Ṣíṣètò ọ̀rọ̀ aṣínà kùnà. Tún gbìyànjú.",
     "failedAddProvider": "Fífi olùpèsè kún un kùnà. Tún gbìyànjú.",
     "connectionError": "Àṣìṣe ìsopọ̀. Jọ̀wọ́ tún gbìyànjú.",
+    "bootstrapTokenLabel": "Àmì ìdánimọ̀ ìbẹ̀rẹ̀",
+    "bootstrapTokenHelp": "A kò dá ìsopọ̀ yìí mọ̀ gẹ́gẹ́ bí ìsopọ̀ abẹ́nú (èyí wọ́pọ̀ lẹ́yìn ìdarí-ibùdó Docker). Ṣàyẹ̀wò àkọsílẹ̀ olupin/àpótí fún àmì ìdánimọ̀ ìbẹ̀rẹ̀ ẹ̀ẹ̀kan ṣoṣo, kí o sì lẹ̀ ẹ́ mọ́ òkè láti tẹ̀síwájú.",
     "provider": "Olùpèsè",
     "apiKeyHelp": "Kọ́kọ́rọ́ API jẹ́ ọ̀rọ̀ aṣínà fún àwọn iṣẹ́ AI. Gbà ọ̀kan láti ojúlé wẹ́ẹ̀bù olùpèsè rẹ (fún àpẹẹrẹ, platform.openai.com, console.anthropic.com).",
     "tier": {
@@ -11418,6 +11420,7 @@
         "clientResponse": "Ìdáhùn Oníbàárà",
         "pipelineError": "Àṣìṣe Pipeline"
       },
+      "payloadSizeLimitOmitted": "A fo ẹrù-ìsọfúnni sílẹ̀ — apá yìí kọjá ààlà ìwọ̀n àkọsílẹ̀ ìpè (CALL_LOG_PIPELINE_MAX_SIZE_KB), a kò sì tọ́jú rẹ̀; kì í ṣe àṣìṣe gidi láti ọ̀dọ̀ olùpèsè.",
       "payloadMissing": "Ohun èlò payload alálàyé kò sí mọ́ fún àkọsílẹ̀ yìí.",
       "payloadCorrupt": "A kò lè ṣe ìtúpalẹ̀ ohun èlò payload alálàyé náà.",
       "notAvailable": "Kò kan án",
@@ -11471,8 +11474,7 @@
       "correlationIdValue": "ID Ìbámu: {id}",
       "detailedPayloadInfo": "Kọ́kọ́ mú ìforúkọsílẹ̀ alálàyé ṣiṣẹ́ bí o bá fẹ́ àfihàn àkóónú client/provider onípele mẹ́rin fún àwọn ìbéèrè tuntun.",
       "copyAll": "Ṣe àdàkọ gbogbo rẹ̀",
-      "copiedAll": "A ti ṣe àdàkọ gbogbo rẹ̀",
-      "payloadSizeLimitOmitted": "A fo ẹrù-ìsọfúnni sílẹ̀ — apá yìí kọjá ààlà ìwọ̀n àkọsílẹ̀ ìpè (CALL_LOG_PIPELINE_MAX_SIZE_KB), a kò sì tọ́jú rẹ̀; kì í ṣe àṣìṣe gidi láti ọ̀dọ̀ olùpèsè."
+      "copiedAll": "A ti ṣe àdàkọ gbogbo rẹ̀"
     }
   },
   "proxyLogger": {

@@ -5018,6 +5018,8 @@
     "failedSetPassword": "Det gick inte att ange lösenord. Försök igen.",
     "failedAddProvider": "Det gick inte att lägga till leverantör. Försök igen.",
     "connectionError": "Anslutningsfel. Försök igen.",
+    "bootstrapTokenLabel": "Bootstrap-token",
+    "bootstrapTokenHelp": "Den här anslutningen identifieras inte som lokal (vanligt vid portvidarebefordran med Docker). Kontrollera server-/containerloggen efter en Bootstrap-token för engångsbruk och klistra in den ovan för att fortsätta.",
     "provider": "Leverantör",
     "apiKeyHelp": "En API-nyckel är ett lösenord för AI-tjänster. Skaffa en från din leverantörs webbplats (t.ex. platform.openai.com, console.anthropic.com).",
     "tier": {

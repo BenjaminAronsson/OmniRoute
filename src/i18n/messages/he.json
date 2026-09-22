@@ -5018,6 +5018,8 @@
     "failedSetPassword": "הגדרת הסיסמה נכשלה. נסה שוב.",
     "failedAddProvider": "הוספת הספק נכשלה. נסה שוב.",
     "connectionError": "שגיאת חיבור. אנא נסה שוב.",
+    "bootstrapTokenLabel": "אסימון אתחול",
+    "bootstrapTokenHelp": "החיבור הזה אינו מזוהה כמקומי (מצב נפוץ בעת העברת יציאות ב-Docker). יש לבדוק ביומן השרת/הקונטיינר אם מופיע אסימון אתחול חד-פעמי ולהדביק אותו למעלה כדי להמשיך.",
     "provider": "ספק",
     "apiKeyHelp": "מפתח API הוא סיסמה עבור שירותי AI. קבל אחד מאתר האינטרנט של הספק שלך (למשל, platform.openai.com, console.anthropic.com).",
     "tier": {

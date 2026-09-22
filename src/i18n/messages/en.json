@@ -5018,6 +5018,8 @@
     "failedSetPassword": "Failed to set password. Try again.",
     "failedAddProvider": "Failed to add provider. Try again.",
     "connectionError": "Connection error. Please try again.",
+    "bootstrapTokenLabel": "Bootstrap token",
+    "bootstrapTokenHelp": "This connection isn't recognized as local (common behind Docker port-forwarding). Check the server/container log for a one-time bootstrap token and paste it above to continue.",
     "provider": "Provider",
     "apiKeyHelp": "An API key is a password for AI services. Get one from your provider's website (e.g., platform.openai.com, console.anthropic.com).",
     "tier": {

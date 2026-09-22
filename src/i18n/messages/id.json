@@ -5018,6 +5018,8 @@
     "failedSetPassword": "Gagal menyetel kata sandi. Coba lagi.",
     "failedAddProvider": "Gagal menambahkan penyedia. Coba lagi.",
     "connectionError": "Kesalahan koneksi. Silakan coba lagi.",
+    "bootstrapTokenLabel": "Token bootstrap",
+    "bootstrapTokenHelp": "Koneksi ini tidak dikenali sebagai koneksi lokal (umum terjadi di balik penerusan port Docker). Periksa log server/container untuk mendapatkan token bootstrap sekali pakai, lalu tempelkan di atas untuk melanjutkan.",
     "provider": "Penyedia",
     "apiKeyHelp": "Kunci API adalah kata sandi untuk layanan AI. Dapatkan satu dari situs web penyedia Anda (mis., platform.openai.com, console.anthropic.com).",
     "tier": {

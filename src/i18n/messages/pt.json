@@ -5018,6 +5018,8 @@
     "failedSetPassword": "Falha ao definir a senha. Tente novamente.",
     "failedAddProvider": "Falha ao adicionar provedor. Tente novamente.",
     "connectionError": "Erro de conexão. Por favor, tente novamente.",
+    "bootstrapTokenLabel": "Token de bootstrap",
+    "bootstrapTokenHelp": "Esta ligação não é reconhecida como local (situação comum com o reencaminhamento de portas do Docker). Consulte o registo do servidor/contentor para obter um token de bootstrap de utilização única e cole-o acima para continuar.",
     "provider": "Provedor",
     "apiKeyHelp": "Uma chave API é uma senha para serviços de IA. Obtenha um no site do seu provedor (por exemplo, platform.openai.com, console.anthropic.com).",
     "tier": {

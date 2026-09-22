@@ -5018,6 +5018,8 @@
     "failedSetPassword": "Nie udało się ustawić hasła. Spróbuj ponownie.",
     "failedAddProvider": "Nie udało się dodać provider. Spróbuj ponownie.",
     "connectionError": "Błąd połączenia. Spróbuj ponownie.",
+    "bootstrapTokenLabel": "Token inicjalizacyjny",
+    "bootstrapTokenHelp": "To połączenie nie zostało rozpoznane jako lokalne (częste w przypadku przekierowywania portów przez Docker). Sprawdź dziennik serwera/kontenera pod kątem jednorazowego tokenu inicjalizacyjnego i wklej go powyżej, aby kontynuować.",
     "provider": "Dostawca",
     "apiKeyHelp": "Klucz API to hasło do usług AI. Można go uzyskać na stronie internetowej provider (np. platform.openai.com, console.anthropic.com).",
     "tier": {

@@ -5018,6 +5018,8 @@
     "failedSetPassword": "Kunne ikke indstille adgangskoden. Prøv igen.",
     "failedAddProvider": "Kunne ikke tilføje udbyder. Prøv igen.",
     "connectionError": "Forbindelsesfejl. Prøv venligst igen.",
+    "bootstrapTokenLabel": "Bootstrap-token",
+    "bootstrapTokenHelp": "Denne forbindelse genkendes ikke som lokal (almindeligt ved Docker-portvideresendelse). Find en engangs-bootstrap-token i server-/containerloggen, og indsæt den ovenfor for at fortsætte.",
     "provider": "Udbyder",
     "apiKeyHelp": "En API-nøgle er en adgangskode til AI-tjenester. Få en fra din udbyders websted (f.eks. platform.openai.com, console.anthropic.com).",
     "tier": {

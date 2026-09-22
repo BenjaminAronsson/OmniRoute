@@ -5018,6 +5018,8 @@
     "failedSetPassword": "Nabigong itakda ang password. Subukan muli.",
     "failedAddProvider": "Nabigong magdagdag ng provider. Subukan muli.",
     "connectionError": "Error sa koneksyon. Pakisubukang muli.",
+    "bootstrapTokenLabel": "Token sa bootstrap",
+    "bootstrapTokenHelp": "Hindi kinikilala bilang lokal ang koneksiyong ito (karaniwan kapag gumagamit ng Docker port-forwarding). Tingnan ang log ng server/container para sa minsanang bootstrap token at i-paste ito sa itaas upang magpatuloy.",
     "provider": "Tagapagbigay",
     "apiKeyHelp": "Ang API key ay isang password para sa mga serbisyo ng AI. Kumuha ng isa mula sa website ng iyong provider (hal., platform.openai.com, console.anthropic.com).",
     "tier": {

@@ -5018,6 +5018,8 @@
     "failedSetPassword": "パスワードの設定に失敗しました。もう一度やり直してください。",
     "failedAddProvider": "プロバイダーの追加に失敗しました。もう一度やり直してください。",
     "connectionError": "接続エラー。もう一度試してください。",
+    "bootstrapTokenLabel": "ブートストラップトークン",
+    "bootstrapTokenHelp": "この接続はローカル接続として認識されていません（Dockerのポートフォワーディング経由ではよくあります）。サーバー／コンテナのログで一度限りのブートストラップトークンを確認し、上に貼り付けて続行してください。",
     "provider": "プロバイダー",
     "apiKeyHelp": "API キーは AI サービスのパスワードです。プロバイダーの Web サイト (platform.openai.com、console.anthropic.com など) から入手します。",
     "tier": {

@@ -5018,6 +5018,8 @@
     "failedSetPassword": "Parol təyin edilə bilmədi. Yenidən cəhd edin.",
     "failedAddProvider": "Provayder əlavə edilə bilmədi. Yenidən cəhd edin.",
     "connectionError": "Bağlantı xətası. Yenidən cəhd edin.",
+    "bootstrapTokenLabel": "İlkin quraşdırma tokeni",
+    "bootstrapTokenHelp": "Bu bağlantı lokal bağlantı kimi tanınmır (Docker port yönləndirməsindən istifadə edildikdə bu, geniş yayılmış haldır). Davam etmək üçün server/konteyner jurnalında birdəfəlik ilkin quraşdırma tokenini tapın və yuxarıdakı sahəyə yapışdırın.",
     "provider": "Provayder",
     "apiKeyHelp": "API açarı AI xidmətləri üçün paroldur. Provayderinizin veb saytından birini əldə edin (məsələn, platform.openai.com, console.anthropic.com).",
     "tier": {

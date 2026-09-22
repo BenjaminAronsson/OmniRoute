@@ -5018,6 +5018,8 @@
     "failedSetPassword": "Nem sikerült beállítani a jelszót. Próbáld újra.",
     "failedAddProvider": "Nem sikerült hozzáadni a szolgáltatót. Próbáld újra.",
     "connectionError": "Csatlakozási hiba. Kérjük, próbálja újra.",
+    "bootstrapTokenLabel": "Rendszerindítási token",
+    "bootstrapTokenHelp": "Ez a kapcsolat nem helyi kapcsolatként lett felismerve (ez gyakori Docker-porttovábbítás esetén). Keresse meg a kiszolgáló/konténer naplójában az egyszer használatos rendszerindítási tokent, és a folytatáshoz illessze be fent.",
     "provider": "Szolgáltató",
     "apiKeyHelp": "Az API-kulcs az AI-szolgáltatások jelszava. Szerezzen be egyet szolgáltatója webhelyéről (pl. platform.openai.com, console.anthropic.com).",
     "tier": {

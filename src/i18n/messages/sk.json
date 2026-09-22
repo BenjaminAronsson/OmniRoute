@@ -5018,6 +5018,8 @@
     "failedSetPassword": "Nepodarilo sa nastaviť heslo. Skúste to znova.",
     "failedAddProvider": "Poskytovateľa sa nepodarilo pridať. Skúste to znova.",
     "connectionError": "Chyba pripojenia. Skúste to znova.",
+    "bootstrapTokenLabel": "Zavádzací token",
+    "bootstrapTokenHelp": "Toto pripojenie nebolo rozpoznané ako lokálne (bežné pri presmerovaní portov v Dockeri). Ak chcete pokračovať, vyhľadajte v denníku servera/kontajnera jednorazový zavádzací token a vložte ho vyššie.",
     "provider": "Poskytovateľ",
     "apiKeyHelp": "Kľúč API je heslo pre služby AI. Získajte jeden z webových stránok svojho poskytovateľa (napr. platform.openai.com, console.anthropic.com).",
     "tier": {

@@ -5018,6 +5018,8 @@
     "failedSetPassword": "Échec de la définition du mot de passe. Essayer à nouveau.",
     "failedAddProvider": "Échec de l'ajout du fournisseur. Essayer à nouveau.",
     "connectionError": "Erreur de connexion. Veuillez réessayer.",
+    "bootstrapTokenLabel": "Jeton d’amorçage",
+    "bootstrapTokenHelp": "Cette connexion n’est pas reconnue comme locale (cas fréquent avec la redirection de ports Docker). Recherchez un jeton d’amorçage à usage unique dans les journaux du serveur/conteneur, puis collez-le ci-dessus pour continuer.",
     "provider": "Fournisseur",
     "apiKeyHelp": "Une clé API est un mot de passe pour les services d'IA. Obtenez-en un sur le site Web de votre fournisseur (par exemple, platform.openai.com, console.anthropic.com).",
     "tier": {

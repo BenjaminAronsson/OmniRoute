@@ -5018,6 +5018,8 @@
     "failedSetPassword": "Gagal menetapkan kata laluan. Cuba lagi.",
     "failedAddProvider": "Gagal menambah pembekal. Cuba lagi.",
     "connectionError": "Ralat sambungan. Sila cuba lagi.",
+    "bootstrapTokenLabel": "Token bootstrap",
+    "bootstrapTokenHelp": "Sambungan ini tidak dikenali sebagai sambungan setempat (lazim berlaku di sebalik pemajuan port Docker). Semak log pelayan/bekas untuk mendapatkan token bootstrap sekali guna dan tampalkannya di atas untuk meneruskan.",
     "provider": "Pembekal",
     "apiKeyHelp": "Kunci API ialah kata laluan untuk perkhidmatan AI. Dapatkan satu daripada tapak web pembekal anda (cth., platform.openai.com, console.anthropic.com).",
     "tier": {

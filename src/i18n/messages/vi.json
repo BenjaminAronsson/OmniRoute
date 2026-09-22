@@ -5018,6 +5018,8 @@
     "failedSetPassword": "Đặt mật khẩu thất bại. Hãy thử lại.",
     "failedAddProvider": "Thêm nhà cung cấp thất bại. Hãy thử lại.",
     "connectionError": "Lỗi kết nối. Vui lòng thử lại.",
+    "bootstrapTokenLabel": "Mã thông báo khởi tạo",
+    "bootstrapTokenHelp": "Kết nối này không được nhận diện là kết nối cục bộ (thường xảy ra khi chuyển tiếp cổng Docker). Hãy kiểm tra nhật ký máy chủ/vùng chứa để tìm mã thông báo khởi tạo dùng một lần rồi dán mã đó vào ô phía trên để tiếp tục.",
     "provider": "Nhà cung cấp",
     "apiKeyHelp": "Khóa API là mật khẩu cho các dịch vụ AI. Hãy lấy một khóa từ trang web của nhà cung cấp của bạn (ví dụ: platform.openai.com, console.anthropic.com).",
     "tier": {

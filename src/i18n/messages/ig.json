@@ -5018,6 +5018,8 @@
     "failedSetPassword": "Ịtọ okwuntughe dara. Nwaa ọzọ.",
     "failedAddProvider": "Ịgbakwunye onye na-eweta ọrụ dara. Nwaa ọzọ.",
     "connectionError": "Njehie njikọ. Biko nwaa ọzọ.",
+    "bootstrapTokenLabel": "Token bootstrap",
+    "bootstrapTokenHelp": "A naghị amata njikọ a dị ka nke mpaghara (nke a na-emekarị n'azụ Docker port-forwarding). Lelee ndekọ server/container maka token bootstrap a na-eji naanị otu ugboro, mado ya n'elu ka ị gaa n'ihu.",
     "provider": "Onye na-eweta ọrụ",
     "apiKeyHelp": "Igodo API bụ okwuntughe maka ọrụ AI. Nweta otu na webụsaịtị onye na-eweta ọrụ gị (dịka platform.openai.com, console.anthropic.com).",
     "tier": {

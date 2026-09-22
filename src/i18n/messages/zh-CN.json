@@ -5018,6 +5018,8 @@
     "failedSetPassword": "设置密码失败。再试一次。",
     "failedAddProvider": "添加提供者失败。再试一次。",
     "connectionError": "连接错误。请再试一次。",
+    "bootstrapTokenLabel": "引导令牌",
+    "bootstrapTokenHelp": "此连接未被识别为本地连接（使用 Docker 端口转发时很常见）。请在服务器/容器日志中查找一次性引导令牌，并将其粘贴到上方以继续。",
     "provider": "提供者",
     "apiKeyHelp": "API密钥是AI服务的密码。从提供者的网站（例如 platform.openai.com、console.anthropic.com）获取一个。",
     "tier": {

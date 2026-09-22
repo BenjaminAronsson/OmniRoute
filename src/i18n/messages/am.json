@@ -5018,6 +5018,8 @@
     "failedSetPassword": "የይለፍ ቃሉን ማዘጋጀት አልተሳካም። እንደገና ይሞክሩ።",
     "failedAddProvider": "አቅራቢውን ማከል አልተሳካም። እንደገና ይሞክሩ።",
     "connectionError": "የግንኙነት ስህተት። እባክዎ እንደገና ይሞክሩ።",
+    "bootstrapTokenLabel": "የማስነሻ ቶከን",
+    "bootstrapTokenHelp": "ይህ ግንኙነት እንደ አካባቢያዊ ግንኙነት አልታወቀም (ይህ ከDocker የወደብ ማስተላለፍ በስተጀርባ የተለመደ ነው)። ለአንድ ጊዜ የሚያገለግል የማስነሻ ቶከን ለማግኘት የአገልጋዩን/የኮንቴይነሩን ምዝግብ ይመልከቱ፣ ከዚያም ለመቀጠል ከላይ ይለጥፉት።",
     "provider": "አቅራቢ",
     "apiKeyHelp": "የAPI ቁልፍ ለAI አገልግሎቶች የይለፍ ቃል ነው። ከአቅራቢዎ ድረ ገጽ ያግኙት (ለምሳሌ፣ platform.openai.com, console.anthropic.com)።",
     "tier": {
@@ -11418,6 +11420,7 @@
         "clientResponse": "የደንበኛ ምላሽ",
         "pipelineError": "የፓይፕላይን ስህተት"
       },
+      "payloadSizeLimitOmitted": "ጭነት ተትቷል — ይህ ክፍል የጥሪ ምዝግብ መጠን ገደብን (CALL_LOG_PIPELINE_MAX_SIZE_KB) አልፏል እና አልተቀመጠም፤ እውነተኛ የላይኛው ስህተት አይደለም።",
       "payloadMissing": "ዝርዝር የውሂብ አርቲፋክቱ ለዚህ የምዝግብ ግቤት ከእንግዲህ አይገኝም።",
       "payloadCorrupt": "ዝርዝር የውሂብ አርቲፋክቱን መተንተን አልተቻለም።",
       "notAvailable": "አይመለከትም",
@@ -11471,8 +11474,7 @@
       "correlationIdValue": "የትስስር መታወቂያ፦ {id}",
       "detailedPayloadInfo": "ለአዳዲስ ጥያቄዎች ባለአራት-ደረጃ የደንበኛ/አቅራቢ ውሂብ እይታን ከፈለጉ፣ መጀመሪያ ዝርዝር ምዝገባን ያንቁ።",
       "copyAll": "ሁሉንም ቅዳ",
-      "copiedAll": "ሁሉም ተቀድቷል",
-      "payloadSizeLimitOmitted": "ጭነት ተትቷል — ይህ ክፍል የጥሪ ምዝግብ መጠን ገደብን (CALL_LOG_PIPELINE_MAX_SIZE_KB) አልፏል እና አልተቀመጠም፤ እውነተኛ የላይኛው ስህተት አይደለም።"
+      "copiedAll": "ሁሉም ተቀድቷል"
     }
   },
   "proxyLogger": {

@@ -5018,6 +5018,8 @@
     "failedSetPassword": "Imeshindikana kuweka nenosiri. Jaribu tena.",
     "failedAddProvider": "Imeshindikana kuongeza mtoa huduma. Jaribu tena.",
     "connectionError": "Hitilafu ya muunganisho. Tafadhali jaribu tena.",
+    "bootstrapTokenLabel": "Tokeni ya kuanzisha",
+    "bootstrapTokenHelp": "Muunganisho huu hautambuliki kama wa ndani (jambo linalotokea mara nyingi nyuma ya usambazaji wa mlango wa Docker). Angalia kumbukumbu ya seva/kontena ili kupata tokeni ya kuanzisha ya matumizi ya mara moja, kisha uibandike hapo juu ili kuendelea.",
     "provider": "Mtoa Huduma",
     "apiKeyHelp": "Kitufe cha API ni nenosiri la huduma za AI. Pata moja kutoka kwa tovuti ya mtoa huduma wako (k.m., platform.openai.com, console.anthropic.com).",
     "tier": {

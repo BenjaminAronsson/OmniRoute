@@ -27,9 +27,11 @@ import {
   verifyManagementPassword,
 } from "@/lib/auth/managementPassword";
 import { requireManagementAuth } from "@/lib/api/requireManagementAuth";
+import { consumeBootstrapToken } from "@/lib/auth/bootstrapToken";
 import { isPaidModelTarget } from "@/shared/utils/freeModels";
 import { getAuditRequestContext, logAuditEvent } from "@/lib/compliance";
 import { isAuthRequired, isDashboardSessionAuthenticated } from "@/shared/utils/apiAuth";
+import { BOOTSTRAP_TOKEN_HEADER } from "@/server/authz/headers";
 import { isCliTokenAuthValid } from "@/lib/middleware/cliTokenAuth";
 import { extractApiKey } from "@/sse/services/auth";
 import { getApiKeyMetadata } from "@/lib/db/apiKeys";
@@ -535,6 +537,11 @@ export async function PATCH(request: Request) {
     } catch {
       // Audit failure must never break the write — swallow.
     }
+
+    // #14296: one-shot — a Docker/NAT-forwarded operator that authenticated
+    // this write via the bootstrap token cannot replay it for a second
+    // write. A no-op when the header is absent or stale (never matches).
+    consumeBootstrapToken(request.headers.get(BOOTSTRAP_TOKEN_HEADER));
 
     const { password, ...safeSettings } = settings;
     const settingsRevision = await getSettingsRevision();

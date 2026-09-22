@@ -5018,6 +5018,8 @@
     "failedSetPassword": "Nastavení hesla selhalo. Zkuste to znovu.",
     "failedAddProvider": "Přidání poskytovatele selhalo. Zkuste to znovu.",
     "connectionError": "Chyba připojení. Zkuste to prosím znovu.",
+    "bootstrapTokenLabel": "Zaváděcí token",
+    "bootstrapTokenHelp": "Toto připojení nebylo rozpoznáno jako místní (běžné při přesměrování portů v Dockeru). Chcete-li pokračovat, vyhledejte v protokolu serveru/kontejneru jednorázový zaváděcí token a vložte jej výše.",
     "provider": "Poskytovatel",
     "apiKeyHelp": "Klíč API je heslo pro služby AI. Získejte jej z webu svého poskytovatele (např. platform.openai.com, console.anthropic.com).",
     "tier": {

@@ -5018,6 +5018,8 @@
     "failedSetPassword": "Nu s-a putut seta parola. Încearcă din nou.",
     "failedAddProvider": "Nu s-a putut adăuga furnizorul. Încearcă din nou.",
     "connectionError": "Eroare de conectare. Vă rugăm să încercați din nou.",
+    "bootstrapTokenLabel": "Token de inițializare",
+    "bootstrapTokenHelp": "Această conexiune nu este recunoscută ca fiind locală (situație frecventă când se utilizează redirecționarea porturilor Docker). Verificați jurnalul serverului/containerului pentru un token de inițializare de unică folosință și introduceți-l mai sus pentru a continua.",
     "provider": "Furnizor",
     "apiKeyHelp": "O cheie API este o parolă pentru serviciile AI. Obțineți unul de pe site-ul furnizorului dvs. (de exemplu, platform.openai.com, console.anthropic.com).",
     "tier": {

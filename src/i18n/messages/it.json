@@ -5018,6 +5018,8 @@
     "failedSetPassword": "Impossibile impostare la password. Riprova.",
     "failedAddProvider": "Impossibile aggiungere il fornitore. Riprova.",
     "connectionError": "Errore di connessione. Per favore riprova.",
+    "bootstrapTokenLabel": "Token di bootstrap",
+    "bootstrapTokenHelp": "Questa connessione non è riconosciuta come locale (comune con l'inoltro delle porte Docker). Controlla il log del server/container per trovare un token di bootstrap monouso e incollalo qui sopra per continuare.",
     "provider": "Fornitore",
     "apiKeyHelp": "Una chiave API è una password per i servizi AI. Ottienine uno dal sito web del tuo provider (ad esempio platform.openai.com, console.anthropic.com).",
     "tier": {

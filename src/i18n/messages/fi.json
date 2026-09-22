@@ -5018,6 +5018,8 @@
     "failedSetPassword": "Salasanan asettaminen epäonnistui. Yritä uudelleen.",
     "failedAddProvider": "Palveluntarjoajan lisääminen epäonnistui. Yritä uudelleen.",
     "connectionError": "Yhteysvirhe. Yritä uudelleen.",
+    "bootstrapTokenLabel": "Alustustunnus",
+    "bootstrapTokenHelp": "Tätä yhteyttä ei tunnisteta paikalliseksi (yleistä Dockerin porttiohjauksen yhteydessä). Tarkista kertakäyttöinen alustustunnus palvelimen tai säilön lokista ja jatka liittämällä se yllä olevaan kenttään.",
     "provider": "Palveluntarjoaja",
     "apiKeyHelp": "API-avain on tekoälypalvelujen salasana. Hanki sellainen palveluntarjoajasi verkkosivustolta (esim. platform.openai.com, console.anthropic.com).",
     "tier": {

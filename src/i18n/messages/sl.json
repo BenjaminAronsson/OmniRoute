@@ -5018,6 +5018,8 @@
     "failedSetPassword": "Gesla ni bilo mogoče nastaviti. Poskusite znova.",
     "failedAddProvider": "Ponudnika ni bilo mogoče dodati. Poskusite znova.",
     "connectionError": "Napaka pri povezavi. Poskusite znova.",
+    "bootstrapTokenLabel": "Začetni žeton",
+    "bootstrapTokenHelp": "Ta povezava ni prepoznana kot lokalna (kar je pogosto pri posredovanju vrat Docker). V dnevniku strežnika/vsebnika poiščite enkratni začetni žeton in ga prilepite zgoraj za nadaljevanje.",
     "provider": "Ponudnik",
     "apiKeyHelp": "Ključ API je geslo za storitve umetne inteligence. Pridobite ga na spletnem mestu svojega ponudnika (npr. platform.openai.com, console.anthropic.com).",
     "tier": {

@@ -5018,6 +5018,8 @@
     "failedSetPassword": "No se pudo establecer la contraseña. Intentar otra vez.",
     "failedAddProvider": "No se pudo agregar el proveedor. Intentar otra vez.",
     "connectionError": "Error de conexión. Por favor inténtalo de nuevo.",
+    "bootstrapTokenLabel": "Token de arranque",
+    "bootstrapTokenHelp": "Esta conexión no se reconoce como local (algo habitual al usar el reenvío de puertos de Docker). Busca en el registro del servidor/contenedor un token de arranque de un solo uso y pégalo arriba para continuar.",
     "provider": "Proveedor",
     "apiKeyHelp": "Una clave API es una contraseña para los servicios de IA. Obtenga uno del sitio web de su proveedor (por ejemplo, platform.openai.com, console.anthropic.com).",
     "tier": {

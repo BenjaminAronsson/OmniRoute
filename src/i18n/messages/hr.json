@@ -5018,6 +5018,8 @@
     "failedSetPassword": "Postavljanje lozinke nije uspjelo. Pokušajte ponovo.",
     "failedAddProvider": "Dodavanje pružatelja nije uspjelo. Pokušajte ponovo.",
     "connectionError": "Pogreška pri povezivanju. Pokušajte ponovo.",
+    "bootstrapTokenLabel": "Token za pokretanje",
+    "bootstrapTokenHelp": "Ova veza nije prepoznata kao lokalna (uobičajeno kod prosljeđivanja portova putem Dockera). U zapisniku poslužitelja/spremnika potražite jednokratni token za pokretanje i zalijepite ga iznad kako biste nastavili.",
     "provider": "Pružatelj",
     "apiKeyHelp": "API ključ je lozinka za AI usluge. Nabavite ga na web stranici vašeg pružatelja usluga (npr. platform.openai.com, console.anthropic.com).",
     "tier": {

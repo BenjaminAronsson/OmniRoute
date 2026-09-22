@@ -5018,6 +5018,8 @@
     "failedSetPassword": "Şifre ayarlanamadı. Tekrar dene.",
     "failedAddProvider": "Sağlayıcı eklenemedi. Tekrar dene.",
     "connectionError": "Bağlantı hatası. Lütfen tekrar dene.",
+    "bootstrapTokenLabel": "Önyükleme belirteci",
+    "bootstrapTokenHelp": "Bu bağlantı yerel olarak tanınmıyor (Docker bağlantı noktası yönlendirmesinin arkasında sık görülür). Devam etmek için sunucu/kapsayıcı günlüğündeki tek kullanımlık önyükleme belirtecini bulup yukarıya yapıştırın.",
     "provider": "Sağlayıcı",
     "apiKeyHelp": "API anahtarı, AI hizmetleri için bir paroladır. Sağlayıcınızın web sitesinden bir tane alın (ör. platform.openai.com, console.anthropic.com).",
     "tier": {

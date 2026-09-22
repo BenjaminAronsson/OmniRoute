@@ -5018,6 +5018,8 @@
     "failedSetPassword": "Níor éirigh leis an bpasfhocal a shocrú. Bain triail as arís.",
     "failedAddProvider": "Níor éirigh leis an soláthraí a chur leis. Bain triail as arís.",
     "connectionError": "Earráid naisc. Bain triail as arís le do thoil.",
+    "bootstrapTokenLabel": "Comhartha bútstrapála",
+    "bootstrapTokenHelp": "Ní aithnítear an ceangal seo mar cheangal áitiúil (rud atá coitianta taobh thiar de chur ar aghaidh poirt Docker). Seiceáil loga an fhreastalaí/an choimeádáin le haghaidh comhartha bútstrapála aonuaire agus greamaigh thuas é chun leanúint ar aghaidh.",
     "provider": "Soláthraí",
     "apiKeyHelp": "Is pasfhocal í eochair API do sheirbhísí AI. Faigh ceann ó shuíomh gréasáin do sholáthraí (m.sh., platform.openai.com, console.anthropic.com).",
     "tier": {
@@ -11418,6 +11420,7 @@
         "clientResponse": "Freagra an Chliaint",
         "pipelineError": "Earráid Phíblíne"
       },
+      "payloadSizeLimitOmitted": "Fágadh an pálasta ar lár — sháraigh an rannán seo teorainn mhéid an logchomhaid glaonna (CALL_LOG_PIPELINE_MAX_SIZE_KB) agus níor stóráladh é; ní fíorearráid ón soláthraí é seo.",
       "payloadMissing": "Níl déantán mionsonraithe an phálasta ar fáil don iontráil logála seo a thuilleadh.",
       "payloadCorrupt": "Níorbh fhéidir déantán mionsonraithe an phálasta a pharsáil.",
       "notAvailable": "Neamhbhainteach",
@@ -11471,8 +11474,7 @@
       "correlationIdValue": "Aitheantas Comhghaoil: {id}",
       "detailedPayloadInfo": "Cumasaigh logáil mhionsonraithe ar dtús más mian leat an t-amharc ceithre chéim ar ualaí cliaint/soláthraí le haghaidh iarratais nua.",
       "copyAll": "Cóipeáil go léir",
-      "copiedAll": "Cóipeáilte go léir",
-      "payloadSizeLimitOmitted": "Fágadh an pálasta ar lár — sháraigh an rannán seo teorainn mhéid an logchomhaid glaonna (CALL_LOG_PIPELINE_MAX_SIZE_KB) agus níor stóráladh é; ní fíorearráid ón soláthraí é seo."
+      "copiedAll": "Cóipeáilte go léir"
     }
   },
   "proxyLogger": {

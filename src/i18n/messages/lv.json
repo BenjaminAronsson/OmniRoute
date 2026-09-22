@@ -5018,6 +5018,8 @@
     "failedSetPassword": "Neizdevās iestatīt paroli. Mēģiniet vēlreiz.",
     "failedAddProvider": "Neizdevās pievienot pakalpojumu sniedzēju. Mēģiniet vēlreiz.",
     "connectionError": "Savienojuma kļūda. Lūdzu, mēģiniet vēlreiz.",
+    "bootstrapTokenLabel": "Sāknēšanas pilnvara",
+    "bootstrapTokenHelp": "Šis savienojums netiek atpazīts kā lokāls (tas bieži notiek Docker portu pāradresācijas gadījumā). Lai turpinātu, servera/konteinera žurnālā atrodiet vienreizēju sāknēšanas pilnvaru un ielīmējiet to augstāk.",
     "provider": "Pakalpojumu sniedzējs",
     "apiKeyHelp": "API atslēga ir parole AI pakalpojumiem. Iegūstiet to sava nodrošinātāja tīmekļa vietnē (piemēram, platform.openai.com, console.anthropic.com).",
     "tier": {
@@ -11418,6 +11420,7 @@
         "clientResponse": "Klienta atbilde",
         "pipelineError": "Konveijera kļūda"
       },
+      "payloadSizeLimitOmitted": "Saturs izlaists — šī sadaļa pārsniedza izsaukumu žurnāla izmēra ierobežojumu (CALL_LOG_PIPELINE_MAX_SIZE_KB) un netika saglabāta; tā nav īsta pakalpojumu sniedzēja kļūda.",
       "payloadMissing": "Detalizētais datu artefakts šim žurnāla ierakstam vairs nav pieejams.",
       "payloadCorrupt": "Detalizēto datu artefaktu neizdevās parsēt.",
       "notAvailable": "N/P",
@@ -11471,8 +11474,7 @@
       "correlationIdValue": "Korelācijas ID: {id}",
       "detailedPayloadInfo": "Vispirms iespējojiet detalizētu žurnalēšanu, ja vēlaties četru posmu klienta/nodrošinātāja derīgās slodzes skatu jauniem pieprasījumiem.",
       "copyAll": "Kopēt visu",
-      "copiedAll": "Viss nokopēts",
-      "payloadSizeLimitOmitted": "Saturs izlaists — šī sadaļa pārsniedza izsaukumu žurnāla izmēra ierobežojumu (CALL_LOG_PIPELINE_MAX_SIZE_KB) un netika saglabāta; tā nav īsta pakalpojumu sniedzēja kļūda."
+      "copiedAll": "Viss nokopēts"
     }
   },
   "proxyLogger": {

@@ -5018,6 +5018,8 @@
     "failedSetPassword": "Nepavyko nustatyti slaptažodžio. Bandykite dar kartą.",
     "failedAddProvider": "Nepavyko pridėti teikėjo. Bandykite dar kartą.",
     "connectionError": "Ryšio klaida. Bandykite dar kartą.",
+    "bootstrapTokenLabel": "Pradinės sąrankos prieigos raktas",
+    "bootstrapTokenHelp": "Šis ryšys neatpažįstamas kaip vietinis (taip dažnai nutinka naudojant Docker prievadų peradresavimą). Serverio arba konteinerio žurnale raskite vienkartinį pradinės sąrankos prieigos raktą ir įklijuokite jį aukščiau, kad galėtumėte tęsti.",
     "provider": "Teikėjas",
     "apiKeyHelp": "API raktas yra AI paslaugų slaptažodis. Gaukite jį savo teikėjo svetainėje (pvz., platform.openai.com, console.anthropic.com).",
     "tier": {

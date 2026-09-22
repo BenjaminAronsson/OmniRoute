@@ -5018,6 +5018,8 @@
     "failedSetPassword": "設定密碼失敗。再試一次。",
     "failedAddProvider": "新增提供者失敗。再試一次。",
     "connectionError": "連線錯誤。請再試一次。",
+    "bootstrapTokenLabel": "啟動權杖",
+    "bootstrapTokenHelp": "此連線未被識別為本機連線（常見於透過 Docker 進行連接埠轉送時）。請在伺服器／容器日誌中尋找一次性啟動權杖，並將其貼到上方以繼續。",
     "provider": "提供者",
     "apiKeyHelp": "API金鑰是AI服務的密碼。從提供者的網站（例如 platform.openai.com、console.anthropic.com）獲取一個。",
     "tier": {

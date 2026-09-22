@@ -5018,6 +5018,8 @@
     "failedSetPassword": "စကားဝှက် သတ်မှတ်၍မရပါ။ ထပ်မံကြိုးစားပါ။",
     "failedAddProvider": "Provider ထည့်၍မရပါ။ ထပ်မံကြိုးစားပါ။",
     "connectionError": "ချိတ်ဆက်မှု အမှားဖြစ်ပွားခဲ့သည်။ ထပ်မံကြိုးစားပါ။",
+    "bootstrapTokenLabel": "Bootstrap တိုကင်",
+    "bootstrapTokenHelp": "ဤချိတ်ဆက်မှုကို local အဖြစ် မသတ်မှတ်နိုင်ပါ (Docker port-forwarding နောက်ကွယ်တွင် ဖြစ်လေ့ရှိသည်)။ ဆက်လက်လုပ်ဆောင်ရန် server/container log တွင် တစ်ကြိမ်သုံး bootstrap တိုကင်ကို ရှာပြီး အပေါ်တွင် ကူးထည့်ပါ။",
     "provider": "ဝန်ဆောင်မှုပေးသူ",
     "apiKeyHelp": "API key သည် AI ဝန်ဆောင်မှုများအတွက် စကားဝှက်တစ်ခုဖြစ်သည်။ သင့်ဝန်ဆောင်မှုပေးသူ၏ ဝဘ်ဆိုက် (ဥပမာ၊ platform.openai.com၊ console.anthropic.com) မှ ရယူပါ။",
     "tier": {

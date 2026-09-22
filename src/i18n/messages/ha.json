@@ -5018,6 +5018,8 @@
     "failedSetPassword": "An kasa saita kalmar sirri. Sake gwadawa.",
     "failedAddProvider": "An kasa ƙara mai samar da sabis. Sake gwadawa.",
     "connectionError": "Kuskuren haɗi. Da fatan za a sake gwadawa.",
+    "bootstrapTokenLabel": "Tokun na bootstrap",
+    "bootstrapTokenHelp": "Ba a gane wannan haɗin a matsayin na gida ba (wannan ya zama ruwan dare yayin amfani da Docker port-forwarding). Duba rajistar uwar garken/kwantena don samun tokun na bootstrap na amfani sau ɗaya, sannan liƙa shi a sama don ci gaba.",
     "provider": "Mai samar da sabis",
     "apiKeyHelp": "Maɓallin API kalmar sirri ce ta ayyukan AI. Sami ɗaya daga gidan yanar gizon mai samar da sabis ɗinka (misali, platform.openai.com, console.anthropic.com).",
     "tier": {
@@ -11418,6 +11420,7 @@
         "clientResponse": "Amsar Abokin Ciniki",
         "pipelineError": "Kuskuren Bututun Aiki"
       },
+      "payloadSizeLimitOmitted": "An bar abin da aka aika — wannan sashe ya wuce iyakar girman rajistar kira (CALL_LOG_PIPELINE_MAX_SIZE_KB) kuma ba a adana shi ba; wannan ba ainihin kuskuren mai bayarwa ba ne.",
       "payloadMissing": "Cikakken artefaktin payload ya daina samuwa ga wannan shigarwar rajista.",
       "payloadCorrupt": "Ba a iya tantance cikakken artefaktin payload ba.",
       "notAvailable": "Bai Shafa ba",
@@ -11471,8 +11474,7 @@
       "correlationIdValue": "ID na Alaƙa: {id}",
       "detailedPayloadInfo": "Da farko, kunna yin cikakken log idan kana son ganin payload na matakai huɗu na abokin ciniki/mai bayarwa don sabbin buƙatu.",
       "copyAll": "Kwafi duka",
-      "copiedAll": "An kwafi duka",
-      "payloadSizeLimitOmitted": "An bar abin da aka aika — wannan sashe ya wuce iyakar girman rajistar kira (CALL_LOG_PIPELINE_MAX_SIZE_KB) kuma ba a adana shi ba; wannan ba ainihin kuskuren mai bayarwa ba ne."
+      "copiedAll": "An kwafi duka"
     }
   },
   "proxyLogger": {
