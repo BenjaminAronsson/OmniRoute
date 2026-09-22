@@ -2,6 +2,9 @@ import { countCallLogsSince, iterateCallLogsSince } from "@/lib/usage/callLogs";
 import { requireManagementAuth } from "@/lib/api/requireManagementAuth";
 import { countProxyLogsSince, iterateProxyLogsSince } from "@/lib/db/proxyLogs";
 import { sanitizeErrorMessage } from "@omniroute/open-sse/utils/error";
+import { logger } from "@/shared/utils/logger";
+
+const log = logger.child({ module: "logs-export" });
 
 /**
  * GET /api/logs/export — export logs as JSON (streamed)
@@ -90,12 +93,46 @@ export async function GET(request: Request) {
         // header ends with `}`, we strip it to append `,"logs":[...]}`
         controller.enqueue(encoder.encode(header.slice(0, -1) + ',"logs":['));
         let index = 0;
-        for await (const row of rows) {
-          if (index > 0) controller.enqueue(encoder.encode(","));
-          controller.enqueue(encoder.encode(JSON.stringify(row)));
-          index++;
+        let streamError: unknown = null;
+        try {
+          for await (const row of rows) {
+            if (index > 0) controller.enqueue(encoder.encode(","));
+            controller.enqueue(encoder.encode(JSON.stringify(row)));
+            index++;
+          }
+        } catch (err) {
+          // #13999: the row source (a DB cursor/generator) can throw partway
+          // through iteration, after headers and some rows have already gone
+          // out over the wire. Letting the exception propagate out of an
+          // async `start()` auto-errors the underlying Web ReadableStream,
+          // but once that stream is bridged onto a real Node HTTP response
+          // (as any Node-based adapter does), a source error does not end or
+          // destroy the destination response — the client's fetch() never
+          // resolves and never rejects, and it hangs forever (proven by
+          // tests/unit/repro-13999-mid-stream-error.test.ts). Instead of
+          // erroring the stream, close the JSON document out cleanly with a
+          // trailing `error`/`emitted` marker so the HTTP response always
+          // completes, and log the failure server-side.
+          streamError = err;
+          log.error(
+            { err, emitted: index, type: logType, hours },
+            "logs export stream failed mid-iteration"
+          );
         }
-        controller.enqueue(encoder.encode("]}\n"));
+        controller.enqueue(encoder.encode("]"));
+        if (streamError) {
+          const errorTail = JSON.stringify({
+            emitted: index,
+            error: sanitizeErrorMessage(
+              streamError instanceof Error ? streamError.message : String(streamError)
+            ),
+          });
+          // errorTail is `{"emitted":N,"error":"..."}` — strip the leading
+          // `{` so it appends as sibling fields before the closing `}`.
+          controller.enqueue(encoder.encode("," + errorTail.slice(1, -1) + "}\n"));
+        } else {
+          controller.enqueue(encoder.encode("}\n"));
+        }
         controller.close();
       },
     });
