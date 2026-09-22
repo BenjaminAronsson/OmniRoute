@@ -54,6 +54,21 @@ const INJECTION_PATTERNS = [
       /\b(base64\s+decode|rot13|hex\s+decode|unicode\s+escape)\b.*\b(instruction|prompt|command)\b/i,
     severity: "medium",
   },
+  {
+    // #14483 (LEDGER-12): "authority / educational framing" jailbreak family from the
+    // 2026-09-21 live promptfoo red-team run. Attacks claim a fictional
+    // safety/research authority ("safe educational context", "as a researcher",
+    // "as a red-teamer") or an explicit permission-to-bypass framing ("uncensored",
+    // "for testing purposes only", "controlled test scenario") to talk the model
+    // into dropping its guardrails. Every alternative is a fixed, bounded phrase
+    // (no nested/unbounded quantifiers) to stay clear of the project's ReDoS rule
+    // and to avoid matching ordinary "I'm a researcher"/"for testing purposes"
+    // traffic that does not also claim this override framing.
+    name: "authority_educational_framing",
+    pattern:
+      /\b(safe\s+(educational|research)\s+context|uncensored|update\s+your\s+behavior|as\s+a\s+(researcher|red[-\s]?teamer)|for\s+testing\s+purposes\s+only|controlled\s+test\s+scenario)\b/i,
+    severity: "medium",
+  },
 ];
 
 /**
