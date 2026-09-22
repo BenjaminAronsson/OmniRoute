@@ -189,7 +189,10 @@ test("shared set size includes live REGISTRY and retired Designer + Felo + Qwen 
   // alias "pepper" from the REGISTRY walk (414 -> 412) — the two land back on the same total.
   // #12648 registers xKiro: id "xkiro" with no separate alias — a single REGISTRY
   // member (412 -> 413).
-  assert.equal(RESERVED_PREFIX_COUNT, 413);
+  // #14217 retires gemini-business (protocol death, no live account to validate a
+  // rewrite against — see docs/reference/REMOVED_PROVIDERS.md), removing its id
+  // "gemini-business" and alias "gembiz" from the REGISTRY walk (413 -> 411).
+  assert.equal(RESERVED_PREFIX_COUNT, 411);
 });
 
 test("isReservedProviderPrefix rejects non-string input", () => {

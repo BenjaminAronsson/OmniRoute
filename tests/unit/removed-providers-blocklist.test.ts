@@ -32,6 +32,12 @@ export const REMOVED_PROVIDERS: readonly RemovedProvider[] = [
     domains: ["theoldllm.com", "theoldllm.vercel.app"],
     removalPr: 12440,
   },
+  {
+    id: "gemini-business",
+    alias: "gembiz",
+    domains: ["business.gemini.google"],
+    removalPr: 14217,
+  },
 ];
 
 // Source trees where a reintroduction would land. Scanned for ids, aliases and domains.
