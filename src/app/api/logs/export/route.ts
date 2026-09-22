@@ -35,6 +35,77 @@ const log = logger.child({ module: "logs-export" });
 const MAX_ROWS = 50_000;
 const DEFAULT_ROWS = 10_000;
 
+/**
+ * Build the streamed JSON body for a log export.
+ *
+ * Streams one row at a time — the row source (`rows`) is a cursor/generator
+ * bounded by SQL LIMIT, so peak memory is bounded by one hydrated row, not the
+ * full matching set (#13123). `capped`/`limit`/`totalAvailable` travel in the
+ * HEADER (not a trailer, as before) so a client consuming the stream
+ * incrementally learns about truncation before it has processed every row.
+ */
+function buildLogExportStream({
+  rows,
+  header,
+  logType,
+  hours,
+}: {
+  rows: AsyncIterable<unknown> | Iterable<unknown>;
+  header: Record<string, unknown>;
+  logType: string;
+  hours: number;
+}): ReadableStream<Uint8Array> {
+  const encoder = new TextEncoder();
+  return new ReadableStream({
+    async start(controller) {
+      // header ends with `}`, we strip it to append `,"logs":[...]}`
+      controller.enqueue(encoder.encode(JSON.stringify(header).slice(0, -1) + ',"logs":['));
+      let index = 0;
+      let streamError: unknown = null;
+      try {
+        for await (const row of rows) {
+          if (index > 0) controller.enqueue(encoder.encode(","));
+          controller.enqueue(encoder.encode(JSON.stringify(row)));
+          index++;
+        }
+      } catch (err) {
+        // #13999: the row source (a DB cursor/generator) can throw partway through
+        // iteration, after headers and some rows have already gone out over the wire.
+        // Letting the exception propagate out of an async `start()` auto-errors the
+        // underlying Web ReadableStream, but once that stream is bridged onto a real
+        // Node HTTP response (as any Node-based adapter does), a source error does not
+        // end or destroy the destination response — the client's fetch() never resolves
+        // and never rejects, and it hangs forever (proven by
+        // tests/unit/repro-13999-mid-stream-error.test.ts). Instead of erroring the
+        // stream, close the JSON document out cleanly with a trailing `error`/`emitted`
+        // marker so the HTTP response always completes, and log the failure server-side.
+        streamError = err;
+        log.error(
+          { err, emitted: index, type: logType, hours },
+          "logs export stream failed mid-iteration"
+        );
+      }
+      controller.enqueue(encoder.encode("]"));
+      controller.enqueue(encoder.encode(streamError ? errorTail(index, streamError) : "}\n"));
+      controller.close();
+    },
+  });
+}
+
+/**
+ * `,"emitted":N,"error":"..."}` — the sibling fields that close a truncated
+ * export out as well-formed JSON (#13999).
+ */
+function errorTail(emitted: number, streamError: unknown): string {
+  const tail = JSON.stringify({
+    emitted,
+    error: sanitizeErrorMessage(
+      streamError instanceof Error ? streamError.message : String(streamError)
+    ),
+  });
+  return "," + tail.slice(1, -1) + "}\n";
+}
+
 export async function GET(request: Request) {
   const authError = await requireManagementAuth(request);
   if (authError) return authError;
@@ -73,68 +144,16 @@ export async function GET(request: Request) {
     const count = Math.min(totalAvailable, limit);
     const filename = `omniroute-${tableName}-${hours}h-${new Date().toISOString().slice(0, 10)}.json`;
 
-    // Stream the JSON response one row at a time — the row source itself
-    // (`rows`) is a cursor/generator bounded by SQL LIMIT, so peak memory is
-    // bounded by one hydrated row, not the full matching set (#13123).
-    const encoder = new TextEncoder();
-    const stream = new ReadableStream({
-      async start(controller) {
-        // `capped`/`limit`/`totalAvailable` are written into the HEADER (not
-        // just a trailer at the end, as before) so a client consuming the
-        // stream incrementally learns about truncation before it has
-        // processed every row. Only present when the export is actually
-        // capped, matching the previous (trailer-only) contract shape.
-        const header = JSON.stringify({
-          count,
-          hours,
-          type: logType,
-          ...(capped ? { capped: true, limit, totalAvailable } : {}),
-        });
-        // header ends with `}`, we strip it to append `,"logs":[...]}`
-        controller.enqueue(encoder.encode(header.slice(0, -1) + ',"logs":['));
-        let index = 0;
-        let streamError: unknown = null;
-        try {
-          for await (const row of rows) {
-            if (index > 0) controller.enqueue(encoder.encode(","));
-            controller.enqueue(encoder.encode(JSON.stringify(row)));
-            index++;
-          }
-        } catch (err) {
-          // #13999: the row source (a DB cursor/generator) can throw partway
-          // through iteration, after headers and some rows have already gone
-          // out over the wire. Letting the exception propagate out of an
-          // async `start()` auto-errors the underlying Web ReadableStream,
-          // but once that stream is bridged onto a real Node HTTP response
-          // (as any Node-based adapter does), a source error does not end or
-          // destroy the destination response — the client's fetch() never
-          // resolves and never rejects, and it hangs forever (proven by
-          // tests/unit/repro-13999-mid-stream-error.test.ts). Instead of
-          // erroring the stream, close the JSON document out cleanly with a
-          // trailing `error`/`emitted` marker so the HTTP response always
-          // completes, and log the failure server-side.
-          streamError = err;
-          log.error(
-            { err, emitted: index, type: logType, hours },
-            "logs export stream failed mid-iteration"
-          );
-        }
-        controller.enqueue(encoder.encode("]"));
-        if (streamError) {
-          const errorTail = JSON.stringify({
-            emitted: index,
-            error: sanitizeErrorMessage(
-              streamError instanceof Error ? streamError.message : String(streamError)
-            ),
-          });
-          // errorTail is `{"emitted":N,"error":"..."}` — strip the leading
-          // `{` so it appends as sibling fields before the closing `}`.
-          controller.enqueue(encoder.encode("," + errorTail.slice(1, -1) + "}\n"));
-        } else {
-          controller.enqueue(encoder.encode("}\n"));
-        }
-        controller.close();
+    const stream = buildLogExportStream({
+      rows,
+      header: {
+        count,
+        hours,
+        type: logType,
+        ...(capped ? { capped: true, limit, totalAvailable } : {}),
       },
+      logType,
+      hours,
     });
 
     return new Response(stream, {
