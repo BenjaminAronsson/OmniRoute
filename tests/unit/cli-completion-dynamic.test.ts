@@ -116,3 +116,21 @@ test("completion scripts expõem os alvos de execução e configuração", async
     }
   }
 });
+
+test("completion exposes models test-add in each shell without network calls", async () => {
+  const { runCompletionCommand } = await import("../../bin/cli/commands/completion.mjs");
+  for (const shell of ["bash", "zsh", "fish"] as const) {
+    const chunks: string[] = [];
+    const originalWrite = process.stdout.write;
+    process.stdout.write = ((chunk: unknown) => {
+      if (typeof chunk === "string") chunks.push(chunk);
+      return true;
+    }) as typeof process.stdout.write;
+    try {
+      assert.equal(await runCompletionCommand(shell), 0);
+    } finally {
+      process.stdout.write = originalWrite;
+    }
+    assert.match(chunks.join(""), /test-add/, `${shell} must expose test-add`);
+  }
+});

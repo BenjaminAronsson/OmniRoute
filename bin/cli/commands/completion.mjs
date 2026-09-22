@@ -179,6 +179,7 @@ _omniroute() {
           _arguments '1:resource:(combos providers api-manager cli-tools agents settings logs memory skills evals audit cost resilience)' ;;
         completion) _arguments '1:subcommand:(zsh bash fish install refresh)' ;;
         config) _arguments '1:subcommand:(list get set validate contexts)' ;;
+        models) _arguments '1:subcommand:(test-add)' ;;
         contexts) _arguments '1:subcommand:(list add use current show remove rename export import migrate)' ;;
         configure) _arguments '1:target:(${CONFIGURE_TARGET_WORDS})' ;;
         run) _arguments '1:target:(${RUN_TARGET_WORDS})' ;;
@@ -235,6 +236,7 @@ _omniroute() {
     keys)        COMPREPLY=($(compgen -W "add list remove regenerate revoke reveal usage" -- "\${cur}")); return 0 ;;
     providers)   COMPREPLY=($(compgen -W "available list test test-all validate rotate status add import auth remove edit metrics metric" -- "\${cur}")); return 0 ;;
     config)      COMPREPLY=($(compgen -W "list get set validate contexts" -- "\${cur}")); return 0 ;;
+    models)      COMPREPLY=($(compgen -W "test-add" -- "\${cur}")); return 0 ;;
     completion)  COMPREPLY=($(compgen -W "zsh bash fish install refresh" -- "\${cur}")); return 0 ;;
     open)        COMPREPLY=($(compgen -W "combos providers api-manager cli-tools agents settings logs memory skills evals audit cost resilience" -- "\${cur}")); return 0 ;;
     contexts)    COMPREPLY=($(compgen -W "list add use current show remove rename export import migrate" -- "\${cur}")); return 0 ;;
@@ -277,6 +279,7 @@ complete -c omniroute -n '__fish_seen_subcommand_from combo' -a 'list switch cre
 complete -c omniroute -n '__fish_seen_subcommand_from keys' -a 'add list remove regenerate revoke reveal usage'
 complete -c omniroute -n '__fish_seen_subcommand_from providers' -a 'available list test test-all validate rotate status add import auth remove edit metrics metric'
 complete -c omniroute -n '__fish_seen_subcommand_from config' -a 'list get set validate contexts'
+complete -c omniroute -n '__fish_seen_subcommand_from models' -a 'test-add'
 complete -c omniroute -n '__fish_seen_subcommand_from completion' -a 'zsh bash fish install refresh'
 complete -c omniroute -n '__fish_seen_subcommand_from open' -a 'combos providers api-manager cli-tools agents settings logs memory skills evals audit cost resilience'
 complete -c omniroute -n '__fish_seen_subcommand_from contexts' -a 'list add use current show remove rename export import migrate'
