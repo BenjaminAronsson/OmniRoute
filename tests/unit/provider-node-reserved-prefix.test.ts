@@ -36,8 +36,13 @@ const { RESERVED_PROVIDER_PREFIXES, isReservedProviderPrefix, RESERVED_PREFIX_CO
 const { buildReservedPrefixes, getProviderPrefixIndex } =
   await import("../../src/lib/providerNodePrefixes.ts");
 const providerNodesDb = await import("../../src/lib/db/providers/nodes.ts");
-const { isCommonChatGptWebRetiredProviderId } =
+const { isCommonChatGptWebRetiredProviderId, RETIRED_COMMON_CHATGPT_WEB_PROVIDER_IDS } =
   await import("../../src/shared/constants/chatgptWebRetirement.ts");
+const { REGISTRY } = await import("../../open-sse/config/providerRegistry.ts");
+const { RETIRED_MICROSOFT_DESIGNER_WEB_PROVIDER_IDS } =
+  await import("../../src/shared/constants/designerWebRetirement.ts");
+const { RUNTIME_RETIRED_PROVIDER_IDS } =
+  await import("../../src/shared/constants/providerRetirement.ts");
 
 async function resetStorage() {
   core.resetDbInstance();
@@ -163,35 +168,30 @@ test("shared set excludes manual aliases that never intercept nodes at runtime",
   assert.equal(RESERVED_PROVIDER_PREFIXES.has("aq"), false);
 });
 
-test("shared set size includes live REGISTRY and retired Designer + Felo + Qwen Web prefixes", () => {
-  // 2026-08-30: 398 → 400 with Perplexity Agent API (#12103) and the second prefix the same
-  // afternoon batch registered — computed, not hand-derived (see the note below).
-  // Computed (not hand-derived) after combining Designer's 2 retired
-  // ids/aliases with Felo's 2 retired ids/aliases and Qwen Web's 2 retired
-  // ids/aliases (qwen-web's REGISTRY id/alias were identical strings, so its
-  // live-REGISTRY contribution was 1 unique member; retiring it removes that
-  // 1 and adds 2 distinct tombstones "qwen-web"/"qw", a net +1) on top of the
-  // live REGISTRY walk, minus the 3 GPL-derived Raycast/Hailuo Web
-  // ids/aliases removed from REGISTRY by #11691's migration 166.
-  // #11513: the two UC providers add four REGISTRY prefixes — the persona id "uc" +
-  // alias "ucn", and the Developer API id "uc-direct" + alias "ucd" (402 → 406).
-  // #12389: the gemini-business registry entry adds its id "gemini-business" and
-  // alias "gembiz" to the REGISTRY walk (406 → 408).
-  // 2026-09-02: a keyless provider was removed at its operator's request, taking its id and
-  // alias out of the REGISTRY walk (408 → 406).
-  // #11786: SeekAi adds id "seekai" + alias "ska" (406 → 408).
-  // #13024 (2b9e7fb3e) GreenPT and #13025 (22473dee5) EURouter each add one REGISTRY member (id ==
-  // alias); #13277 (02128f334) registers Arcee AI, adding id "arcee-ai" + alias "arcee" (408 → 412).
-  // #13399 (cdcde97c7) registers Agnes AI (China): id "agnes-cn" + alias "agnescn" — the only
-  // two provider-level members added since (412 -> 414); everything else in that range is
-  // model ids. Same entry that moved the apikey/regional count to 241 in #13905.
-  // #13131 then retires `chipotle`/`pepper` (dead upstream), removing its id "chipotle" and
-  // alias "pepper" from the REGISTRY walk (414 -> 412) — the two land back on the same total.
-  // #12648 registers xKiro: id "xkiro" with no separate alias — a single REGISTRY
-  // member (412 -> 413).
-  // Lyceum (pay-per-use OpenAI-compatible gateway, 2026-09-20) registers id "lyceum"
-  // with an identical alias — a single REGISTRY member (413 -> 414).
-  assert.equal(RESERVED_PREFIX_COUNT, 414);
+test("reserved prefixes cover every live id, alias and retirement without extra entries", () => {
+  const expected = new Set([
+    ...Object.values(REGISTRY).flatMap((provider) =>
+      [provider.id, provider.alias].filter((value): value is string => Boolean(value))
+    ),
+    ...RETIRED_MICROSOFT_DESIGNER_WEB_PROVIDER_IDS,
+    ...RUNTIME_RETIRED_PROVIDER_IDS,
+    ...RETIRED_COMMON_CHATGPT_WEB_PROVIDER_IDS,
+  ]);
+  assert.ok(expected.size > 0, "the provider fixture must not be empty");
+  assert.deepEqual([...RESERVED_PROVIDER_PREFIXES].sort(), [...expected].sort());
+  assert.equal(RESERVED_PREFIX_COUNT, expected.size);
+  for (const prefix of expected) {
+    assert.equal(isReservedProviderPrefix(prefix), true, `${prefix} must remain reserved`);
+    const result = updateProviderNodeSchema.safeParse({
+      name: "Reserved prefix",
+      prefix,
+      baseUrl: "https://reserved.example.invalid/v1",
+    });
+    assert.equal(result.success, false, `${prefix} must be rejected by the write path`);
+    if (!result.success) {
+      assert.ok(result.error.issues.some((issue) => issue.path[0] === "prefix"));
+    }
+  }
 });
 
 test("isReservedProviderPrefix rejects non-string input", () => {
