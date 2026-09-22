@@ -43,6 +43,7 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-node@v7
         with:
+          package-manager-cache: false
           node-version: ${{ env.CI_NODE_VERSION }}
       - name: Validate gate inventory
         run: npm run check:gate-manifest
@@ -103,13 +104,17 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@v7
         with:
+          package-manager-cache: false
           node-version: ${{ env.CI_NODE_VERSION }}
-          cache: npm
       - uses: ./.github/actions/npm-ci-retry
+        with:
+          # PR acceleration is not release-candidate provenance.
+          cache: ${{ github.event_name == 'pull_request' }}
       - run: npm run check:node-runtime
       - run: npm run audit:deps
       - name: Restore ESLint file cache
-        uses: actions/cache@v6
+        if: github.event_name == 'pull_request'
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
           path: |
             .eslintcache
@@ -215,11 +220,15 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@v7
         with:
+          package-manager-cache: false
           node-version: ${{ env.CI_NODE_VERSION }}
-          cache: npm
       - uses: ./.github/actions/npm-ci-retry
+        with:
+          # PR acceleration is not release-candidate provenance.
+          cache: ${{ github.event_name == 'pull_request' }}
       - name: Restore ESLint file cache
-        uses: actions/cache@v6
+        if: github.event_name == 'pull_request'
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
           path: |
             .eslintcache
@@ -327,9 +336,12 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-node@v7
         with:
+          package-manager-cache: false
           node-version: ${{ env.CI_NODE_VERSION }}
-          cache: npm
       - uses: ./.github/actions/npm-ci-retry
+        with:
+          # PR acceleration is not release-candidate provenance.
+          cache: ${{ github.event_name == 'pull_request' }}
       # Dead-code, cognitive-complexity, type-coverage foram promovidos ao job
       # quality-gate (bloqueante) na Fase 7 INT — não rodam aqui para evitar duplo custo.
       - name: Circular deps (dpdm; advisory)
@@ -443,9 +455,12 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@v7
         with:
+          package-manager-cache: false
           node-version: ${{ env.CI_NODE_VERSION }}
-          cache: npm
       - uses: ./.github/actions/npm-ci-retry
+        with:
+          # PR acceleration is not release-candidate provenance.
+          cache: ${{ github.event_name == 'pull_request' }}
       - run: npm run check:docs-all
       # Previously-orphaned contract gates (existed as files, never wired anywhere).
       # All exit 0 today: cli-i18n is a hard gate, openapi-coverage is a ratchet
@@ -482,8 +497,8 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@v7
         with:
+          package-manager-cache: false
           node-version: ${{ env.CI_NODE_VERSION }}
-          cache: npm
       - name: markdownlint (docs + root, advisory)
         run: npx --yes markdownlint-cli2 "docs/**/*.md" "*.md" "!docs/i18n" "!docs/research" || true
       - name: Vale prose lint (Microsoft style, advisory)
@@ -514,9 +529,12 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-node@v7
         with:
+          package-manager-cache: false
           node-version: ${{ env.CI_NODE_VERSION }}
-          cache: npm
       - uses: ./.github/actions/npm-ci-retry
+        with:
+          # PR acceleration is not release-candidate provenance.
+          cache: ${{ github.event_name == 'pull_request' }}
       - run: node scripts/i18n/check-ui-keys-coverage.mjs --threshold=65
       # Real-translation ratchet: a leaf copied verbatim from en.json passes key
       # parity above but is still English to the user (es shipped 55% English).
@@ -573,9 +591,12 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@v7
         with:
+          package-manager-cache: false
           node-version: ${{ env.CI_NODE_VERSION }}
-          cache: npm
       - uses: ./.github/actions/npm-ci-retry
+        with:
+          # PR acceleration is not release-candidate provenance.
+          cache: ${{ github.event_name == 'pull_request' }}
       - run: node scripts/i18n/check-glossary-consistency.mjs --locale=zh-CN
       - run: node scripts/i18n/check-glossary-consistency.mjs --locale=zh-TW
 
@@ -637,6 +658,7 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-node@v7
         with:
+          package-manager-cache: false
           node-version: ${{ env.CI_NODE_VERSION }}
       - name: Fetch base branch
         run: git fetch --no-tags origin "${GITHUB_BASE_REF}"
@@ -686,9 +708,12 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@v7
         with:
+          package-manager-cache: false
           node-version: ${{ env.CI_NODE_VERSION }}
-          cache: npm
       - uses: ./.github/actions/npm-ci-retry
+        with:
+          # PR acceleration is not release-candidate provenance.
+          cache: ${{ github.event_name == 'pull_request' }}
       - run: npm run check:node-runtime
       # NOTE: the webpack `.build/next/cache` actions/cache step was removed with the
       # Turbopack switch below — Turbopack does not read/write the webpack cache dir
@@ -734,9 +759,12 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@v7
         with:
+          package-manager-cache: false
           node-version: ${{ env.CI_NODE_VERSION }}
-          cache: npm
       - uses: ./.github/actions/npm-ci-retry
+        with:
+          # PR acceleration is not release-candidate provenance.
+          cache: ${{ github.event_name == 'pull_request' }}
       - run: npm run check:node-runtime
       - name: Download Next.js build artifact
         uses: actions/download-artifact@v8
@@ -829,9 +857,12 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@v7
         with:
+          package-manager-cache: false
           node-version: ${{ env.CI_NODE_VERSION }}
-          cache: npm
       - uses: ./.github/actions/npm-ci-retry
+        with:
+          # PR acceleration is not release-candidate provenance.
+          cache: ${{ github.event_name == 'pull_request' }}
       - run: npm run check:node-runtime
       - name: Download Next.js build artifact
         uses: actions/download-artifact@v8
@@ -900,9 +931,12 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@v7
         with:
+          package-manager-cache: false
           node-version: ${{ env.CI_NODE_VERSION }}
-          cache: npm
       - uses: ./.github/actions/npm-ci-retry
+        with:
+          # PR acceleration is not release-candidate provenance.
+          cache: ${{ github.event_name == 'pull_request' }}
       - run: npm run check:node-runtime
       # QW-d (plano mestre): fonte única — o MESMO npm script dos runs locais (adiciona o
       # setupPolyfill que o comando inline omitia; o glob canônico vive só no package.json).
@@ -960,9 +994,12 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@v7
         with:
+          package-manager-cache: false
           node-version: ${{ env.CI_NODE_VERSION }}
-          cache: npm
       - uses: ./.github/actions/npm-ci-retry
+        with:
+          # PR acceleration is not release-candidate provenance.
+          cache: ${{ github.event_name == 'pull_request' }}
       - name: Install Bun (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
@@ -998,9 +1035,12 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@v7
         with:
+          package-manager-cache: false
           node-version: ${{ env.CI_NODE_VERSION }}
-          cache: npm
       - uses: ./.github/actions/npm-ci-retry
+        with:
+          # PR acceleration is not release-candidate provenance.
+          cache: ${{ github.event_name == 'pull_request' }}
       # The second test runner (CLAUDE.md: "Both test runners must pass") — was never
       # wired into CI until the 2026-06-09 quality audit (Fase 6A.2).
       # WS5.2/5.3 (v3.8.49 plan): JUnit output feeds Trunk Flaky Tests (advisory upload
@@ -1047,9 +1087,12 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@v7
         with:
+          package-manager-cache: false
           node-version: ${{ env.CI_NODE_VERSION }}
-          cache: npm
       - uses: ./.github/actions/npm-ci-retry
+        with:
+          # PR acceleration is not release-candidate provenance.
+          cache: ${{ github.event_name == 'pull_request' }}
       - name: Download all shard coverage
         uses: actions/download-artifact@v8
         with:
@@ -1295,12 +1338,16 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@v7
         with:
+          package-manager-cache: false
           node-version: ${{ env.CI_NODE_VERSION }}
-          cache: npm
       - uses: ./.github/actions/npm-ci-retry
+        with:
+          # PR acceleration is not release-candidate provenance.
+          cache: ${{ github.event_name == 'pull_request' }}
       - run: npm run check:node-runtime
       - name: Cache Playwright browsers
-        uses: actions/cache@v6
+        if: github.event_name == 'pull_request'
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
           path: ~/.cache/ms-playwright
           key: playwright-chromium-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
@@ -1370,9 +1417,12 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@v7
         with:
+          package-manager-cache: false
           node-version: ${{ env.CI_NODE_VERSION }}
-          cache: npm
       - uses: ./.github/actions/npm-ci-retry
+        with:
+          # PR acceleration is not release-candidate provenance.
+          cache: ${{ github.event_name == 'pull_request' }}
       - run: npm run check:node-runtime
       - name: Integration tests (shard ${{ matrix.shard }}/2)
         env:
@@ -1395,9 +1445,12 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@v7
         with:
+          package-manager-cache: false
           node-version: ${{ env.CI_NODE_VERSION }}
-          cache: npm
       - uses: ./.github/actions/npm-ci-retry
+        with:
+          # PR acceleration is not release-candidate provenance.
+          cache: ${{ github.event_name == 'pull_request' }}
       - run: npm run check:node-runtime
       - run: npm run test:security
 
@@ -1423,9 +1476,12 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@v7
         with:
+          package-manager-cache: false
           node-version: ${{ env.CI_NODE_VERSION }}
-          cache: npm
       - uses: ./.github/actions/npm-ci-retry
+        with:
+          # PR acceleration is not release-candidate provenance.
+          cache: ${{ github.event_name == 'pull_request' }}
       - run: npm run check:node-runtime
       - run: npm run test:ecosystem
 
@@ -1452,9 +1508,12 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@v7
         with:
+          package-manager-cache: false
           node-version: ${{ env.CI_NODE_VERSION }}
-          cache: npm
       - uses: ./.github/actions/npm-ci-retry
+        with:
+          # PR acceleration is not release-candidate provenance.
+          cache: ${{ github.event_name == 'pull_request' }}
       - run: npm run check:node-runtime
       - run: npm run test:protocols:e2e
 
@@ -1489,12 +1548,13 @@ jobs:
       - sonarqube
       - coverage-pr-comment
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ github.sha }}
           persist-credentials: false
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
+          package-manager-cache: false
           node-version: ${{ env.CI_NODE_VERSION }}
       - name: Evaluate exact-candidate admission
         env:
@@ -1502,7 +1562,7 @@ jobs:
         run: node scripts/quality/admission-verdict.mjs ci
       - name: Retain admission receipt
         if: ${{ always() }}
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: ci-admission-${{ github.run_id }}-${{ github.run_attempt }}
           path: .artifacts/ci-admission.json
