@@ -19,6 +19,11 @@
       "disposition": "separately-invoked"
     },
     {
+      "name": "check:ai-attribution",
+      "command": "node scripts/check/check-ai-attribution.mjs",
+      "disposition": "separately-invoked"
+    },
+    {
       "name": "check:any-budget:t11",
       "command": "node scripts/check/check-t11-any-budget.mjs",
       "disposition": "separately-invoked"
