@@ -20,11 +20,12 @@ fs.mkdirSync(process.env.OMNIROUTE_PLUGINS_DIR, { recursive: true });
 
 const core = await import("../../src/lib/db/core.ts");
 const providersDb = await import("../../src/lib/db/providers.ts");
+const { waitForCallLogSaves } = await import("../../src/lib/usage/callLogs.ts");
 const { handleChatCore } = await import("../../open-sse/handlers/chatCore.ts");
 const { closeSharedLoggerResource } = await import("../../src/shared/utils/loggerResource.ts");
 
 const CANARY = "VIDEO_CUE_PRIVATE_SENTINEL_7D2";
-const upstreamMessage = `Permission denied after cue ${CANARY}`;
+const upstreamMessage = `Authentication failed; cue ${CANARY}`;
 
 async function invokeFailure(observed: boolean) {
   const connection = await providersDb.createProviderConnection({
@@ -45,7 +46,7 @@ async function invokeFailure(observed: boolean) {
   const originalLog = console.log;
   globalThis.fetch = async () =>
     new Response(JSON.stringify({ error: { message: upstreamMessage } }), {
-      status: 403,
+      status: 401,
       headers: { "Content-Type": "application/json" },
     });
   console.log = (...parts: unknown[]) => {
@@ -83,6 +84,7 @@ async function invokeFailure(observed: boolean) {
 }
 
 test.after(async () => {
+  await waitForCallLogSaves(5000);
   core.resetDbInstance();
   await closeSharedLoggerResource();
   for (const [name, value] of Object.entries(originalEnv)) {
@@ -97,7 +99,7 @@ test("observed video provider failures omit echoed cues from retained connection
   const ordinary = await invokeFailure(false);
   const observed = await invokeFailure(true);
 
-  assert.equal(ordinary.status, 403);
+  assert.equal(ordinary.status, 401);
   assert.equal(observed.status, ordinary.status);
   assert.equal(observed.clientBody, ordinary.clientBody, "client-visible failure stays unchanged");
   assert.match(ordinary.lastError, /VIDEO_CUE_PRIVATE_SENTINEL_7D2/);
