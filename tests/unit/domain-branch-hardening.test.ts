@@ -338,7 +338,7 @@ test("quotaCache covers normalized windows, stale exhaustion, stats and refresh 
   quotaCache.stopBackgroundRefresh();
 });
 
-test("quotaCache covers empty quotas, invalid dates and fallback percentage normalization", () => {
+test("quotaCache distinguishes unknown fractions from reported exhaustion with invalid dates", () => {
   let now = 100_000;
   Date.now = () => now;
 
@@ -354,8 +354,10 @@ test("quotaCache covers empty quotas, invalid dates and fallback percentage norm
     remainingPercentage: 0,
     usedPercentage: 100,
     resetAt: null,
-    reachedThreshold: true,
+    reachedThreshold: false,
   });
+  assert.equal(quotaCache.isAccountQuotaExhausted("quota-zero-total"), false);
+  assert.equal(quotaCache.getQuotaWindowObservation("quota-zero-total", "daily"), null);
   assert.equal(quotaCache.getQuotaWindowStatus("quota-zero-total", "unknown"), null);
 
   quotaCache.setQuotaCache("quota-invalid-reset", "cursor", {
@@ -365,13 +367,19 @@ test("quotaCache covers empty quotas, invalid dates and fallback percentage norm
     remainingPercentage: 0,
     usedPercentage: 100,
     resetAt: "not-a-date",
-    reachedThreshold: true,
+    reachedThreshold: false,
   });
+  assert.equal(quotaCache.isAccountQuotaExhausted("quota-invalid-reset"), false);
+  assert.equal(quotaCache.getQuotaWindowObservation("quota-invalid-reset", "daily"), null);
 
   quotaCache.setQuotaCache("quota-invalid-exhausted", "cursor", {
     daily: { remainingPercentage: 0, resetAt: "still-not-a-date" },
   });
   assert.equal(quotaCache.isAccountQuotaExhausted("quota-invalid-exhausted"), true);
+  assert.equal(
+    quotaCache.getQuotaWindowStatus("quota-invalid-exhausted", "daily", 10)?.reachedThreshold,
+    true
+  );
 });
 
 test("policyEngine evaluates lockout, budget, fallback chains and policy class actions", () => {
