@@ -16,11 +16,7 @@
  *   model travels via env/provider args instead of a CLI flag).
  */
 
-import { readFileSync } from "node:fs";
-
-const rawManifest = JSON.parse(
-  readFileSync(new URL("../../config/cli-tools-manifest.json", import.meta.url), "utf8")
-);
+import rawManifest from "../../config/cli-tools-manifest.json" with { type: "json" };
 
 export const CLI_TARGET_MANIFEST = Object.freeze(
   Object.fromEntries(
