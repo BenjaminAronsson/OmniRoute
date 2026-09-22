@@ -25,6 +25,16 @@ import path from "node:path";
 const TEST_DATA_DIR = fs.mkdtempSync(path.join(os.tmpdir(), "omniroute-image-chat-6457-"));
 process.env.DATA_DIR = TEST_DATA_DIR;
 process.env.API_KEY_SECRET = process.env.API_KEY_SECRET || "catalog-test-secret-6457";
+// Every case here resets the catalog cache, so each `getUnifiedModelsResponse()` is a
+// COLD build of the full catalog. That path is bounded by CATALOG_BUILD_TIMEOUT_MS
+// (#12627, 8s by default) and a cold tsx build already costs ~7s on an idle box — when
+// the bound trips, `getUnifiedModelsResponse` answers 503 `catalog_build_timeout` and
+// the `assert.equal(response.status, 200)` below aborts the case before a single
+// catalog-shape assertion runs. Build latency is not what #6457 covers, so pin it out
+// of the way exactly like tests/unit/{9147-catalog-eventloop-yield,
+// 12058-models-catalog-canonical-self-aliased,models-catalog-route}.test.ts do.
+// Every assertion below is unchanged.
+process.env.CATALOG_BUILD_TIMEOUT_MS = "120000";
 
 const core = await import("../../src/lib/db/core.ts");
 const providersDb = await import("../../src/lib/db/providers.ts");

@@ -6,6 +6,16 @@ import path from "node:path";
 
 const TEST_DATA_DIR = fs.mkdtempSync(path.join(os.tmpdir(), "omniroute-token-limit-catalog-"));
 process.env.DATA_DIR = TEST_DATA_DIR;
+// Every override write bumps the catalog cache generation, so each `getModel()` here is
+// a COLD build of the full catalog. That path is bounded by CATALOG_BUILD_TIMEOUT_MS
+// (#12627, 8s by default) and a cold tsx build already costs ~7s on an idle box — when
+// the bound trips, `getUnifiedModelsResponse` answers a 503 `catalog_build_timeout`
+// body with no `data` array and `getModel()` dies on `body.data.find` before any
+// token-limit assertion runs. Build latency is not what this file covers, so pin it out
+// of the way exactly like tests/unit/{9147-catalog-eventloop-yield,
+// 12058-models-catalog-canonical-self-aliased,models-catalog-route}.test.ts do.
+// Every assertion below is unchanged.
+process.env.CATALOG_BUILD_TIMEOUT_MS = "120000";
 
 const core = await import("../../src/lib/db/core.ts");
 const contextOverrides = await import("../../src/lib/db/modelContextOverrides.ts");
