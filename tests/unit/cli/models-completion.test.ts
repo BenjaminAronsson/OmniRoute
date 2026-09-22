@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { spawn } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createServer } from "node:http";
 import { tmpdir } from "node:os";
@@ -8,19 +8,22 @@ import test from "node:test";
 
 async function invoke(args: string[], dataDir: string) {
   const moduleUrl = new URL("../../../bin/cli/commands/completion.mjs", import.meta.url).href;
+  const modelsUrl = new URL("../../../bin/cli/commands/models.mjs", import.meta.url).href;
   const child = spawn(
     process.execPath,
     [
       "--input-type=module",
       "--eval",
-      `const {Command}=await import('commander'); const {registerCompletion}=await import(process.argv[1]); const program=new Command().option('--base-url <url>').option('--api-key <key>', '', 'fixture-model-api-key'); registerCompletion(program); await program.parseAsync(JSON.parse(process.argv[2]),{from:'user'});`,
+      `const {Command}=await import('commander'); const {registerCompletion}=await import(process.argv[1]); const {registerModels}=await import(process.argv[3]); const program=new Command().option('--base-url <url>').option('--api-key <key>', '', 'fixture-model-api-key'); registerCompletion(program); registerModels(program); await program.parseAsync(JSON.parse(process.argv[2]),{from:'user'});`,
       moduleUrl,
       JSON.stringify(args),
+      modelsUrl,
     ],
     {
       env: {
         ...process.env,
         DATA_DIR: dataDir,
+        HOME: dataDir,
         OMNIROUTE_CLI_TOKEN: "fixture",
         OMNIROUTE_API_KEY: "ambient-not-used",
         OMNIROUTE_BASE_URL: "http://127.0.0.1:1",
@@ -88,7 +91,37 @@ test("all shell completion scripts advertise manual model commands", async () =>
       const result = await invoke(["completion", shell], dataDir);
       assert.equal(result.code, 0);
       assert.ok(result.out.includes("manual add edit remove"), shell);
+      const branch =
+        shell === "bash"
+          ? /^\s*models\).*COMPREPLY/gm
+          : shell === "zsh"
+            ? /^\s*models\).*_arguments/gm
+            : /^complete .*__fish_seen_subcommand_from models'/gm;
+      assert.equal([...result.out.matchAll(branch)].length, 1, `${shell} has one model branch`);
+      if (shell === "bash" && process.platform !== "win32") {
+        const output = execFileSync("/bin/bash", ["--noprofile", "--norc"], {
+          input:
+            result.out +
+            '\nCOMP_WORDS=(omniroute models "")\nCOMP_CWORD=2\n_omniroute\nprintf "%s\\n" "${COMPREPLY[@]}"\n',
+          encoding: "utf8",
+          timeout: 5000,
+          env: { PATH: "/usr/bin:/bin" },
+        });
+        assert.deepEqual(output.trim().split("\n"), ["manual", "add", "edit", "remove"]);
+      }
     }
+  } finally {
+    rmSync(dataDir, { recursive: true, force: true });
+  }
+});
+
+test("installed completion includes models registered after completion", async () => {
+  const dataDir = mkdtempSync(join(tmpdir(), "omniroute-model-install-"));
+  try {
+    const result = await invoke(["completion", "install", "bash"], dataDir);
+    assert.equal(result.code, 0, result.err);
+    const script = readFileSync(join(dataDir, ".bash_completion.d", "omniroute"), "utf8");
+    assert.match(script, /manual add edit remove/);
   } finally {
     rmSync(dataDir, { recursive: true, force: true });
   }
