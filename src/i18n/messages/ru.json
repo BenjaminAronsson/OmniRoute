@@ -6285,7 +6285,6 @@
       "stability-ai": "Подключите Stability AI с помощью API-ключа.",
       "stepfun": "Получите API-ключ на platform.stepfun.com",
       "sumopod": "SumoPod предоставляет совместимую с OpenAI конечную точку генерации ответов чата по адресу https://ai.sumopod.com/v1/chat/completions, а также актуальный каталог /v1/models. OmniRoute использует протокол OpenAI и выводит список моделей через passthrough.",
-      "suno": "Вставьте сессионный cookie из suno.ai (авторизация Clerk)",
       "synthetic": "Подключите Synthetic с помощью API-ключа.",
       "tencent": "Получите API-ключ на console.cloud.tencent.com",
       "thebai": "API-ключ Bearer для совместимого с OpenAI шлюза TheB.AI.",

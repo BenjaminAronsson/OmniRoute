@@ -6285,7 +6285,6 @@
       "stability-ai": "Hubungkan Stability AI dengan kunci API.",
       "stepfun": "Dapatkan kunci API di platform.stepfun.com",
       "sumopod": "SumoPod mengekspos endpoint chat completions yang kompatibel dengan OpenAI di https://ai.sumopod.com/v1/chat/completions, ditambah katalog /v1/models langsung. OmniRoute menggunakan protokol OpenAI dan mencantumkan model melalui passthrough.",
-      "suno": "Tempel cookie sesi dari suno.ai (autentikasi Clerk)",
       "synthetic": "Hubungkan Synthetic dengan kunci API.",
       "tencent": "Dapatkan kunci API di console.cloud.tencent.com",
       "thebai": "Kunci API Bearer untuk gateway yang kompatibel dengan OpenAI TheB.AI.",

@@ -6285,7 +6285,6 @@
       "stability-ai": "Csatlakoztassa a Stability AI-t egy API-kulccsal.",
       "stepfun": "Szerezzen API-kulcsot a platform.stepfun.com oldalon",
       "sumopod": "A SumoPod egy OpenAI-kompatibilis chat completions végpontot tesz elérhetővé a https://ai.sumopod.com/v1/chat/completions címen, valamint egy élő /v1/models katalógust. Az OmniRoute az OpenAI protokollt használja, és passthrough módon listázza a modelleket.",
-      "suno": "Illessze be a session cookie-t a suno.ai oldalról (Clerk auth)",
       "synthetic": "Csatlakoztassa a Syntheticket egy API-kulccsal.",
       "tencent": "Szerezzen API-kulcsot a console.cloud.tencent.com oldalon",
       "thebai": "Bearer API-kulcs a TheB.AI OpenAI-kompatibilis átjáróhoz.",

@@ -6285,7 +6285,6 @@
       "stability-ai": "使用 API 密钥连接 Stability AI。",
       "stepfun": "在 platform.stepfun.com 获取 API 密钥",
       "sumopod": "SumoPod 在 https://ai.sumopod.com/v1/chat/completions 提供了兼容 OpenAI 的 chat completions 端点，以及实时的 /v1/models 目录。OmniRoute 使用 OpenAI 协议并通过直通方式列出模型。",
-      "suno": "粘贴来自 suno.ai 的 session cookie（Clerk 认证）",
       "synthetic": "使用 API 密钥连接 Synthetic。",
       "tencent": "在 console.cloud.tencent.com 获取 API 密钥",
       "thebai": "用于 TheB.AI 兼容 OpenAI 网关的 Bearer API 密钥。",

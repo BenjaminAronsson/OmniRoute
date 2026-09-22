@@ -6285,7 +6285,6 @@
       "stability-ai": "Verbind Stability AI met een API-sleutel.",
       "stepfun": "Haal API-sleutel op via platform.stepfun.com",
       "sumopod": "SumoPod stelt een OpenAI-compatibel chat-completions-eindpunt beschikbaar op https://ai.sumopod.com/v1/chat/completions, plus een live /v1/models-catalogus. OmniRoute gebruikt het OpenAI-protocol en vermeldt modellen via passthrough.",
-      "suno": "Plak sessiecookie van suno.ai (Clerk-authenticatie)",
       "synthetic": "Verbind Synthetic met een API-sleutel.",
       "tencent": "Haal API-sleutel op via console.cloud.tencent.com",
       "thebai": "Bearer API-sleutel voor de OpenAI-compatibele gateway van TheB.AI.",

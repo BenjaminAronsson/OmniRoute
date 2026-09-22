@@ -6285,7 +6285,6 @@
       "stability-ai": "Sambungkan Stability AI dengan kunci API.",
       "stepfun": "Dapatkan kunci API di platform.stepfun.com",
       "sumopod": "SumoPod mendedahkan titik akhir pelengkapan sembang serasi OpenAI di https://ai.sumopod.com/v1/chat/completions, serta katalog /v1/models langsung. OmniRoute menggunakan protokol OpenAI dan menyenaraikan model melalui passthrough.",
-      "suno": "Tampal kuki sesi daripada suno.ai (pengesahan Clerk)",
       "synthetic": "Sambungkan Synthetic dengan kunci API.",
       "tencent": "Dapatkan kunci API di console.cloud.tencent.com",
       "thebai": "Kunci API Bearer untuk gateway serasi OpenAI TheB.AI.",

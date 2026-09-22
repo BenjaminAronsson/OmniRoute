@@ -6285,7 +6285,6 @@
       "stability-ai": "Միացրեք Stability AI-ը API բանալիով։",
       "stepfun": "Ստացեք API բանալի platform.stepfun.com կայքում",
       "sumopod": "SumoPod-ը տրամադրում է OpenAI-ի հետ համատեղելի զրույցի լրացումների վերջնակետ՝ https://ai.sumopod.com/v1/chat/completions հասցեով, ինչպես նաև գործող /v1/models կատալոգ։ OmniRoute-ն օգտագործում է OpenAI արձանագրությունը և ցուցակագրում է մոդելները միջանցիկ փոխանցման միջոցով։",
-      "suno": "Տեղադրեք suno.ai-ի աշխատաշրջանի cookie-ն (Clerk նույնականացում)",
       "synthetic": "Միացրեք Synthetic-ը API բանալիով։",
       "tencent": "Ստացեք API բանալի console.cloud.tencent.com կայքում",
       "thebai": "Bearer API բանալի՝ TheB.AI-ի OpenAI-ի հետ համատեղելի դարպասի համար։",

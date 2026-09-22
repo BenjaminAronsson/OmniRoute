@@ -6285,7 +6285,6 @@
       "stability-ai": "API key વડે Stability AI ને કનેક્ટ કરો.",
       "stepfun": "platform.stepfun.com પર API key મેળવો",
       "sumopod": "SumoPod https://ai.sumopod.com/v1/chat/completions પર OpenAI-સુસંગત ચેટ કમ્પ્લીશન્સ એન્ડપોઇન્ટ પ્રદાન કરે છે, સાથે જ એક લાઈવ /v1/models કેટલોગ પણ આપે છે. OmniRoute OpenAI પ્રોટોકોલનો ઉપયોગ કરે છે અને પાસથ્રુ દ્વારા મોડલ્સની યાદી આપે છે.",
-      "suno": "suno.ai (Clerk auth) માંથી સેશન કૂકી પેસ્ટ કરો",
       "synthetic": "API key વડે Synthetic ને કનેક્ટ કરો.",
       "tencent": "console.cloud.tencent.com પર API key મેળવો",
       "thebai": "TheB.AI OpenAI-સુસંગત ગેટવે માટે Bearer API key.",

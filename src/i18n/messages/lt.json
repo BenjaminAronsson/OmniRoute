@@ -6285,7 +6285,6 @@
       "stability-ai": "Prijunkite Stability AI naudodami API raktą.",
       "stepfun": "Gaukite API raktą adresu platform.stepfun.com",
       "sumopod": "SumoPod teikia su OpenAI suderinamą pokalbių užbaigimo galinį tašką adresu https://ai.sumopod.com/v1/chat/completions ir tiesiogiai atnaujinamą /v1/models katalogą. OmniRoute naudoja OpenAI protokolą ir pateikia modelių sąrašą perduodamas užklausas tiesiogiai.",
-      "suno": "Įklijuokite seanso slapuką iš suno.ai (Clerk autentifikavimas)",
       "synthetic": "Prijunkite Synthetic naudodami API raktą.",
       "tencent": "Gaukite API raktą adresu console.cloud.tencent.com",
       "thebai": "Bearer API raktas, skirtas su OpenAI suderinamam TheB.AI šliuzui.",

@@ -6285,7 +6285,6 @@
       "stability-ai": "Ceangail Stability AI le heochair API.",
       "stepfun": "Faigh eochair API ag platform.stepfun.com",
       "sumopod": "Nochtann SumoPod críochphointe comhlánaithe comhrá atá comhoiriúnach le OpenAI ag https://ai.sumopod.com/v1/chat/completions, chomh maith le catalóg bheo /v1/models. Úsáideann OmniRoute prótacal OpenAI agus liostaíonn sé múnlaí trí passthrough.",
-      "suno": "Greamaigh fianán seisiúin ó suno.ai (fíordheimhniú Clerk)",
       "synthetic": "Ceangail Synthetic le heochair API.",
       "tencent": "Faigh eochair API ag console.cloud.tencent.com",
       "thebai": "Eochair API de chineál Bearer do gheata TheB.AI atá comhoiriúnach le OpenAI.",

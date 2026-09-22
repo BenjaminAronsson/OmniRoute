@@ -6285,7 +6285,6 @@
       "stability-ai": "ربط Stability AI بمفتاح API.",
       "stepfun": "احصل على مفتاح API من platform.stepfun.com",
       "sumopod": "يوفر SumoPod نقطة نهاية لإكمال الدردشة متوافقة مع OpenAI على https://ai.sumopod.com/v1/chat/completions، بالإضافة إلى كتالوج /v1/models مباشر. يستخدم OmniRoute بروتوكول OpenAI ويسرد النماذج عبر التمرير المباشر.",
-      "suno": "الصق ملف تعريف ارتباط الجلسة (session cookie) من suno.ai (مصادقة Clerk)",
       "synthetic": "ربط Synthetic بمفتاح API.",
       "tencent": "احصل على مفتاح API من console.cloud.tencent.com",
       "thebai": "مفتاح Bearer API لبوابة TheB.AI المتوافقة مع OpenAI.",

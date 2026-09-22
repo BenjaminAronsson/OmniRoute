@@ -6285,7 +6285,6 @@
       "stability-ai": "Свържете Stability AI с API ключ.",
       "stepfun": "Вземете API ключ на platform.stepfun.com",
       "sumopod": "SumoPod предоставя съвместима с OpenAI крайна точка за chat completions на https://ai.sumopod.com/v1/chat/completions, плюс каталог на живо за /v1/models. OmniRoute използва протокола на OpenAI и изброява моделите чрез passthrough.",
-      "suno": "Поставете сесийната бисквитка от suno.ai (Clerk auth)",
       "synthetic": "Свържете Synthetic с API ключ.",
       "tencent": "Вземете API ключ на console.cloud.tencent.com",
       "thebai": "Bearer API ключ за съвместимия с OpenAI шлюз на TheB.AI.",

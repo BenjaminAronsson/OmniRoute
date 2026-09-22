@@ -6285,7 +6285,6 @@
       "stability-ai": "APIキーでStability AIに接続します。",
       "stepfun": "platform.stepfun.comでAPIキーを取得",
       "sumopod": "SumoPodはhttps://ai.sumopod.com/v1/chat/completionsでOpenAI互換のチャット完了エンドポイントを提供し、さらに有効な/v1/modelsカタログも提供します。OmniRouteはOpenAIプロトコルを使用し、パススルー経由でモデルをリストします。",
-      "suno": "suno.aiからセッションクッキーを貼り付け（Clerk認証）",
       "synthetic": "APIキーでSyntheticに接続します。",
       "tencent": "console.cloud.tencent.comでAPIキーを取得",
       "thebai": "TheB.AIのOpenAI互換ゲートウェイ用のBearer APIキー。",

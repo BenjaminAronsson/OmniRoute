@@ -6285,7 +6285,6 @@
       "stability-ai": "Conecte a Stability AI com uma chave de API.",
       "stepfun": "Obtenha a chave de API em platform.stepfun.com",
       "sumopod": "O SumoPod expõe um endpoint de chat completions compatível com OpenAI em https://ai.sumopod.com/v1/chat/completions, além de um catálogo /v1/models ao vivo. O OmniRoute usa o protocolo OpenAI e lista modelos via passthrough.",
-      "suno": "Cole o cookie de sessão do suno.ai (autenticação Clerk)",
       "synthetic": "Conecte o Synthetic com uma chave de API.",
       "tencent": "Obtenha a chave de API em console.cloud.tencent.com",
       "thebai": "Chave de API Bearer para o gateway compatível com OpenAI do TheB.AI.",

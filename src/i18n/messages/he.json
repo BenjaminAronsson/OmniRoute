@@ -6285,7 +6285,6 @@
       "stability-ai": "חבר את Stability AI באמצעות מפתח API.",
       "stepfun": "קבל מפתח API ב-platform.stepfun.com",
       "sumopod": "SumoPod חושף נקודת קצה של chat completions התואמת ל-OpenAI בכתובת https://ai.sumopod.com/v1/chat/completions, בנוסף לקטלוג /v1/models חי. OmniRoute משתמש בפרוטוקול של OpenAI ומציג מודלים באמצעות passthrough.",
-      "suno": "הדבק session cookie מ-suno.ai (אימות Clerk)",
       "synthetic": "חבר את Synthetic באמצעות מפתח API.",
       "tencent": "קבל מפתח API ב-console.cloud.tencent.com",
       "thebai": "מפתח Bearer API עבור שער TheB.AI התואם ל-OpenAI.",

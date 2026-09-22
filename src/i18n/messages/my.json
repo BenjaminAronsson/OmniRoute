@@ -6285,7 +6285,6 @@
       "stability-ai": "Stability AI ကို API key တစ်ခုဖြင့် ချိတ်ဆက်ပါ။",
       "stepfun": "API key ကို platform.stepfun.com တွင် ရယူပါ",
       "sumopod": "SumoPod သည် OpenAI နှင့် တွဲဖက်အသုံးပြုနိုင်သော chat completions endpoint ကို https://ai.sumopod.com/v1/chat/completions တွင် ပံ့ပိုးပြီး တိုက်ရိုက်အပ်ဒိတ်လုပ်သော /v1/models ကတ်တလောက်လည်း ပါဝင်သည်။ OmniRoute သည် OpenAI protocol ကို အသုံးပြုပြီး passthrough ဖြင့် မော်ဒယ်များကို စာရင်းပြုစုသည်။",
-      "suno": "suno.ai မှ session cookie (Clerk auth) ကို ကူးထည့်ပါ",
       "synthetic": "Synthetic ကို API ကီးဖြင့် ချိတ်ဆက်ပါ။",
       "tencent": "console.cloud.tencent.com တွင် API ကီး ရယူပါ",
       "thebai": "TheB.AI OpenAI-compatible gateway အတွက် Bearer API ကီး။",

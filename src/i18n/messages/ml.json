@@ -6285,7 +6285,6 @@
       "stability-ai": "ഒരു API കീ ഉപയോഗിച്ച് Stability AI കണക്റ്റ് ചെയ്യുക.",
       "stepfun": "platform.stepfun.com-ൽ API കീ നേടുക",
       "sumopod": "SumoPod, https://ai.sumopod.com/v1/chat/completions-ൽ OpenAI-അനുയോജ്യമായ ചാറ്റ് കംപ്ലീഷൻസ് എൻഡ്പോയിന്റും തത്സമയ /v1/models കാറ്റലോഗും ലഭ്യമാക്കുന്നു. OmniRoute, OpenAI പ്രോട്ടോക്കോൾ ഉപയോഗിക്കുകയും പാസ്ത്രൂ വഴി മോഡലുകൾ ലിസ്റ്റ് ചെയ്യുകയും ചെയ്യുന്നു.",
-      "suno": "suno.ai-ൽ നിന്നുള്ള സെഷൻ കുക്കി ഒട്ടിക്കുക (Clerk ഓത്ത്)",
       "synthetic": "ഒരു API കീ ഉപയോഗിച്ച് Synthetic കണക്റ്റ് ചെയ്യുക.",
       "tencent": "console.cloud.tencent.com-ൽ നിന്ന് API കീ നേടുക",
       "thebai": "TheB.AI-യുടെ OpenAI-അനുയോജ്യ ഗേറ്റ്വേക്കുള്ള Bearer API കീ.",

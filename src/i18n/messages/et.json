@@ -6285,7 +6285,6 @@
       "stability-ai": "Ühenda Stability AI API-võtmega.",
       "stepfun": "Hangi API-võti aadressilt platform.stepfun.com",
       "sumopod": "SumoPod pakub OpenAI-ga ühilduvat vestluslõpetuste lõpp-punkti aadressil https://ai.sumopod.com/v1/chat/completions ning reaalajas kataloogi /v1/models. OmniRoute kasutab OpenAI protokolli ja loetleb mudelid läbivahenduse kaudu.",
-      "suno": "Kleebi seansiküpsis saidilt suno.ai (Clerk autentimine)",
       "synthetic": "Ühenda Synthetic API-võtmega.",
       "tencent": "Hangi API-võti aadressilt console.cloud.tencent.com",
       "thebai": "Bearer API-võti TheB.AI OpenAI-ga ühilduva lüüsi jaoks.",

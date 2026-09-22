@@ -6285,7 +6285,6 @@
       "stability-ai": "Yhdistä Stability AI API-avaimella.",
       "stepfun": "Hanki API-avain osoitteesta platform.stepfun.com",
       "sumopod": "SumoPod tarjoaa OpenAI-yhteensopivan chat completions -päätepisteen osoitteessa https://ai.sumopod.com/v1/chat/completions sekä reaaliaikaisen /v1/models-luettelon. OmniRoute käyttää OpenAI-protokollaa ja listaa mallit läpiviennin kautta.",
-      "suno": "Liitä istuntoeväste osoitteesta suno.ai (Clerk-todennus)",
       "synthetic": "Yhdistä Synthetic API-avaimella.",
       "tencent": "Hanki API-avain osoitteesta console.cloud.tencent.com",
       "thebai": "Bearer API -avain OpenAI-yhteensopivalle TheB.AI-yhdyskäytävälle.",

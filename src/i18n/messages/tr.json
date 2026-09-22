@@ -6285,7 +6285,6 @@
       "stability-ai": "Stability AI'ı bir API anahtarı ile bağlayın.",
       "stepfun": "API anahtarını platform.stepfun.com adresinden alın",
       "sumopod": "SumoPod, https://ai.sumopod.com/v1/chat/completions adresinde OpenAI uyumlu bir sohbet tamamlama uç noktası ve canlı bir /v1/models kataloğu sunar. OmniRoute, OpenAI protokolünü kullanır ve modelleri passthrough aracılığıyla listeler.",
-      "suno": "suno.ai'dan oturum çerezini (session cookie) yapıştırın (Clerk kimlik doğrulaması)",
       "synthetic": "Synthetic'i bir API anahtarı ile bağlayın.",
       "tencent": "API anahtarını console.cloud.tencent.com adresinden alın",
       "thebai": "TheB.AI OpenAI uyumlu geçidi için Bearer API anahtarı.",

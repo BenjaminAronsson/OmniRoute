@@ -6285,7 +6285,6 @@
       "stability-ai": "اتصال Stability AI با یک کلید API.",
       "stepfun": "کلید API را در platform.stepfun.com دریافت کنید",
       "sumopod": "سرویس SumoPod یک نقطه پایانی تکمیل چت سازگار با OpenAI در https://ai.sumopod.com/v1/chat/completions به همراه یک کاتالوگ زنده /v1/models ارائه می‌دهد. OmniRoute از پروتکل OpenAI استفاده می‌کند و مدل‌ها را از طریق انتقال مستقیم (passthrough) لیست می‌کند.",
-      "suno": "کوکی نشست (session cookie) را از suno.ai (احراز هویت Clerk) جای‌گذاری کنید",
       "synthetic": "اتصال Synthetic با یک کلید API.",
       "tencent": "کلید API را در console.cloud.tencent.com دریافت کنید",
       "thebai": "کلید API از نوع Bearer برای درگاه سازگار با OpenAI در TheB.AI.",

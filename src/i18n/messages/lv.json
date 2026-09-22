@@ -6285,7 +6285,6 @@
       "stability-ai": "Savienojiet Stability AI ar API atslēgu.",
       "stepfun": "Iegūstiet API atslēgu vietnē platform.stepfun.com",
       "sumopod": "SumoPod nodrošina ar OpenAI saderīgu tērzēšanas pabeigšanas galapunktu https://ai.sumopod.com/v1/chat/completions, kā arī aktīvu /v1/models katalogu. OmniRoute izmanto OpenAI protokolu un uzskaita modeļus, izmantojot passthrough.",
-      "suno": "Ielīmējiet sesijas sīkdatni no suno.ai (Clerk autentifikācija)",
       "synthetic": "Savienojiet Synthetic ar API atslēgu.",
       "tencent": "Iegūstiet API atslēgu vietnē console.cloud.tencent.com",
       "thebai": "Bearer API atslēga ar OpenAI saderīgajai TheB.AI vārtejai.",

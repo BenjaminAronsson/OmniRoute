@@ -6285,7 +6285,6 @@
       "stability-ai": "Jikọọ Stability AI site na API key.",
       "stepfun": "Nweta API key na platform.stepfun.com",
       "sumopod": "SumoPod na-enye ebe njedebe mmezu nkata dakọtara na OpenAI na https://ai.sumopod.com/v1/chat/completions, tinyere katalọgụ /v1/models dị ndụ. OmniRoute na-eji protokol OpenAI ma depụta ụdị site na passthrough.",
-      "suno": "Mado kuki nnọkọ sitere na suno.ai (Clerk auth)",
       "synthetic": "Jikọọ Synthetic site na API key.",
       "tencent": "Nweta API key na console.cloud.tencent.com",
       "thebai": "Bearer API key maka ọnụ ụzọ TheB.AI dakọtara na OpenAI.",

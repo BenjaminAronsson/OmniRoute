@@ -6285,7 +6285,6 @@
       "stability-ai": "Povežite Stability AI s ključem API.",
       "stepfun": "Pridobite ključ API na platform.stepfun.com",
       "sumopod": "SumoPod ponuja končno točko za dokončanje klepeta, združljivo z OpenAI, na https://ai.sumopod.com/v1/chat/completions ter sproti posodobljen katalog /v1/models. OmniRoute uporablja protokol OpenAI in modele prikazuje z neposrednim posredovanjem.",
-      "suno": "Prilepite sejni piškotek s suno.ai (avtentikacija Clerk)",
       "synthetic": "Povežite Synthetic s ključem API.",
       "tencent": "Pridobite ključ API na console.cloud.tencent.com",
       "thebai": "Ključ API vrste Bearer za prehod TheB.AI, združljiv z OpenAI.",

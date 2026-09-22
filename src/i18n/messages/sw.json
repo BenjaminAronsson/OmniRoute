@@ -6285,7 +6285,6 @@
       "stability-ai": "Unganisha Stability AI kwa kutumia ufunguo wa API.",
       "stepfun": "Pata ufunguo wa API kwenye platform.stepfun.com",
       "sumopod": "SumoPod hutoa endpoint ya ukamilishaji wa gumzo inayooana na OpenAI katika https://ai.sumopod.com/v1/chat/completions, pamoja na orodha ya moja kwa moja ya /v1/models. OmniRoute hutumia itifaki ya OpenAI na huorodhesha miundo kupitia passthrough.",
-      "suno": "Bandika kuki ya kipindi kutoka suno.ai (Clerk auth)",
       "synthetic": "Unganisha Synthetic kwa kutumia ufunguo wa API.",
       "tencent": "Pata ufunguo wa API kwenye console.cloud.tencent.com",
       "thebai": "Ufunguo wa API wa Bearer kwa ajili ya lango la TheB.AI linalooana na OpenAI.",

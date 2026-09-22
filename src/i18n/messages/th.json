@@ -6285,7 +6285,6 @@
       "stability-ai": "เชื่อมต่อ Stability AI ด้วยคีย์ API",
       "stepfun": "รับคีย์ API ที่ platform.stepfun.com",
       "sumopod": "SumoPod ให้บริการปลายทาง chat completions ที่เข้ากันได้กับ OpenAI ที่ https://ai.sumopod.com/v1/chat/completions พร้อมแคตตาล็อก /v1/models แบบสด โดย OmniRoute จะใช้โปรโตคอล OpenAI และแสดงรายการโมเดลผ่าน passthrough",
-      "suno": "วางคุกกี้เซสชันจาก suno.ai (Clerk auth)",
       "synthetic": "เชื่อมต่อ Synthetic ด้วยคีย์ API",
       "tencent": "รับคีย์ API ที่ console.cloud.tencent.com",
       "thebai": "คีย์ API แบบ Bearer สำหรับเกตเวย์ TheB.AI ที่เข้ากันได้กับ OpenAI",

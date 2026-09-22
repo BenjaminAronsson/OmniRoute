@@ -6285,7 +6285,6 @@
       "stability-ai": "API కీతో Stability AIని కనెక్ట్ చేయండి.",
       "stepfun": "platform.stepfun.com వద్ద API కీని పొందండి",
       "sumopod": "SumoPod అనేది https://ai.sumopod.com/v1/chat/completions వద్ద OpenAI-అనుకూల చాట్ కంప్లీషన్స్ ఎండ్‌పాయింట్‌ను, అలాగే లైవ్ /v1/models కేటలాగ్‌ను అందిస్తుంది. OmniRoute అనేది OpenAI ప్రోటోకాల్‌ను ఉపయోగిస్తుంది మరియు పాస్‌త్రూ ద్వారా మోడల్‌లను జాబితా చేస్తుంది.",
-      "suno": "suno.ai (Clerk auth) నుండి సెషన్ కుకీని పేస్ట్ చేయండి",
       "synthetic": "API కీతో Syntheticని కనెక్ట్ చేయండి.",
       "tencent": "console.cloud.tencent.com వద్ద API కీని పొందండి",
       "thebai": "TheB.AI OpenAI-అనుకూల గేట్‌వే కోసం Bearer API కీ.",

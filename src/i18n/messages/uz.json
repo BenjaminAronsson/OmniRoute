@@ -6285,7 +6285,6 @@
       "stability-ai": "Stability AI’ni API kaliti bilan ulang.",
       "stepfun": "API kalitini platform.stepfun.com saytidan oling",
       "sumopod": "SumoPod https://ai.sumopod.com/v1/chat/completions manzilida OpenAI bilan mos chat yakunlash endpointini hamda amaldagi /v1/models katalogini taqdim etadi. OmniRoute OpenAI protokolidan foydalanadi va modellarni to‘g‘ridan-to‘g‘ri uzatish orqali ro‘yxatlaydi.",
-      "suno": "suno.ai saytidan sessiya cookie’sini joylashtiring (Clerk autentifikatsiyasi)",
       "synthetic": "Synthetic’ni API kaliti bilan ulang.",
       "tencent": "API kalitini console.cloud.tencent.com saytidan oling",
       "thebai": "TheB.AI’ning OpenAI bilan mos shlyuzi uchun Bearer API kaliti.",

@@ -6285,7 +6285,6 @@
       "stability-ai": "Повежите Stability AI помоћу API кључа.",
       "stepfun": "Набавите API кључ на platform.stepfun.com",
       "sumopod": "SumoPod пружа крајњу тачку компатибилну са OpenAI за chat completions на https://ai.sumopod.com/v1/chat/completions, као и ажуран каталог /v1/models. OmniRoute користи OpenAI протокол и приказује моделе путем директног прослеђивања (passthrough).",
-      "suno": "Налепите колачић сесије са suno.ai (Clerk аутентификација)",
       "synthetic": "Повежите Synthetic помоћу API кључа.",
       "tencent": "Набавите API кључ на console.cloud.tencent.com",
       "thebai": "Bearer API кључ за TheB.AI мрежни пролаз компатибилан са OpenAI.",

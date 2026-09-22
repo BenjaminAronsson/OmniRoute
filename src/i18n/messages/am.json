@@ -6285,7 +6285,6 @@
       "stability-ai": "Stability AIን በAPI ቁልፍ ያገናኙ።",
       "stepfun": "የAPI ቁልፍን ከ platform.stepfun.com ያግኙ",
       "sumopod": "SumoPod በ https://ai.sumopod.com/v1/chat/completions ላይ OpenAI-ተኳሃኝ የውይይት ማጠናቀቂያ መገናኛ ነጥብን፣ እንዲሁም ቀጥታ የ /v1/models ካታሎግን ያቀርባል። OmniRoute የOpenAI ፕሮቶኮልን ይጠቀማል፣ ሞዴሎችንም በpassthrough በኩል ይዘረዝራል።",
-      "suno": "ከ suno.ai የክፍለ ጊዜ ኩኪን ይለጥፉ (Clerk ማረጋገጫ)",
       "synthetic": "Syntheticን በAPI ቁልፍ ያገናኙ።",
       "tencent": "የAPI ቁልፍን ከ console.cloud.tencent.com ያግኙ",
       "thebai": "ለTheB.AI OpenAI-ተኳሃኝ ጌትዌይ የBearer API ቁልፍ።",

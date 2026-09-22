@@ -6285,7 +6285,6 @@
       "stability-ai": "Συνδέστε το Stability AI με ένα κλειδί API.",
       "stepfun": "Λάβετε κλειδί API στο platform.stepfun.com",
       "sumopod": "Το SumoPod παρέχει ένα συμβατό με OpenAI τελικό σημείο chat completions στη διεύθυνση https://ai.sumopod.com/v1/chat/completions, καθώς και έναν ενημερωμένο κατάλογο /v1/models. Το OmniRoute χρησιμοποιεί το πρωτόκολλο OpenAI και παραθέτει τα μοντέλα μέσω passthrough.",
-      "suno": "Επικολλήστε το session cookie από το suno.ai (Clerk auth)",
       "synthetic": "Συνδέστε το Synthetic με ένα κλειδί API.",
       "tencent": "Λάβετε κλειδί API στο console.cloud.tencent.com",
       "thebai": "Κλειδί API τύπου Bearer για τη συμβατή με OpenAI πύλη TheB.AI.",

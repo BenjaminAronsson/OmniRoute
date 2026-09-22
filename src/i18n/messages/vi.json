@@ -6285,7 +6285,6 @@
       "stability-ai": "Kết nối Stability AI bằng khóa API.",
       "stepfun": "Lấy khóa API tại platform.stepfun.com",
       "sumopod": "SumoPod cung cấp endpoint chat completions tương thích OpenAI tại https://ai.sumopod.com/v1/chat/completions cùng danh mục /v1/models trực tiếp. OmniRoute dùng giao thức OpenAI và liệt kê mô hình qua passthrough.",
-      "suno": "Dán cookie phiên từ suno.ai (xác thực Clerk)",
       "synthetic": "Kết nối Synthetic bằng khóa API.",
       "tencent": "Lấy khóa API tại console.cloud.tencent.com",
       "thebai": "Khóa API Bearer cho cổng TheB.AI tương thích OpenAI.",

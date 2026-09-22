@@ -6285,7 +6285,6 @@
       "stability-ai": "API යතුරක් භාවිතයෙන් Stability AI සම්බන්ධ කරන්න.",
       "stepfun": "API යතුර platform.stepfun.com වෙතින් ලබා ගන්න",
       "sumopod": "SumoPod විසින් https://ai.sumopod.com/v1/chat/completions හි OpenAI-අනුකූල කතාබස් සම්පූර්ණ කිරීමේ අන්ත ලක්ෂ්යයක් සහ සජීවී /v1/models නාමාවලියක් සපයයි. OmniRoute විසින් OpenAI ප්රොටෝකෝලය භාවිත කරන අතර passthrough හරහා මාදිලි ලැයිස්තුගත කරයි.",
-      "suno": "suno.ai වෙතින් session cookie එක අලවන්න (Clerk auth)",
       "synthetic": "API key එකක් භාවිතයෙන් Synthetic සම්බන්ධ කරන්න.",
       "tencent": "console.cloud.tencent.com වෙතින් API key එක ලබා ගන්න",
       "thebai": "TheB.AI හි OpenAI-අනුකූල ද්වාරය සඳහා Bearer API key එක.",

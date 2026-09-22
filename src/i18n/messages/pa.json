@@ -6285,7 +6285,6 @@
       "stability-ai": "Stability AI ਨੂੰ ਇੱਕ API ਕੁੰਜੀ ਨਾਲ ਕਨੈਕਟ ਕਰੋ।",
       "stepfun": "API ਕੁੰਜੀ platform.stepfun.com ਤੋਂ ਪ੍ਰਾਪਤ ਕਰੋ",
       "sumopod": "SumoPod https://ai.sumopod.com/v1/chat/completions 'ਤੇ ਇੱਕ OpenAI-ਅਨੁਕੂਲ ਚੈਟ ਕੰਪਲੀਸ਼ਨਜ਼ ਐਂਡਪੌਇੰਟ ਅਤੇ ਇੱਕ ਲਾਈਵ /v1/models ਕੈਟਾਲਾਗ ਪ੍ਰਦਾਨ ਕਰਦਾ ਹੈ। OmniRoute OpenAI ਪ੍ਰੋਟੋਕੋਲ ਦੀ ਵਰਤੋਂ ਕਰਦਾ ਹੈ ਅਤੇ ਪਾਸਥਰੂ ਰਾਹੀਂ ਮਾਡਲਾਂ ਨੂੰ ਸੂਚੀਬੱਧ ਕਰਦਾ ਹੈ।",
-      "suno": "suno.ai ਤੋਂ ਸੈਸ਼ਨ ਕੁਕੀ ਪੇਸਟ ਕਰੋ (Clerk ਪ੍ਰਮਾਣੀਕਰਨ)",
       "synthetic": "Synthetic ਨੂੰ API ਕੁੰਜੀ ਨਾਲ ਕਨੈਕਟ ਕਰੋ।",
       "tencent": "API ਕੁੰਜੀ console.cloud.tencent.com ਤੋਂ ਪ੍ਰਾਪਤ ਕਰੋ",
       "thebai": "TheB.AI ਦੇ OpenAI-ਅਨੁਕੂਲ ਗੇਟਵੇ ਲਈ Bearer API ਕੁੰਜੀ।",

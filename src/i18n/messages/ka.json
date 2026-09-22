@@ -6285,7 +6285,6 @@
       "stability-ai": "დააკავშირეთ Stability AI API გასაღებით.",
       "stepfun": "მიიღეთ API გასაღები მისამართზე platform.stepfun.com",
       "sumopod": "SumoPod გთავაზობთ OpenAI-თან თავსებად ჩატის დასრულებების ენდპოინტს მისამართზე https://ai.sumopod.com/v1/chat/completions და აქტიურ /v1/models კატალოგს. OmniRoute იყენებს OpenAI-ის პროტოკოლს და მოდელებს passthrough რეჟიმში ჩამოთვლის.",
-      "suno": "ჩასვით სესიის cookie suno.ai-დან (Clerk ავთენტიფიკაცია)",
       "synthetic": "დააკავშირეთ Synthetic API გასაღებით.",
       "tencent": "მიიღეთ API გასაღები მისამართზე console.cloud.tencent.com",
       "thebai": "Bearer API გასაღები TheB.AI-ის OpenAI-თან თავსებადი კარიბჭისთვის.",

@@ -6285,7 +6285,6 @@
       "stability-ai": "Connecter Stability AI avec une clé API.",
       "stepfun": "Obtenez la clé API sur platform.stepfun.com",
       "sumopod": "SumoPod expose un point de terminaison de complétion de chat compatible avec OpenAI à l'adresse https://ai.sumopod.com/v1/chat/completions, ainsi qu'un catalogue /v1/models en direct. OmniRoute utilise le protocole OpenAI et liste les modèles via passthrough.",
-      "suno": "Coller le cookie de session de suno.ai (authentification Clerk)",
       "synthetic": "Connecter Synthetic avec une clé API.",
       "tencent": "Obtenez la clé API sur console.cloud.tencent.com",
       "thebai": "Clé API Bearer pour la passerelle compatible OpenAI de TheB.AI.",

@@ -6285,7 +6285,6 @@
       "stability-ai": "Haɗa Stability AI ta amfani da maɓallin API.",
       "stepfun": "Sami maɓallin API a platform.stepfun.com",
       "sumopod": "SumoPod yana samar da wurin ƙarshen kammala tattaunawa mai dacewa da OpenAI a https://ai.sumopod.com/v1/chat/completions, tare da kundin /v1/models mai aiki kai tsaye. OmniRoute yana amfani da ƙa'idar OpenAI kuma yana jera samfura ta hanyar passthrough.",
-      "suno": "Manna session cookie daga suno.ai (Clerk auth)",
       "synthetic": "Haɗa Synthetic ta amfani da maɓallin API.",
       "tencent": "Sami maɓallin API a console.cloud.tencent.com",
       "thebai": "Maɓallin API na Bearer don ƙofar TheB.AI mai dacewa da OpenAI.",

@@ -6285,7 +6285,6 @@
       "stability-ai": "Stability AI-ஐ ஒரு API கீ மூலம் இணைக்கவும்.",
       "stepfun": "platform.stepfun.com இல் API கீயைப் பெறவும்",
       "sumopod": "SumoPod ஆனது https://ai.sumopod.com/v1/chat/completions இல் OpenAI-உடன் இணக்கமான அரட்டை நிறைவு எண்ட்பாயிண்ட்டை வழங்குகிறது, அத்துடன் நேரடி /v1/models பட்டியலையும் வழங்குகிறது. OmniRoute ஆனது OpenAI புரோட்டோகாலைப் பயன்படுத்துகிறது மற்றும் பாஸ்த்ரூ வழியாக மாதிரிகளைப் பட்டியலிடுகிறது.",
-      "suno": "suno.ai இலிருந்து செஷன் குக்கீயை ஒட்டவும் (Clerk அங்கீகாரம்)",
       "synthetic": "Synthetic-ஐ ஒரு API கீ மூலம் இணைக்கவும்.",
       "tencent": "console.cloud.tencent.com இல் API கீயைப் பெறவும்",
       "thebai": "TheB.AI OpenAI-உடன் இணக்கமான கேட்வேக்கான Bearer API கீ.",

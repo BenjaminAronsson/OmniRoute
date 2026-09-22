@@ -6285,7 +6285,6 @@
       "stability-ai": "Forbind Stability AI med en API-nøgle.",
       "stepfun": "Hent API-nøgle på platform.stepfun.com",
       "sumopod": "SumoPod eksponerer et OpenAI-kompatibelt chat completions-slutpunkt på https://ai.sumopod.com/v1/chat/completions plus et live /v1/models-katalog. OmniRoute bruger OpenAI-protokollen og viser modeller via passthrough.",
-      "suno": "Indsæt sessionscookie fra suno.ai (Clerk-godkendelse)",
       "synthetic": "Forbind Synthetic med en API-nøgle.",
       "tencent": "Hent API-nøgle på console.cloud.tencent.com",
       "thebai": "Bearer API-nøgle til den OpenAI-kompatible TheB.AI-gateway.",

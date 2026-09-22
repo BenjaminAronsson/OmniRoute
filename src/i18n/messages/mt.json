@@ -6285,7 +6285,6 @@
       "stability-ai": "Qabbad Stability AI b’ċavetta API.",
       "stepfun": "Ikseb ċavetta API fuq platform.stepfun.com",
       "sumopod": "SumoPod joffri endpoint għat-tlestijiet taċ-chat kompatibbli ma’ OpenAI fuq https://ai.sumopod.com/v1/chat/completions, flimkien ma’ katalogu attiv fuq /v1/models. OmniRoute juża l-protokoll OpenAI u jelenka l-mudelli permezz ta’ passthrough.",
-      "suno": "Waħħal il-cookie tas-sessjoni minn suno.ai (awtentikazzjoni Clerk)",
       "synthetic": "Qabbad Synthetic b’ċavetta API.",
       "tencent": "Ikseb ċavetta API fuq console.cloud.tencent.com",
       "thebai": "Ċavetta API Bearer għall-gateway ta’ TheB.AI kompatibbli ma’ OpenAI.",

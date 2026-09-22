@@ -6285,7 +6285,6 @@
       "stability-ai": "Stability AI-ı API açarı ilə qoşun.",
       "stepfun": "API açarını platform.stepfun.com ünvanından əldə edin",
       "sumopod": "SumoPod https://ai.sumopod.com/v1/chat/completions ünvanında OpenAI ilə uyğun söhbət tamamlama son nöqtəsini və əlavə olaraq canlı /v1/models kataloqunu təqdim edir. OmniRoute OpenAI protokolundan istifadə edir və modelləri birbaşa ötürmə (passthrough) vasitəsilə siyahıya alır.",
-      "suno": "suno.ai saytından sessiya kukisini (Clerk auth) yapışdırın",
       "synthetic": "Synthetic-i API açarı ilə qoşun.",
       "tencent": "API açarını console.cloud.tencent.com ünvanından əldə edin",
       "thebai": "TheB.AI OpenAI ilə uyğun şlüzü (gateway) üçün Bearer API açarı.",

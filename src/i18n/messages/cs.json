@@ -6285,7 +6285,6 @@
       "stability-ai": "Připojte Stability AI pomocí API klíče.",
       "stepfun": "Získejte API klíč na platform.stepfun.com",
       "sumopod": "SumoPod poskytuje koncový bod pro doplňování chatu kompatibilní s OpenAI na adrese https://ai.sumopod.com/v1/chat/completions a také živý katalog /v1/models. OmniRoute používá protokol OpenAI a vypisuje modely prostřednictvím passthrough.",
-      "suno": "Vložte session cookie ze suno.ai (ověření Clerk)",
       "synthetic": "Připojte Synthetic pomocí API klíče.",
       "tencent": "Získejte API klíč na console.cloud.tencent.com",
       "thebai": "Bearer API klíč pro bránu TheB.AI kompatibilní s OpenAI.",
