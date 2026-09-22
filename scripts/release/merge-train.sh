@@ -76,6 +76,30 @@ STATIC_GATES=(
   "npm run i18n:check-keys:cli"
   "npm run i18n:check-ratio"
   "node scripts/i18n/check-translation-drift.mjs"
+  # ci.yml:lint family (2026-09-22): the same lesson as the i18n block above, for the
+  # rest of the lint job. A 170-PR drain left the tip red on eleven `ci.yml:lint` /
+  # `docs-sync-strict` gates the train never ran — every PR was green on its own and
+  # only the combined tree failed. The migration one alone cost a 226-test red (two
+  # boarded PRs both claiming version 181). Kept under ~1 min total on the devbox;
+  # anything slower lives in FULL_ONLY_GATES.
+  "npm run check:migration-numbering"   # ~3s  — two boarded PRs claiming one version
+  "npm run check:env-doc-sync"          # ~4s  — process.env added without .env.example
+  "npm run check:route-validation:t06"  # ~4s  — new route without Zod validation
+  "npm run check:db-rules"              # ~5s  — raw SQL outside src/lib/db
+  "npm run check:vitest-exclusions"     # ~2s  — stale vitest exclusion entries
+  "npm run check:tracked-artifacts"     # ~3s  — a boarded PR tracking a root _* path
+  "npm run check:cycles"                # ~2s  — an import cycle only the merged tree closes
+  "npm run check:provider-consistency"  # ~2s  — registry/catalog drift across PRs
+  "npm run check:error-helper"          # ~17s — raw err.message reaching a response body
+  "npm run check:known-symbols"         # ~27s — a symbol one PR removes and another still uses
+)
+# Same class, but minutes each — FULL mode only, so an intra-day `--fast` train stays
+# fast. The daily FULL run (see the header) is where these earn their keep.
+FULL_ONLY_GATES=(
+  "npm run check:agent-skills-sync"       # ~76s  — generated SKILL.md out of date
+  "npm run check:route-guard-membership"  # ~46s  — new local-only route left unclassified
+  "npm run check:docs-counts"             # ~164s — README/AGENTS/llm.txt counts vs code
+  "npm run check:dashboard-typecheck"     # minutes — TS errors under the dashboard tsconfig
 )
 # Full mode: the box-speed runner (same coverage as the two CI shards combined —
 # main + dashboard + serial groups — at local concurrency instead of runner-sized).
@@ -95,6 +119,12 @@ if [ "$PLAN" = "1" ]; then
     echo "[merge-train] ${i}. ${c}"
     i=$((i + 1))
   done
+  if [ "$FAST" != "1" ]; then
+    for c in "${FULL_ONLY_GATES[@]}"; do
+      echo "[merge-train] ${i}. ${c}"
+      i=$((i + 1))
+    done
+  fi
   if [ "$FAST" = "1" ]; then
     echo "[merge-train] ${i}. (fast) run node:test files changed by the boarded PRs (main/dashboard/serial buckets)"
   else
@@ -172,6 +202,12 @@ run_gate() {
 for c in "${STATIC_GATES[@]}"; do
   run_gate "$c"
 done
+# The minutes-long members of the same family run only in FULL mode.
+if [ "$FAST" != "1" ]; then
+  for c in "${FULL_ONLY_GATES[@]}"; do
+    run_gate "$c"
+  done
+fi
 
 if [ "$FAST" = "1" ]; then
   # node:test files changed by the boarded PRs (tests/unit/**/*.test.{ts,mjs};
