@@ -100,7 +100,14 @@ test("scanRange + main: flags only the commits in the range that carry AI attrib
       assert.equal(main(["--range", `${base}..${base}`]), 0);
       assert.equal(main(["--pr-title", "feat: made with Claude Code"]), 1);
       assert.equal(main(["--pr-title", "feat(claude): normal title"]), 0);
-      assert.equal(main([]), 2, "no input → usage");
+      // in Actions GITHUB_EVENT_PATH is set (the real PR event) — isolate the no-input case
+      const savedEvent = process.env.GITHUB_EVENT_PATH;
+      delete process.env.GITHUB_EVENT_PATH;
+      try {
+        assert.equal(main([]), 2, "no input → usage");
+      } finally {
+        if (savedEvent !== undefined) process.env.GITHUB_EVENT_PATH = savedEvent;
+      }
     } finally {
       console.error = orig;
     }

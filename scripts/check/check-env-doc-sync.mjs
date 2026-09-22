@@ -100,6 +100,8 @@ const IGNORE_FROM_CODE = new Set([
   // CI providers (set by the runner).
   "GITHUB_BASE_REF",
   "GITHUB_BASE_SHA",
+  // check-ai-attribution.mjs reads the PR of the Actions event payload when run without args (#14436)
+  "GITHUB_EVENT_PATH",
   // Set by the Actions runner; the ts7 ratchet appends its job summary there
   // (scripts/check/check-ts7-diagnostics-ratchet.mjs) — never OmniRoute runtime config (#9985).
   "GITHUB_STEP_SUMMARY",
