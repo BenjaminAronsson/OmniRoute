@@ -274,6 +274,18 @@ jobs:
       # reported at the end. set -uo pipefail (NOT set -e) so one failing gate does
       # not abort the job and mask every later gate. Release-added gates are folded
       # in: open-sse typecheck (#8781) and file-size base-relative mode (#8522).
+      # Hard Rule #16 — AI/bot attribution in PR commits, title or body (#14436). ci.yml only
+      # runs on PRs to main, so release-branch PRs are gated here.
+      - name: AI attribution in commit / PR metadata (Hard Rule #16)
+        if: github.event_name == 'pull_request'
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          printf '%s' "$PR_BODY" > "$RUNNER_TEMP/pr-body.md"
+          npm run check:ai-attribution -- --range "$PR_BASE_SHA..$PR_HEAD_SHA" --pr-title "$PR_TITLE" --pr-body-file "$RUNNER_TEMP/pr-body.md"
       - name: Quality gates (all, non-fail-fast)
         env:
           # #8522: base-relative file-size mode on PR events — inherited drift (base

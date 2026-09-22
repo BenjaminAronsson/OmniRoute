@@ -12,7 +12,8 @@
 //
 // Incident record: 8 contributor commits reached release/v3.8.51 with such trailers through squash
 // merges that copied the PR commit bodies (#14436). This gate runs:
-//   • in CI on every PR commit of the range base..head plus the PR title/body (ci.yml → lint);
+//   • in CI on every PR commit of the range base..head plus the PR title/body (quality.yml →
+//     fast-gates for PR→release/**, ci.yml → lint for PR→main);
 //   • locally as the husky `commit-msg` hook on the message being committed.
 //
 // Usage:
@@ -51,7 +52,9 @@ export function findAiAttribution(text) {
     );
     if (trailer) {
       const who = trailer[2];
-      if (AI_NAME_RE.test(who.replace(/<[^>]*>/, "")) || AI_EMAIL_RE.test(who)) {
+      // name part = everything before the first "<" (not HTML sanitization — CodeQL js/incomplete-multi-character-sanitization does not apply)
+      const name = who.split("<")[0];
+      if (AI_NAME_RE.test(name) || AI_EMAIL_RE.test(who)) {
         hits.push(line);
         continue;
       }

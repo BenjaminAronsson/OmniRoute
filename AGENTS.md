@@ -542,7 +542,7 @@ git push -u origin feat/your-feature
 **Husky hooks**:
 
 - **pre-commit**: lint-staged + `check-docs-sync` + `check:any-budget:t11` + `check:tracked-artifacts`
-- **commit-msg**: `check:ai-attribution` — rejects AI/bot `Co-Authored-By` trailers and AI-generation footers in the message (Hard Rule #16; human co-authors allowed; also a PR-only step in the CI `lint` job — #14436)
+- **commit-msg**: `check:ai-attribution` — rejects AI/bot `Co-Authored-By` trailers and AI-generation footers in the message (Hard Rule #16; human co-authors allowed; also a PR-only step in `quality.yml` fast-gates (PR→`release/**`) and `ci.yml` lint (PR→`main`) — #14436)
 - **pre-push**: intentionally light (PATH/npm sanity only). `any-budget` + `tracked-artifacts`
   already run on pre-commit; re-running them on every push was pure double-pay. CI still
   enforces both. (Was Fase 6A.12 full pre-push gate; folded into pre-commit in #6716.)
