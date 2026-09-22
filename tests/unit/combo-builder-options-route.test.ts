@@ -256,5 +256,8 @@ test("combo builder options route exposes compatible provider nodes with node me
   assert.equal(provider.source, "provider-node");
   assert.equal(provider.acceptsArbitraryModel, true);
   assert.ok(provider.models.some((model) => model.id === "gpt-custom"));
-  assert.equal(provider.models[0].qualifiedModel, "openai-compatible-demo/gpt-custom");
+  // #14143 (fixes #14135): a provider node with a prefix alias qualifies its models
+  // under that alias, because `gd/` is what the router actually resolves — the raw
+  // internal node id never routed. Mirrors the `oc/` assertion in the test above.
+  assert.equal(provider.models[0].qualifiedModel, "gd/gpt-custom");
 });
