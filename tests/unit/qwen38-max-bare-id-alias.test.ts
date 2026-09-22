@@ -1,12 +1,12 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { MODEL_SPECS } from "../../src/shared/constants/modelSpecs.ts";
+import { getModelSpec } from "../../src/shared/constants/modelSpecs.ts";
 import { resolveModelAlias } from "../../open-sse/services/modelDeprecation.ts";
 import { resolveLifecycle } from "../../open-sse/handlers/chatCore/modelLifecyclePolicy.ts";
 import { hasKnownProviderModel } from "../../open-sse/services/model.ts";
 
 /**
- * Bare `qwen3.8-max` was an unroutable id: the model ships everywhere as
+ * Bare `qwen3.8-max` was originally unroutable: the model shipped as
  * `qwen3.8-max-preview` (bailian-coding-plan, qoder, qwen-cloud-token-plan),
  * and nothing in the repo declared the short form. A client sending it therefore
  *
@@ -24,9 +24,10 @@ import { hasKnownProviderModel } from "../../open-sse/services/model.ts";
  * preflight and the upstream dispatch. A MODEL_SPECS `aliases` entry would have
  * fixed only (1): spec aliases resolve capabilities, never the dispatched id.
  *
- * SINCE THEN the premise has half-expired: `qwen-cloud-token-plan` and `qwen-web`
- * now list the BARE id and no longer carry `-preview` at all, so the rewrite that
- * rescues `qoder`/`bailian-coding-plan` would break those two. `resolveModelAlias`
+ * SINCE THEN the premise has expired for GA-capable providers:
+ * `qwen-cloud-token-plan` and `opencode-go` list the BARE id, so the rewrite that
+ * rescues `qoder`/`bailian-coding-plan` would break those two. #14181 also gave
+ * GA its own capability spec, distinct from preview. `resolveModelAlias`
  * already handles this — `hasKnownProviderModel` short-circuits the built-in alias
  * when the provider serves the id itself — which is why the alias map keeps the
  * entry rather than dropping it. The assertions below pin BOTH halves.
@@ -43,13 +44,13 @@ test("the canonical id is a no-op through the alias map (no double rewrite)", ()
   assert.equal(resolveModelAlias(CANONICAL), CANONICAL);
 });
 
-test("the alias target carries the real 1M window, not the 128k fallback", () => {
-  const spec = MODEL_SPECS[CANONICAL];
-  assert.ok(spec, `MODEL_SPECS is missing ${CANONICAL}`);
-  assert.equal(spec.contextWindow, 1_000_000);
-  // The bare id must NOT gain its own spec entry — a second source of truth for the
-  // same model is what lets the two ids drift apart again.
-  assert.equal(MODEL_SPECS[BARE], undefined);
+test("GA and preview both resolve a 1M window without the 128k fallback", () => {
+  for (const model of [BARE, CANONICAL]) {
+    const spec = getModelSpec(model);
+    assert.ok(spec, `missing capabilities for ${model}`);
+    assert.equal(spec.contextWindow, 1_000_000, `context window for ${model}`);
+    assert.equal(spec.maxOutputTokens, 65_536, `output budget for ${model}`);
+  }
 });
 
 // The catalogs have since split. `qwen-cloud-token-plan` now lists the BARE
@@ -59,7 +60,7 @@ test("the alias target carries the real 1M window, not the 128k fallback", () =>
 // serves. The rewrite still has to happen on the providers that only know
 // `-preview`. `qwen-web` served the BARE id too before its retirement
 // (provenance HOLD, #11713); it no longer exists as a provider at all.
-const SERVES_BARE = ["qwen-cloud-token-plan"];
+const SERVES_BARE = ["qwen-cloud-token-plan", "opencode-go"];
 const SERVES_PREVIEW = ["qoder", "bailian-coding-plan"];
 
 // Pin the premise, not just the outcome: if a catalog flips, this fails first and says
