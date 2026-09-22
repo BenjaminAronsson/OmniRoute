@@ -789,9 +789,23 @@ test("chatCore preserves Combo skip behavior for incompatible reasoning", async 
   assert.equal(skipped.calls.length, 0);
 });
 
+// #14316 flipped DeepSeek's registry default from the Responses API to OpenAI Chat
+// Completions (baseUrl .../responses -> .../chat/completions) because DeepSeek's public
+// API is Chat and the Responses path 400s on multi-turn tool calls that do not echo
+// reasoning_text. The Responses protocol stayed reachable per connection, moved into
+// `alternateFormats` as "Responses-compatible". The three regressions below are about
+// the DeepSeek *Responses* reasoning-replay path, so they select that alternate exactly
+// the way an operator does — providerSpecificData.targetFormat — instead of leaning on
+// the old default.
+const DEEPSEEK_RESPONSES_CREDENTIALS = {
+  apiKey: "sk-test",
+  providerSpecificData: { targetFormat: "openai-responses" },
+};
+
 test("chatCore carries Chat reasoning_content into official DeepSeek Responses input", async () => {
   const { call, result } = await invokeChatCore({
     provider: "deepseek",
+    credentials: DEEPSEEK_RESPONSES_CREDENTIALS,
     model: "deepseek-v4-pro",
     endpoint: "/v1/chat/completions",
     body: {
@@ -841,6 +855,7 @@ test("chatCore replays nonstream DeepSeek Responses reasoning across a Chat tool
   const apiKeyInfo = { id: "deepseek-nonstream-chat-key" };
   const first = await invokeChatCore({
     provider: "deepseek",
+    credentials: DEEPSEEK_RESPONSES_CREDENTIALS,
     model: "deepseek-v4-flash",
     endpoint: "/v1/chat/completions",
     body: {
@@ -869,6 +884,7 @@ test("chatCore replays nonstream DeepSeek Responses reasoning across a Chat tool
 
   const second = await invokeChatCore({
     provider: "deepseek",
+    credentials: DEEPSEEK_RESPONSES_CREDENTIALS,
     model: "deepseek-v4-flash",
     endpoint: "/v1/chat/completions",
     body: {
@@ -898,6 +914,7 @@ test("chatCore replays streamed DeepSeek Responses reasoning across a Chat tool 
   const apiKeyInfo = { id: "deepseek-stream-chat-key" };
   const first = await invokeChatCore({
     provider: "deepseek",
+    credentials: DEEPSEEK_RESPONSES_CREDENTIALS,
     model: "deepseek-v4-flash",
     endpoint: "/v1/chat/completions",
     body: {
@@ -923,6 +940,7 @@ test("chatCore replays streamed DeepSeek Responses reasoning across a Chat tool 
 
   const second = await invokeChatCore({
     provider: "deepseek",
+    credentials: DEEPSEEK_RESPONSES_CREDENTIALS,
     model: "deepseek-v4-flash",
     endpoint: "/v1/chat/completions",
     body: {

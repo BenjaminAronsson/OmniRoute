@@ -23,7 +23,7 @@
  *   5. ~/.auggie/bin/auggie                  (alternate installer layout)
  */
 
-import { spawn } from "node:child_process";
+import { spawn, type StdioNull, type StdioPipe } from "node:child_process";
 import path from "node:path";
 import os from "node:os";
 import fs from "node:fs";
@@ -213,7 +213,13 @@ function buildAuggieArgs(model: string): string[] {
  * elements to the shell, it does not concatenate them into a single
  * command line.
  */
-export function buildAuggieSpawnOptions<S extends readonly string[]>(
+export function buildAuggieSpawnOptions<
+  // A 3-tuple, not `readonly string[]`: spawn()'s overloads key on the tuple
+  // shape to decide whether `child.stdout`/`child.stdin` can be null, and an
+  // array-typed `stdio` matches none of them (TS2769 here, then TS18047 at
+  // every `child.stdout` use downstream).
+  S extends readonly [StdioNull | StdioPipe, StdioNull | StdioPipe, StdioNull | StdioPipe],
+>(
   stdio: S
 ): {
   env: NodeJS.ProcessEnv;

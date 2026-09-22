@@ -1,7 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { stripInternalBodyFields } from "../../open-sse/config/cliFingerprints.ts";
+import {
+  stripInternalBodyFields,
+  stripInternalOmnirouteMarkers,
+} from "../../open-sse/config/cliFingerprints.ts";
 import { SKIP_UNIVERSAL_HANDOFF_FLAG } from "../../open-sse/services/contextHandoff.ts";
 
 // Live 400 on the claude/claude-opus-5 hop of best-reasoning-paid:
@@ -84,6 +87,55 @@ test("stripInternalBodyFields keeps the pre-existing non-_omniroute markers stri
   stripInternalBodyFields(body);
 
   assert.deepEqual(Object.keys(body), ["model"]);
+});
+
+// The pre-executor boundary (prepareUpstreamBody) must NOT use the full strip.
+// #14252 wired stripInternalBodyFields() there, which also deleted the markers the
+// EXECUTORS still have to read in transformRequest() — so `_nativeCodexPassthrough`
+// never reached CodexExecutor and every native Responses passthrough silently fell
+// through to the translated path (the Responses allowlist then dropped the client's
+// `metadata`). The prefix-only helper is what that boundary gets.
+test("stripInternalOmnirouteMarkers keeps the executor-consumed markers", () => {
+  const body: Record<string, unknown> = {
+    model: "gpt-5.6-sol",
+    metadata: { source: "codex-client" },
+    _claudeCodeRequiresLowercaseToolNames: true,
+    _nativeCodexPassthrough: true,
+    _nativeXaiResponsesPassthrough: true,
+    _nativeOpenAICompatibleResponsesPassthrough: true,
+    _omnirouteSkipContextRelay: true,
+  };
+
+  stripInternalOmnirouteMarkers(body);
+
+  assert.equal(body._omnirouteSkipContextRelay, undefined);
+  assert.equal(body._nativeCodexPassthrough, true);
+  assert.equal(body._nativeXaiResponsesPassthrough, true);
+  assert.equal(body._nativeOpenAICompatibleResponsesPassthrough, true);
+  assert.equal(body._claudeCodeRequiresLowercaseToolNames, true);
+  assert.deepEqual(body.metadata, { source: "codex-client" });
+});
+
+test("prepareUpstreamBody preserves _nativeCodexPassthrough for the executor", async () => {
+  const { prepareUpstreamBody } = await import("../../open-sse/handlers/chatCore/upstreamBody.ts");
+
+  const prepared = (await prepareUpstreamBody({
+    translatedBody: {
+      model: "gpt-5.6-sol",
+      input: [],
+      metadata: { source: "codex-client" },
+      _nativeCodexPassthrough: true,
+      _omnirouteSkipContextRelay: true,
+    },
+    modelToCall: "gpt-5.6-sol",
+    provider: "codex",
+    targetFormat: "openai-responses",
+    credentials: {},
+  } as never)) as Record<string, unknown>;
+
+  assert.equal(prepared._omnirouteSkipContextRelay, undefined);
+  assert.equal(prepared._nativeCodexPassthrough, true);
+  assert.deepEqual(prepared.metadata, { source: "codex-client" });
 });
 
 test("stripInternalBodyFields leaves client fields with a leading underscore alone", () => {

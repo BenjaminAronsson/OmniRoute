@@ -189,9 +189,13 @@ test("shared set size includes live REGISTRY and retired Designer + Felo + Qwen 
   // alias "pepper" from the REGISTRY walk (414 -> 412) — the two land back on the same total.
   // #12648 registers xKiro: id "xkiro" with no separate alias — a single REGISTRY
   // member (412 -> 413).
-  // Lyceum (pay-per-use OpenAI-compatible gateway, 2026-09-20) registers id "lyceum"
-  // with an identical alias — a single REGISTRY member (413 -> 414).
-  assert.equal(RESERVED_PREFIX_COUNT, 414);
+  // Lyceum (pay-per-use OpenAI-compatible gateway, #12474) registers id "lyceum" with an
+  // identical alias — a single REGISTRY member. Its PR wrote "413 -> 414", but the set was
+  // ALREADY 414 at its parent commit (verified by dumping RESERVED_PROVIDER_PREFIXES at
+  // 2a33528f~1), so the real move is 414 -> 415 and the assertion was left one short — this
+  // test has been red on the release tip ever since that merge. Diffing the two dumps shows
+  // "lyceum" as the one and only member added.
+  assert.equal(RESERVED_PREFIX_COUNT, 415);
 });
 
 test("isReservedProviderPrefix rejects non-string input", () => {

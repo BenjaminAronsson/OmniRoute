@@ -200,7 +200,14 @@ test("handleChat rejects requests without a model", async () => {
 });
 
 test("handleChat applies task-aware routing when a semantic override is enabled", async () => {
-  await seedConnection("deepseek", { apiKey: "sk-deepseek-task-route" });
+  // #14316 flipped DeepSeek's registry default from the Responses API to OpenAI Chat
+  // Completions and moved "openai-responses" into `alternateFormats`. This regression
+  // asserts the task-routed request reaches the upstream in Responses shape (`input`,
+  // no `messages`), so the connection selects that alternate the way an operator does.
+  await seedConnection("deepseek", {
+    apiKey: "sk-deepseek-task-route",
+    providerSpecificData: { targetFormat: "openai-responses" },
+  });
   const seenAuthHeaders = [];
   const seenRequestBodies = [];
   setTaskRoutingConfig({
@@ -317,7 +324,13 @@ test("handleChat keeps protected combo fallback separate from Global Fallback Mo
 });
 
 test("handleChat defaults a Combo's incompatible reasoning fallback to drop", async () => {
-  await seedConnection("deepseek", { apiKey: "sk-deepseek-reasoning-drop" });
+  // Responses-to-Responses reasoning drop: the opaque `reasoning` item must not be
+  // replayed upstream while the `function_call` is. Since #14316 that path is the
+  // DeepSeek connection's "Responses-compatible" alternate, not its default format.
+  await seedConnection("deepseek", {
+    apiKey: "sk-deepseek-reasoning-drop",
+    providerSpecificData: { targetFormat: "openai-responses" },
+  });
   await combosDb.createCombo({
     name: "reasoning-transport-drop",
     strategy: "priority",
