@@ -1,5 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { Command } from "commander";
+import { registerModels } from "../../bin/cli/commands/models.mjs";
+import { registerModelValidation } from "../../bin/cli/commands/model-validation.mjs";
 
 test("completion.mjs pode ser importado sem erro", async () => {
   const mod = await import("../../bin/cli/commands/completion.mjs");
@@ -24,6 +27,7 @@ test("runCompletionCommand bash retorna 0 e string não-vazia", async () => {
   const out = chunks.join("");
   assert.ok(out.includes("omniroute"), "bash script should mention omniroute");
   assert.ok(out.includes("_omniroute"), "bash script should define _omniroute function");
+  assert.match(out, /^\s*models\).*compgen -W ""/m, "legacy calls must not invent subcommands");
 });
 
 test("runCompletionCommand zsh contém compdef", async () => {
@@ -119,6 +123,9 @@ test("completion scripts expõem os alvos de execução e configuração", async
 
 test("completion exposes models test-add in each shell without network calls", async () => {
   const { runCompletionCommand } = await import("../../bin/cli/commands/completion.mjs");
+  const program = new Command();
+  registerModels(program);
+  registerModelValidation(program);
   for (const shell of ["bash", "zsh", "fish"] as const) {
     const chunks: string[] = [];
     const originalWrite = process.stdout.write;
@@ -127,7 +134,7 @@ test("completion exposes models test-add in each shell without network calls", a
       return true;
     }) as typeof process.stdout.write;
     try {
-      assert.equal(await runCompletionCommand(shell), 0);
+      assert.equal(await runCompletionCommand(shell, program), 0);
     } finally {
       process.stdout.write = originalWrite;
     }
