@@ -213,7 +213,7 @@ function buildAuggieArgs(model: string): string[] {
  * elements to the shell, it does not concatenate them into a single
  * command line.
  */
-export function buildAuggieSpawnOptions<S extends readonly string[]>(
+export function buildAuggieSpawnOptions<S extends ["pipe" | "ignore", "pipe", "pipe"]>(
   stdio: S
 ): {
   env: NodeJS.ProcessEnv;
