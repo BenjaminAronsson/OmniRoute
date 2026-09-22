@@ -29,6 +29,9 @@
 #
 # Exit codes: 0 = suite green (evidence printed); 1 = usage error; 2 = suite red;
 #             PRs whose merge conflicts are EJECTED (reported, train continues).
+#             A static gate already red on origin/<base> with the SAME violations is
+#             reported as INHERITED and does NOT stop the train (merge-gates.md §3);
+#             exit 0 still happens, and the summary lists every inherited gate.
 set -euo pipefail
 
 PLAN=0
@@ -133,6 +136,9 @@ if [ "$PLAN" = "1" ]; then
   i=$((i + 1))
   echo "[merge-train] ${i}. ${VITEST}"
   i=$((i + 1))
+  echo "[merge-train] ${i}. a red static gate is re-run on origin/${BASE}: same violations → reported"
+  echo "[merge-train]     as INHERITED and the train continues; any ADDED violation → exit 2"
+  i=$((i + 1))
   echo "[merge-train] ${i}. green → print --admin evidence per PR; red → exit 2 (bisect + eject)"
   echo "[merge-train] ${i}. teardown: git worktree remove --force (trap EXIT)"
   exit 0
@@ -147,8 +153,12 @@ TS="$(date +%Y%m%d-%H%M%S)"
 WT="$ROOT/.claude/worktrees/merge-train-$TS"
 LOG="$WT-suite.log"
 
+BASE_WT="$WT-base"
+BASE_LOG="$WT-base.log"
+
 cleanup() {
   git -C "$ROOT" worktree remove --force "$WT" 2>/dev/null || true
+  git -C "$ROOT" worktree remove --force "$BASE_WT" 2>/dev/null || true
 }
 trap cleanup EXIT
 
@@ -187,25 +197,77 @@ EJ_MSG=""
 echo "[merge-train] train tip ${TIP} — boarded: ${BOARDED[*]}${EJ_MSG}"
 echo "[merge-train] running parity suite (log: ${LOG})…"
 
+# A red gate is only the train's fault when it is GREEN on the untouched base.
+# Before 2026-09-22 the train aborted on the first red and the operator re-derived
+# that by hand every time — which is how a 170-PR drain stalled behind gates that
+# were already red on the release tip (docs counts, mutation coverage, two API
+# typecheck errors). merge-gates.md §3 says to reproduce a failure on
+# `origin/<base>` before calling it inherited; this does exactly that, automatically.
+#
+# Only the `npm run check:*` static gates are discriminated. The unit/vitest gates
+# run files the boarded PRs added, which do not exist on the base at all, so a red
+# there means "file not found", not "inherited" — those still abort and the
+# operator bisects as before.
+INHERITED=()
+
+base_probe_ready() {
+  [ -d "$BASE_WT" ] && return 0
+  git -C "$ROOT" worktree add --detach "$BASE_WT" "origin/$BASE" --quiet || return 1
+  [ -e "$BASE_WT/node_modules" ] || ln -s "$ROOT/node_modules" "$BASE_WT/node_modules"
+  return 0
+}
+
+# A gate run's failure signature: the lines it marks as violations. The train's red
+# counts as INHERITED only when every violation line also appears on the base — a
+# train that ADDS one line owns a genuine red even though the gate was already
+# failing, and that is precisely the case a bare "it was red before" waves through.
+gate_violations() {
+  grep -aE '^[[:space:]]*(✗|✖|×|FAIL|✘)' "$1" 2>/dev/null | sed 's/^[[:space:]]*//' | sort -u
+}
+
 run_gate() {
   local c="$1"
+  local discriminate="${2:-0}"
+  local before
+  before="$(wc -l <"$LOG" 2>/dev/null || echo 0)"
   echo "[merge-train] ▶ $(date +%H:%M:%S) ${c}"
-  if ! (cd "$WT" && eval "$c") >>"$LOG" 2>&1; then
-    echo "[merge-train] ✗ SUITE RED at: ${c}" >&2
-    echo "[merge-train] tail of ${LOG}:" >&2
-    tail -30 "$LOG" >&2
-    echo "[merge-train] bisect: re-run the failing gate on intermediate train commits, eject the offender, re-run." >&2
-    exit 2
+  if (cd "$WT" && eval "$c") >>"$LOG" 2>&1; then
+    return 0
   fi
+
+  if [ "$discriminate" = "1" ] && base_probe_ready; then
+    tail -n "+$((before + 1))" "$LOG" >"$LOG.gate" 2>/dev/null || : >"$LOG.gate"
+    echo "[merge-train]   … red — re-running it on the untouched origin/${BASE} to classify"
+    : >"$BASE_LOG"
+    if (cd "$BASE_WT" && eval "$c") >>"$BASE_LOG" 2>&1; then
+      echo "[merge-train] ✗ SUITE RED at: ${c} — GREEN on origin/${BASE}: the train owns this." >&2
+    else
+      local added
+      added="$(comm -23 <(gate_violations "$LOG.gate") <(gate_violations "$BASE_LOG") || true)"
+      if [ -z "$added" ]; then
+        echo "[merge-train] ⚠ INHERITED base-red (same violations on origin/${BASE}) — continuing: ${c}"
+        INHERITED+=("$c")
+        return 0
+      fi
+      echo "[merge-train] ✗ SUITE RED at: ${c} — red on the base too, but the train ADDS:" >&2
+      printf '%s\n' "$added" | sed 's/^/[merge-train]     + /' >&2
+    fi
+  fi
+
+  echo "[merge-train] ✗ SUITE RED at: ${c}" >&2
+  echo "[merge-train] tail of ${LOG}:" >&2
+  tail -30 "$LOG" >&2
+  echo "[merge-train] bisect: re-run the failing gate on intermediate train commits, eject the offender, re-run." >&2
+  exit 2
 }
 
 for c in "${STATIC_GATES[@]}"; do
-  run_gate "$c"
+  run_gate "$c" 1
 done
 # The minutes-long members of the same family run only in FULL mode.
 if [ "$FAST" != "1" ]; then
   for c in "${FULL_ONLY_GATES[@]}"; do
-    run_gate "$c"
+    run_gate "$c" 1
   done
 fi
 
@@ -256,7 +318,17 @@ run_gate "$VITEST"
 
 MODE_NOTE="suite green"
 [ "$FAST" = "1" ] && MODE_NOTE="FAST gates green: static + changed tests + vitest — daily full-suite run still required"
-echo "[merge-train] ✅ SUITE GREEN on ${TIP}"
+if [ ${#INHERITED[@]} -gt 0 ]; then
+  MODE_NOTE="${MODE_NOTE}; ${#INHERITED[@]} gate(s) inherited-red from origin/${BASE}"
+  echo "[merge-train] ✅ SUITE GREEN on ${TIP} — except ${#INHERITED[@]} gate(s) already red on origin/${BASE}:"
+  for c in "${INHERITED[@]}"; do
+    echo "[merge-train]   ⚠ ${c}"
+  done
+  echo "[merge-train] those are NOT this train's defect (identical violations on the base), but the"
+  echo "[merge-train] base stays red until they are drained — track them before the next release."
+else
+  echo "[merge-train] ✅ SUITE GREEN on ${TIP}"
+fi
 echo "[merge-train] evidence line for each PR (paste before gh pr merge --squash --admin):"
 for N in "${BOARDED[@]}"; do
   echo "  #${N}: Validated in local merge-train ${LOG} on $(hostname) @ ${TIP} (${MODE_NOTE})"

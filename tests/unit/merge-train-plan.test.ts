@@ -164,3 +164,43 @@ test("rejects a non-numeric PR ref", async () => {
   assert.equal(code, 1);
   assert.match(stderr, /not numeric/);
 });
+
+test("a red static gate is discriminated against the base before the train is blamed", async () => {
+  // 2026-09-22: a 170-PR drain stalled because every train aborted on the first red
+  // gate, and four of those gates (docs counts, mutation coverage, two API typecheck
+  // errors) were already red on the release tip. merge-gates.md §3 requires
+  // reproducing a failure on `origin/<base>` before calling it inherited — the script
+  // must do that itself, and it must only forgive a red whose violations are IDENTICAL
+  // to the base's, so a train that ADDS a violation still owns it.
+  const script = await readFile(SCRIPT, "utf8");
+  assert.match(script, /base_probe_ready\(\)/, "must have a base-probe worktree helper");
+  assert.match(
+    script,
+    /worktree remove --force "\$BASE_WT"/,
+    "the base probe must be torn down by the cleanup trap"
+  );
+  assert.match(script, /INHERITED\+=\("\$c"\)/, "an inherited red must be recorded, not silent");
+  assert.match(
+    script,
+    /comm -23 <\(gate_violations/,
+    "inherited must mean 'adds no violation the base does not already have'"
+  );
+  for (const loop of ["STATIC_GATES", "FULL_ONLY_GATES"]) {
+    assert.match(
+      script,
+      new RegExp(`\\$\\{${loop}\\[@\\]\\}"; do\\n\\s*run_gate "\\$c" 1`),
+      `${loop} must run with discrimination enabled`
+    );
+  }
+  // The unit/vitest gates must NOT be discriminated: they run files the boarded PRs
+  // added, which simply do not exist on the base — "red there too" would be ENOENT.
+  assert.match(script, /run_gate "\$VITEST"\n/, "vitest must run without the discriminate flag");
+});
+
+test("--plan documents the inherited-red classification", async () => {
+  const { code, stdout } = await run(["--plan", "release/v9.9.9", "111"]);
+  assert.equal(code, 0);
+  assert.match(stdout, /re-run on origin\/release\/v9\.9\.9/);
+  assert.match(stdout, /INHERITED and the train continues/);
+  assert.match(stdout, /ADDED violation/);
+});
