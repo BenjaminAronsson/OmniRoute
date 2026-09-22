@@ -1,0 +1,1 @@
+- **quality:** drain the 2026-09-22 release-tip base-reds — migration counts 178 → 179 in README/AGENTS/llm.txt (+65 mirrors), six covering unit tests registered in `stryker.conf.json`, and two real type errors fixed (`auggie.ts` spawn stdio tuple, `intelligentRouting.ts` spread of an un-narrowed `unknown`).

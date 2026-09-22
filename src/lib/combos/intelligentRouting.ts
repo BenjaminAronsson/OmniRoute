@@ -235,7 +235,11 @@ export function applyIntelligentRoutingConfigPatch(
   patch: Record<string, unknown>
 ): Record<string, unknown> & IntelligentRoutingConfig {
   const normalized = normalizeIntelligentRoutingConfig(config);
-  const editsWeights = isRecord(patch.weights);
+  // Keep the NARROWED value, not just the boolean: `patch` is Record<string, unknown>,
+  // so storing only `isRecord(...)`'s result leaves `patch.weights` as `unknown` at the
+  // spread below (TS2698 — spread types may only be created from object types).
+  const patchWeights = isRecord(patch.weights) ? patch.weights : null;
+  const editsWeights = patchWeights !== null;
   return {
     ...config,
     ...normalized,
@@ -245,7 +249,7 @@ export function applyIntelligentRoutingConfigPatch(
       : ((patch.modePack as string | undefined) ?? normalized.modePack),
     weights: {
       ...normalized.weights,
-      ...(editsWeights ? patch.weights : {}),
+      ...(patchWeights ?? {}),
     },
   };
 }
