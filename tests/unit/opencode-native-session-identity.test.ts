@@ -69,3 +69,39 @@ test("untrusted native IDs reject controls and excessive length", () => {
     assert.equal(clientSuppliedOpencodeSession({ thread_id: id }), undefined);
   }
 });
+
+test("native fallback preserves raw identity and an existing request when CLI synthesis is off", () => {
+  const output: Record<string, string> = {};
+  forwardOpencodeClientHeaders(
+    output,
+    { thread_id: "native-conversation", "x-opencode-request": "existing-request" },
+    { synthesizeRequestId: true }
+  );
+  assert.equal(output["x-opencode-session"], "native-conversation");
+  assert.equal(output["x-opencode-request"], "existing-request");
+});
+
+test("an existing outbound session bypasses fallback request synthesis", () => {
+  const output = { "x-opencode-session": "existing-session" } as Record<string, string>;
+  forwardOpencodeClientHeaders(
+    output,
+    { thread_id: "native-conversation" },
+    {
+      synthesizeRequestId: true,
+    }
+  );
+  assert.deepEqual(output, { "x-opencode-session": "existing-session" });
+});
+
+test("invalid body identity does not synthesize a request without CLI defaults", () => {
+  const output: Record<string, string> = {};
+  forwardOpencodeClientHeaders(
+    output,
+    {},
+    {
+      synthesizeRequestId: true,
+      sessionBody: { metadata: { session_id: "bad\nidentity" } },
+    }
+  );
+  assert.deepEqual(output, {});
+});

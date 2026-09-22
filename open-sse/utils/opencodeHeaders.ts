@@ -182,18 +182,8 @@ export function forwardOpencodeClientHeaders(
   }
 
   // 3. OpencodeExecutor-only: synthesize session/request id from fallback headers
-  if ((options?.synthesizeRequestId || options?.cliDefaults) && !headers["x-opencode-session"]) {
-    const sessionAffinity = resolveOpencodeSessionIdentity(clientHeaders, options.sessionBody);
-    if (sessionAffinity) {
-      // Kept as-is here. When identity synthesis is on, applyCliDefaults renders it in the
-      // canonical shape below; with the synthesis opted out this path stays byte-identical
-      // to before, since opting out means no fabricated identity at all.
-      headers["x-opencode-session"] = sessionAffinity;
-
-      if (!headers["x-opencode-request"]) {
-        headers["x-opencode-request"] = randomUUID();
-      }
-    }
+  if (options?.synthesizeRequestId || options?.cliDefaults) {
+    applySessionFallback(headers, clientHeaders, options.sessionBody);
   }
 
   // 4. OpencodeExecutor-only: synthesize the OpenCode CLI identity Cloudflare expects
@@ -201,6 +191,21 @@ export function forwardOpencodeClientHeaders(
   if (options?.cliDefaults) {
     applyCliDefaults(headers, options.cliDefaults, options.sessionBody);
   }
+}
+
+/** Fill missing session/request identity without changing the CLI synthesis policy. */
+function applySessionFallback(
+  headers: Record<string, string>,
+  clientHeaders: Record<string, string>,
+  sessionBody?: OpencodeSessionBody
+): void {
+  if (headers["x-opencode-session"]) return;
+  const sessionAffinity = resolveOpencodeSessionIdentity(clientHeaders, sessionBody);
+  if (!sessionAffinity) return;
+  // Keep the caller's identity as-is when CLI synthesis is disabled; applyCliDefaults
+  // renders it in the canonical shape only when that policy is enabled.
+  headers["x-opencode-session"] = sessionAffinity;
+  headers["x-opencode-request"] ||= randomUUID();
 }
 
 /**
