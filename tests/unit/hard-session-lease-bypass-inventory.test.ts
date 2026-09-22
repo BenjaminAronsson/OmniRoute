@@ -19,6 +19,11 @@ const EXPECTED: Record<InventoryKind, Record<string, number>> = {
     // `getProviderCredentials` across the seam as a dependency (a reference, not a
     // call), so the two sites are inventoried at their new home — see the
     // property-access branch in countCalls().
+    // #14213: the bounded empty-turn retry resolves a NEW connection before
+    // replaying the turn. It goes through the normal `getProviderCredentials`
+    // path (class B, like every other pipeline site) — it does not reach past
+    // the lease, which is why it is inventoried rather than exempted.
+    "open-sse/handlers/chatCore.ts": 1,
     "open-sse/handlers/chatCore/providerExecutionPipeline.ts": 2,
     "open-sse/services/imageCombo.ts": 1,
     "open-sse/services/speechCombo.ts": 1,
