@@ -794,6 +794,11 @@ test("chatCore carries Chat reasoning_content into official DeepSeek Responses i
     provider: "deepseek",
     model: "deepseek-v4-pro",
     endpoint: "/v1/chat/completions",
+    // #14316 made DeepSeek default to Chat Completions (the Responses protocol demands
+    // the caller echo reasoning_text on every turn, which broke multi-turn tool calls).
+    // The Responses path is still offered per-connection, so this test selects it the way
+    // an operator does - apiType: "responses" - instead of relying on the old default.
+    credentials: { apiKey: "sk-deepseek", providerSpecificData: { apiType: "responses" } },
     body: {
       model: "deepseek-v4-pro",
       stream: false,
@@ -843,6 +848,11 @@ test("chatCore replays nonstream DeepSeek Responses reasoning across a Chat tool
     provider: "deepseek",
     model: "deepseek-v4-flash",
     endpoint: "/v1/chat/completions",
+    // #14316 made DeepSeek default to Chat Completions (the Responses protocol demands
+    // the caller echo reasoning_text on every turn, which broke multi-turn tool calls).
+    // The Responses path is still offered per-connection, so this test selects it the way
+    // an operator does - apiType: "responses" - instead of relying on the old default.
+    credentials: { apiKey: "sk-deepseek", providerSpecificData: { apiType: "responses" } },
     body: {
       model: "deepseek-v4-flash",
       stream: false,
@@ -900,6 +910,11 @@ test("chatCore replays streamed DeepSeek Responses reasoning across a Chat tool 
     provider: "deepseek",
     model: "deepseek-v4-flash",
     endpoint: "/v1/chat/completions",
+    // #14316 made DeepSeek default to Chat Completions (the Responses protocol demands
+    // the caller echo reasoning_text on every turn, which broke multi-turn tool calls).
+    // The Responses path is still offered per-connection, so this test selects it the way
+    // an operator does - apiType: "responses" - instead of relying on the old default.
+    credentials: { apiKey: "sk-deepseek", providerSpecificData: { apiType: "responses" } },
     body: {
       model: "deepseek-v4-flash",
       stream: true,
