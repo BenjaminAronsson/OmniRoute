@@ -239,10 +239,16 @@ describe("OpencodeExecutor", () => {
       // A paid model carries the client's non-streaming expectation through. A free-tier
       // model does not: the gated tier only answers streamed requests, so the executor
       // announces the event stream and the JSON body is rebuilt from it.
+      //
+      // #14230 routed the whole opencode-zen GPT-5.6 family to the Responses API
+      // (targetFormat:"openai-responses"), and #12633 established that Zen's
+      // /v1/responses endpoint authenticates with `x-api-key`, not Bearer — unlike
+      // /chat/completions on the same host. So this model's headers legitimately moved
+      // to x-api-key; what this case is about, the ABSENT Accept header, is unchanged.
       const result = await zenExecutor.execute(createInput("gpt-5.6-luna", false));
 
       assert.deepEqual(result.headers, {
-        Authorization: "Bearer test-key",
+        "x-api-key": "test-key",
         "Content-Type": "application/json",
       });
       assert.deepEqual(fetchCalls[0].options.headers, result.headers);

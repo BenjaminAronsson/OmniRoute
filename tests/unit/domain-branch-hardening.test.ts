@@ -350,22 +350,30 @@ test("quotaCache covers empty quotas, invalid dates and fallback percentage norm
     daily: { total: 0, used: 25 },
     "###": { remainingPercentage: 50 },
   });
+  // #14276: a window the upstream reports with `total: 0` gives no computable fraction,
+  // so it is UNKNOWN, not "0% remaining". The percentages still read 0/100 (that is the
+  // documented placeholder), but an unknown window must never reach the exhaustion
+  // threshold — that was Vertex spend telemetry locking whole accounts out. The branch
+  // this case exists to cover (zero total ⇒ no boundedPercentage) is still exercised.
   assert.deepEqual(quotaCache.getQuotaWindowStatus("quota-zero-total", "daily", 10), {
     remainingPercentage: 0,
     usedPercentage: 100,
     resetAt: null,
-    reachedThreshold: true,
+    reachedThreshold: false,
   });
   assert.equal(quotaCache.getQuotaWindowStatus("quota-zero-total", "unknown"), null);
 
   quotaCache.setQuotaCache("quota-invalid-reset", "cursor", {
     daily: { remainingPercentage: Number.POSITIVE_INFINITY, resetAt: "not-a-date" },
   });
+  // Same #14276 rule as the zero-total case above: an Infinity percentage is not a
+  // reported fraction, so the window is unknown and must not reach the threshold. The
+  // unparseable resetAt is still carried through verbatim — that is this case's subject.
   assert.deepEqual(quotaCache.getQuotaWindowStatus("quota-invalid-reset", "daily", 10), {
     remainingPercentage: 0,
     usedPercentage: 100,
     resetAt: "not-a-date",
-    reachedThreshold: true,
+    reachedThreshold: false,
   });
 
   quotaCache.setQuotaCache("quota-invalid-exhausted", "cursor", {
