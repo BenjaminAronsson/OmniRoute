@@ -2,10 +2,12 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, "release/**"]
   pull_request:
-    branches: [main]
-    types: [opened, synchronize, reopened, ready_for_review]
+    branches: [main, "release/**"]
+    types: [opened, synchronize, reopened, ready_for_review, converted_to_draft, edited]
+  merge_group:
+    types: [checks_requested]
   workflow_dispatch:
 
 concurrency:
@@ -71,6 +73,7 @@ jobs:
               echo "docs=true"
               echo "i18n=true"
               echo "workflow=true"
+              echo "testsOnly=false"
             } >> "$GITHUB_OUTPUT"
             exit 0
           fi
@@ -200,7 +203,7 @@ jobs:
     # The coverage.* metrics degrade gracefully: the download is continue-on-error and
     # the ratchet runs with --allow-missing, so absent coverage is skipped, not failed.
     # Path filter: code-only — pure docs/i18n PRs have nothing for these ratchets to guard.
-    if: ${{ !cancelled() && !contains(github.event.pull_request.labels.*.name, 'hotfix') && (github.event_name != 'pull_request' || (github.event.pull_request.draft == false && needs.changes.outputs.code == 'true' && (needs.lint.result == 'success' || needs.lint.result == 'failure'))) }}
+    if: ${{ !cancelled() && (github.event_name != 'pull_request' || (github.event.pull_request.draft == false && needs.changes.outputs.code == 'true' && (needs.lint.result == 'success' || needs.lint.result == 'failure'))) }}
     # security-events: read lets the CodeQL ratchet read open code-scanning alerts
     # via `gh api .../code-scanning/alerts`. contents: read keeps checkout working.
     permissions:
@@ -313,7 +316,7 @@ jobs:
     # P3 (plano mestre): a release-PR viva fica DRAFT o ciclo inteiro — jobs pesados pulam
     # drafts (ciclo v3.8.44: 123 runs pesados re-disparados por merges na release, 88 cancelados).
     # Path filter: code-only (scanners/ratchets target production surface).
-    if: ${{ !contains(github.event.pull_request.labels.*.name, 'hotfix') && (github.event_name != 'pull_request' || (github.event.pull_request.draft == false && needs.changes.outputs.code == 'true')) }}
+    if: ${{ github.event_name != 'pull_request' || (github.event.pull_request.draft == false && needs.changes.outputs.code == 'true') }}
     steps:
       # fetch-depth: 0 — the OpenAPI breaking-change gate (oasdiff) reads the base
       # spec via `git show <base_ref>:docs/openapi.yaml`; a shallow clone
@@ -664,7 +667,7 @@ jobs:
     # back to ubuntu-latest unless the PR head repo is this repository (push /
     # dispatch events are own-origin by definition). Any failure path (VM down,
     # var unset/false) also falls back to ubuntu-latest.
-    runs-on: ${{ (vars.USE_VPS_RUNNER == 'true' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)) && fromJSON('["self-hosted","omni-build"]') || 'ubuntu-latest' }}
+    runs-on: ${{ (vars.USE_VPS_RUNNER == 'true' && github.event_name != 'merge_group' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)) && fromJSON('["self-hosted","omni-build"]') || 'ubuntu-latest' }}
     needs: changes
     # Capacity is owned by the ONE omni-build runner slot (#12048), also used by
     # Docker amd64. Do not add another worker with that label on the same host
@@ -1034,7 +1037,7 @@ jobs:
     # blocking job was green. The upload step now has its own ceiling; this is headroom.
     timeout-minutes: 30
     needs: test-unit
-    if: ${{ !cancelled() && needs.test-unit.result == 'success' && !contains(github.event.pull_request.labels.*.name, 'hotfix') }}
+    if: ${{ !cancelled() && needs.test-unit.result == 'success' }}
     env:
       JWT_SECRET: ci-test-secret-with-sufficient-length-for-validation
       API_KEY_SECRET: ci-test-api-key-secret-long
@@ -1274,11 +1277,9 @@ jobs:
     # Heavy shard target: ≤20min (was ~40min). Timeout 45min to cover slow runners.
     timeout-minutes: 45
     needs: [build, changes]
-    # WS3.1 hotfix fast-lane: the 9-shard E2E matrix is the CI critical path (~25min).
-    # It skips for (a) PRs labeled `hotfix` (entry policy in docs/ops/RELEASE_CHECKLIST.md:
-    # production-broken only, full-suite evidence from the previous green run linked in the
-    # PR) and (b) tests-only diffs outside tests/e2e/ (cannot change the served app).
-    if: ${{ needs.changes.outputs.testsOnly != 'true' && !contains(github.event.pull_request.labels.*.name, 'hotfix') }}
+    # Tests-only diffs outside tests/e2e/ cannot change the served app. A hotfix
+    # label is not evidence for this candidate and cannot waive required tests.
+    if: ${{ needs.changes.outputs.testsOnly != 'true' }}
     strategy:
       fail-fast: false
       matrix:
@@ -1456,6 +1457,57 @@ jobs:
       - uses: ./.github/actions/npm-ci-retry
       - run: npm run check:node-runtime
       - run: npm run test:protocols:e2e
+
+  admission-verdict:
+    name: Gate / CI
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs:
+      - changes
+      - lint
+      - quality-gate
+      - quality-extended
+      - docs-sync-strict
+      - docs-lint
+      - i18n-ui-coverage
+      - i18n-glossary-zhcn
+      - i18n
+      - pr-test-policy
+      - build
+      - package-artifact
+      - electron-package-smoke
+      - test-unit
+      - test-bun-sqlite
+      - test-vitest
+      - test-coverage
+      - test-e2e
+      - test-integration
+      - test-security
+      - test-ecosystem
+      - test-protocols-e2e
+      - sonarqube
+      - coverage-pr-comment
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.CI_NODE_VERSION }}
+      - name: Evaluate exact-candidate admission
+        env:
+          NEEDS_JSON: ${{ toJSON(needs) }}
+        run: node scripts/quality/admission-verdict.mjs ci
+      - name: Retain admission receipt
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: ci-admission-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .artifacts/ci-admission.json
+          if-no-files-found: error
+          retention-days: 14
 
   ci-summary:
     name: CI Dashboard
