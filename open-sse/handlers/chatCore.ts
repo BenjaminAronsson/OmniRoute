@@ -497,6 +497,7 @@ export async function handleChatCore({
   // the model-bound `body` itself is never touched.
   videoBridgeLog = undefined,
   fallbackAttempts = undefined,
+  forcedConnectionId = null, // #14116: caller's pinned/requested connection, vs credentials.connectionId below
 }) {
   const {
     model: originModel,
@@ -5829,6 +5830,9 @@ export async function handleChatCore({
     compressionResponseMeta,
     comboStrategy,
     fallbackAttempts,
+    isCombo, // #14116: foreign-account quota-header strip (only meaningful when true)
+    requestedConnectionId: forcedConnectionId || null,
+    selectedConnectionId: credentials?.connectionId ?? null,
   });
 
   // The streaming headers (turn-state included, when present) are committed to
