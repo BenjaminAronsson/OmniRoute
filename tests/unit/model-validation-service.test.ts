@@ -11,6 +11,11 @@ import { upsertSessionAccountAffinity } from "../../src/lib/db/sessionAccountAff
 import { POST } from "../../src/app/api/provider-models/validate-and-add/route.ts";
 import { getCustomModels } from "../../src/lib/db/models.ts";
 import { getDbInstance } from "../../src/lib/db/core.ts";
+import { createApiKey } from "../../src/lib/db/apiKeys.ts";
+import {
+  acquireExclusiveConnectionLease,
+  releaseExclusiveConnectionLease,
+} from "../../src/lib/db/exclusiveConnectionLeases.ts";
 import { insertPlugin, deletePlugin } from "../../src/lib/db/plugins.ts";
 import { registerHook, unregisterHooks, runOnResponse } from "../../src/lib/plugins/hooks.ts";
 import { validateAndAddModel } from "../../src/lib/modelValidation/service.ts";
@@ -335,6 +340,83 @@ test("unavailable selected connection cannot fall back to a healthy sibling", as
     /unavailable/
   );
   assert.equal(executor.calls.length, 0);
+});
+
+test("FREE lease-capable connection remains eligible for auxiliary validation", async () => {
+  const input = await fixture("free-managed-proof");
+  const previousSecret = process.env.API_KEY_SECRET;
+  process.env.API_KEY_SECRET = "model-validation-test-fixture-secret";
+  try {
+    await createApiKey("validation lease capability", "test", ["lease:exclusive"], {
+      allowedConnections: [input.connectionId],
+    });
+    const result = await validateAndAddModel(input, new AbortController().signal);
+    assert.equal(result.persistenceVerified, true);
+    assert.equal(executor.calls.length, 3);
+  } finally {
+    if (previousSecret === undefined) delete process.env.API_KEY_SECRET;
+    else process.env.API_KEY_SECRET = previousSecret;
+  }
+});
+
+test("an ACTIVE exclusive lease prevents validation before dispatch or persistence", async () => {
+  const input = await fixture("active-managed-proof");
+  const leaseOwnerId = `vlo_${"A".repeat(43)}`;
+  const apiKeyId = "validation-active-owner";
+  const claimed = acquireExclusiveConnectionLease({
+    leaseOwnerId,
+    apiKeyId,
+    provider: input.provider,
+    connectionId: input.connectionId,
+  });
+  assert.equal(claimed.kind, "ACQUIRED");
+  if (claimed.kind !== "ACQUIRED") throw new Error("fixture lease was not acquired");
+  try {
+    await assert.rejects(() => validateAndAddModel(input, new AbortController().signal), {
+      code: "VALIDATION_CONNECTION_UNAVAILABLE",
+    });
+    assert.equal(executor.calls.length, 0);
+    assert.equal(
+      (await getCustomModels(input.provider)).some((model) => model.id === input.modelId),
+      false
+    );
+  } finally {
+    releaseExclusiveConnectionLease({
+      leaseOwnerId,
+      apiKeyId,
+      generation: claimed.lease.generation,
+    });
+  }
+});
+
+test("lease acquired during the first proof prevents subsequent sends and persistence", async () => {
+  const input = await fixture("late-managed-proof");
+  const leaseOwnerId = `vlo_${"B".repeat(43)}`;
+  const apiKeyId = "validation-late-owner";
+  let generation: number;
+  executor.onDispatch = async () => {
+    const claimed = acquireExclusiveConnectionLease({
+      leaseOwnerId,
+      apiKeyId,
+      provider: input.provider,
+      connectionId: input.connectionId,
+    });
+    assert.equal(claimed.kind, "ACQUIRED");
+    if (claimed.kind !== "ACQUIRED") throw new Error("fixture lease was not acquired");
+    generation = claimed.lease.generation;
+  };
+  try {
+    await assert.rejects(() => validateAndAddModel(input, new AbortController().signal), {
+      code: "VALIDATION_CONNECTION_UNAVAILABLE",
+    });
+    assert.equal(executor.calls.length, 1);
+    assert.equal(
+      (await getCustomModels(input.provider)).some((model) => model.id === input.modelId),
+      false
+    );
+  } finally {
+    if (generation) releaseExclusiveConnectionLease({ leaseOwnerId, apiKeyId, generation });
+  }
 });
 
 test("credential or settings mutation during a proof aborts before persistence", async () => {

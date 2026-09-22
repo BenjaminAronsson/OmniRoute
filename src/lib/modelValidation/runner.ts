@@ -9,6 +9,7 @@ import { assertValidationSnapshot, type ValidationSnapshot } from "../db/validat
 import { createValidationDispatchFence } from "./dispatchFence";
 import { assertSelectedCredentialsCurrent } from "./credentials";
 import { assertRequestPluginsIdle } from "../plugins/executionGuard";
+import { isConnectionUnavailableToAuxiliaryActivity } from "../exclusiveLeaseIsolation";
 import { ModelValidationError, type ValidationInput } from "./http";
 import { abortable, readProof, proofFailed, deadline } from "./proofs";
 
@@ -29,15 +30,23 @@ async function selectStrictCredentials(
     [input.connectionId],
     input.modelId
   );
-  const stored = await getProviderConnectionById(input.connectionId);
   if (
     !credentials ||
     !("connectionId" in credentials) ||
+    !("provider" in credentials) ||
     credentials.connectionId !== input.connectionId ||
-    credentials.provider !== input.provider ||
-    !stored
+    credentials.provider !== input.provider
   )
     proofFailed();
+  if (await isConnectionUnavailableToAuxiliaryActivity(input.connectionId)) {
+    throw new ModelValidationError(
+      409,
+      "VALIDATION_CONNECTION_UNAVAILABLE",
+      "Selected connection is unavailable"
+    );
+  }
+  const stored = await getProviderConnectionById(input.connectionId);
+  if (!stored) proofFailed();
   await assertSelectedCredentialsCurrent(input.provider, credentials, stored);
   return credentials;
 }
@@ -48,6 +57,12 @@ function credentialsChanged(): never {
     "VALIDATION_CONFIG_CHANGED",
     "Credentials changed during validation"
   );
+}
+
+/** Internal envelope boundary: a raw pipeline Response is never a completed proof. */
+export function requireProofResponse(result: Awaited<ReturnType<typeof handleChatCore>>): Response {
+  if (result instanceof Response || !result.success || !result.response) proofFailed();
+  return result.response;
 }
 
 export async function createProofRunner(
@@ -117,8 +132,7 @@ export async function createProofRunner(
         stageSignal
       );
       fence.assertDispatched();
-      if (!result.success || !result.response) proofFailed();
-      const proof = await readProof(result.response, stageSignal, stream);
+      const proof = await readProof(requireProofResponse(result), stageSignal, stream);
       fence.assertDispatched();
       return proof;
     } finally {

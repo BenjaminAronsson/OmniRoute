@@ -4,6 +4,12 @@ import { isCompatibleProviderConnectionId } from "../../shared/utils/compatibleP
 import { ModelValidationError } from "./http";
 
 type RecordValue = Record<string, unknown>;
+interface CredentialSnapshotFields {
+  apiKey?: unknown;
+  accessToken?: unknown;
+  refreshToken?: unknown;
+  providerSpecificData?: unknown;
+}
 function object(value: unknown): RecordValue {
   return value && typeof value === "object" && !Array.isArray(value) ? (value as RecordValue) : {};
 }
@@ -29,11 +35,11 @@ async function freshProviderData(provider: string, value: unknown) {
 /** A fresh DB fingerprint alone cannot attest a previously cached selection's metadata. */
 export async function assertSelectedCredentialsCurrent(
   provider: string,
-  selected: RecordValue,
-  stored: RecordValue
+  selected: CredentialSnapshotFields,
+  stored: CredentialSnapshotFields
 ) {
   const expected = await freshProviderData(provider, stored.providerSpecificData);
-  const sameSecrets = ["apiKey", "accessToken", "refreshToken"].every(
+  const sameSecrets = (["apiKey", "accessToken", "refreshToken"] as const).every(
     (key) => (selected[key] ?? null) === (stored[key] ?? null)
   );
   if (!sameSecrets || !isDeepStrictEqual(object(selected.providerSpecificData), expected)) {

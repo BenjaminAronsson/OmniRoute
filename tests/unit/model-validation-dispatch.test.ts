@@ -131,3 +131,19 @@ test("custom execute overrides and final auth/model rewriting are fail-closed", 
   }
   assert.equal(calls, 0);
 });
+
+test("a specialized executor cannot impersonate BaseExecutor through its constructor property", () => {
+  class Specialized extends BaseExecutor {}
+  const executor = new Specialized("openai", {});
+  Object.defineProperty(executor, "constructor", { value: BaseExecutor });
+  const fence = createValidationDispatchFence({
+    provider: "openai",
+    modelId: "chosen-model",
+    connectionId: "chosen",
+    signal: new AbortController().signal,
+    assertFresh: () => {},
+    expectedExecutor: executor,
+    expectedCredentials: credentials,
+  });
+  assert.throws(() => fence.wrap(executor), { code: "VALIDATION_EXECUTOR_UNSUPPORTED" });
+});

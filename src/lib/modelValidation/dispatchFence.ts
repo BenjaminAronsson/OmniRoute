@@ -60,6 +60,8 @@ function matchesBearer(headers: HeadersInit | undefined, credentials: ExecuteInp
 }
 
 function assertAuditedExecutor(executor: ValidationExecutor): void {
+  const execute = executor.execute;
+  const prototype = Object.getPrototypeOf(executor);
   const providerSupported =
     executor.provider === "openai" ||
     (executor.provider.startsWith("openai-compatible-") &&
@@ -67,9 +69,11 @@ function assertAuditedExecutor(executor: ValidationExecutor): void {
   const audited =
     providerSupported &&
     ((executor.constructor === BaseExecutor &&
-      executor.execute === BaseExecutor.prototype.execute) ||
+      prototype === BaseExecutor.prototype &&
+      execute === BaseExecutor.prototype.execute) ||
       (executor.constructor === DefaultExecutor &&
-        executor.execute === DefaultExecutor.prototype.execute));
+        prototype === DefaultExecutor.prototype &&
+        execute === DefaultExecutor.prototype.execute));
   if (!audited)
     throw new ModelValidationError(
       422,
