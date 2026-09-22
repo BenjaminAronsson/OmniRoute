@@ -15,12 +15,15 @@
  * those features instead of requiring manual config after import.
  */
 import { getResolvedModelCapabilities } from "@/lib/modelCapabilities";
-import {
-  resolveNestedComboTargets,
-  type ComboCollectionLike,
-  type ComboLike,
-  type ResolvedComboTarget,
-} from "@omniroute/open-sse/services/combo/comboStructure.ts";
+import { resolveNestedComboTargets } from "@omniroute/open-sse/services/combo/comboStructure.ts";
+// The three types live in combo/types.ts. comboStructure.ts only `import type`s
+// them, so it never re-exported them and #14271 pulled them from the wrong module
+// (TS2459/TS2724 — invisible to typecheck:core, which does not cover open-sse/).
+import type {
+  ComboCollectionLike,
+  ComboLike,
+  ResolvedComboTarget,
+} from "@omniroute/open-sse/services/combo/types.ts";
 
 export interface PublicComboStep {
   kind: "model" | "combo-ref";
