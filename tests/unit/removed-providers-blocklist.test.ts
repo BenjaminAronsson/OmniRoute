@@ -37,7 +37,7 @@ export const REMOVED_PROVIDERS: readonly RemovedProvider[] = [
     id: "suno",
     alias: "suno",
     domains: ["studio-api.suno.ai", "studio-api-prod.suno.com"],
-    removalPr: 14432,
+    removalPr: 14468,
   },
 ];
 
