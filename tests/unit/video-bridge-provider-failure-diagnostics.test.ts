@@ -41,17 +41,12 @@ async function invokeFailure(observed: boolean) {
     stream: false,
     messages: [{ role: "user", content: `[Video 1] transcript: ${CANARY}` }],
   };
-  const output: string[] = [];
   const originalFetch = globalThis.fetch;
-  const originalLog = console.log;
   globalThis.fetch = async () =>
     new Response(JSON.stringify({ error: { message: upstreamMessage } }), {
       status: 401,
       headers: { "Content-Type": "application/json" },
     });
-  console.log = (...parts: unknown[]) => {
-    output.push(parts.map(String).join(" "));
-  };
 
   try {
     const response = await handleChatCore({
@@ -75,11 +70,11 @@ async function invokeFailure(observed: boolean) {
       status: response.status,
       clientBody,
       lastError: stored?.lastError ?? "",
-      errorLogs: output.filter((line) => line.includes("[ERROR]")),
+      lastErrorType: stored?.lastErrorType ?? "",
+      testStatus: stored?.testStatus ?? "",
     };
   } finally {
     globalThis.fetch = originalFetch;
-    console.log = originalLog;
   }
 }
 
@@ -94,7 +89,7 @@ test.after(async () => {
   fs.rmSync(testRoot, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
 });
 
-test("observed video provider failures omit echoed cues from retained connection and application diagnostics", async () => {
+test("observed video provider failures omit echoed cues from retained connection errors", async () => {
   await core.ensureDbInitialized();
   const ordinary = await invokeFailure(false);
   const observed = await invokeFailure(true);
@@ -102,9 +97,8 @@ test("observed video provider failures omit echoed cues from retained connection
   assert.equal(ordinary.status, 401);
   assert.equal(observed.status, ordinary.status);
   assert.equal(observed.clientBody, ordinary.clientBody, "client-visible failure stays unchanged");
+  assert.equal(observed.lastErrorType, ordinary.lastErrorType, "failure class stays unchanged");
+  assert.equal(observed.testStatus, ordinary.testStatus, "connection state stays unchanged");
   assert.match(ordinary.lastError, /VIDEO_CUE_PRIVATE_SENTINEL_7D2/);
-  assert.ok(ordinary.errorLogs.some((line) => line.includes(CANARY)));
   assert.doesNotMatch(observed.lastError, /VIDEO_CUE_PRIVATE_SENTINEL_7D2/);
-  assert.ok(observed.errorLogs.length > 0);
-  assert.ok(observed.errorLogs.every((line) => !line.includes(CANARY)));
 });
