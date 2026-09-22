@@ -1,0 +1,1 @@
+- fix(db): stagger the cleanup and model-sync 6h background schedulers so they never fire in the same second, and add the missing `conversation_turn_nodes.last_seen_at` index used by the retention DELETE (#13973)

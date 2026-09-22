@@ -19,6 +19,15 @@ export const DEFAULT_INTERVAL_MS = 6 * 60 * 60 * 1000; // 6 hours
 export const MODEL_SYNC_CYCLE_CONCURRENCY = 4;
 /** First cycle after boot. Past cleanup's 30s so the two jobs do not overlap. */
 export const MODEL_SYNC_STARTUP_DELAY_MS = 90_000;
+/**
+ * Fixed phase offset added on top of the periodic interval so this
+ * scheduler's 6h tick never lands in the same wall-clock second as
+ * cleanup.ts's own 6h scheduler (#13973 — both are started back-to-back in
+ * the same boot sequence with no relative offset, so they collide every 6h
+ * for the process lifetime). Applied to the recurring `setInterval` delay,
+ * not just the first run, so the phase shift holds for every tick.
+ */
+export const MODEL_SYNC_STAGGER_OFFSET_MS = 45 * 60 * 1000; // 45 minutes
 const MODEL_SYNC_SETTING_KEY = "model_sync_last_run";
 const MODEL_SYNC_INTERNAL_AUTH_HEADER = "x-model-sync-internal-auth";
 
@@ -312,9 +321,14 @@ export function startModelSyncScheduler(
   const envHours = parseInt(process.env.MODEL_SYNC_INTERVAL_HOURS ?? "", 10);
   const effectiveIntervalMs =
     !isNaN(envHours) && envHours > 0 ? envHours * 60 * 60 * 1000 : intervalMs;
+  // Stagger against cleanup.ts's own un-offset 6h interval (#13973).
+  const staggeredIntervalMs = effectiveIntervalMs + MODEL_SYNC_STAGGER_OFFSET_MS;
   const trustedApiBaseUrl = resolveModelSyncInternalBaseUrl(apiBaseUrl);
 
-  console.log(`[ModelSync] Scheduler started — interval: ${effectiveIntervalMs / 3_600_000}h`);
+  console.log(
+    `[ModelSync] Scheduler started — interval: ${effectiveIntervalMs / 3_600_000}h ` +
+      `(+${MODEL_SYNC_STAGGER_OFFSET_MS / 60_000}m stagger)`
+  );
 
   // Serve traffic first; cleanup's first pass is +30s, so stay past that window.
   const startupDelay = setTimeout(
@@ -332,8 +346,8 @@ export function startModelSyncScheduler(
       // silent
     });
 
-  // Then run on the regular interval
-  schedulerTimer = setInterval(() => runSyncCycle(trustedApiBaseUrl), effectiveIntervalMs);
+  // Then run on the regular (staggered) interval
+  schedulerTimer = setInterval(() => runSyncCycle(trustedApiBaseUrl), staggeredIntervalMs);
   schedulerTimer.unref?.();
 }
 
