@@ -153,8 +153,7 @@ test("Vertex authorization API key detects and persists its project for curated 
   // #12328 — Express-key discovery must validate against Vertex AI itself (aiplatform.googleapis.com),
   // never generativelanguage.googleapis.com (a different Google service that always rejects a
   // genuine Vertex Express key).
-  assert.ok(calledUrls[0].includes("aiplatform.googleapis.com"));
-  assert.ok(!calledUrls[0].includes("generativelanguage.googleapis.com"));
+  assert.equal(new URL(calledUrls[0]).hostname, "aiplatform.googleapis.com");
   assert.ok(!calledUrls[0].includes("vertex-authorization-key"));
 
   const saved = await providersDb.getProviderConnectionById(connection.id);

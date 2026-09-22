@@ -155,8 +155,7 @@ test("Vertex API-key discovery extracts its consumer project without probing Mod
   // #12328 — Express-key discovery must validate against Vertex AI itself
   // (aiplatform.googleapis.com), never generativelanguage.googleapis.com (a different Google
   // service that always rejects a genuine Vertex Express key).
-  assert.ok(urls[0].includes("aiplatform.googleapis.com"));
-  assert.ok(!urls[0].includes("generativelanguage.googleapis.com"));
+  assert.equal(new URL(urls[0]).hostname, "aiplatform.googleapis.com");
   // #12328 — the validation call is a single-model GET (a lightweight key check), not a
   // Model Garden catalog listing, which pages through `publisherModels?pageSize=...`.
   assert.ok(!urls[0].includes("publisherModels"));
