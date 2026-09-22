@@ -191,7 +191,9 @@ test("shared set size includes live REGISTRY and retired Designer + Felo + Qwen 
   // member (412 -> 413).
   // Lyceum (pay-per-use OpenAI-compatible gateway, 2026-09-20) registers id "lyceum"
   // with an identical alias — a single REGISTRY member (413 -> 414).
-  assert.equal(RESERVED_PREFIX_COUNT, 414);
+  // #14289 (257f0a0d) fails closed on retired gemini-cli routing, adding "gemini-cli" to
+  // RUNTIME_RETIRED_PROVIDER_IDS — a retired id counts in the same walk (414 -> 415).
+  assert.equal(RESERVED_PREFIX_COUNT, 415);
 });
 
 test("isReservedProviderPrefix rejects non-string input", () => {
