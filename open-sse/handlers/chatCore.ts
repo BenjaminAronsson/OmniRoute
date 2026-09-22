@@ -4736,8 +4736,6 @@ export async function handleChatCore({
         safeUpstreamErrorBody
       );
 
-      // Rate limiter updated in applyProviderFailureClassification
-
       // ── T5: Intra-family model fallback ──────────────────────────────────────
       // Before returning a model-unavailable error upstream, try sibling models
       // from the same family. This keeps the request alive on the same account
