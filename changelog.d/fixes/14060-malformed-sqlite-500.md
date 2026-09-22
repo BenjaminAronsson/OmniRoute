@@ -1,0 +1,1 @@
+- fix(db): degrade getSettings() to defaults instead of crashing the Home dashboard when the key_value table is corrupted (#14060)
