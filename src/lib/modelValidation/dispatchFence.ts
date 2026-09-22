@@ -13,6 +13,31 @@ interface ValidationExecutor {
   execute: (input: ExecuteInput) => Promise<ExecutorExecuteResult>;
 }
 
+interface DispatchFenceOptions<T extends ValidationExecutor> {
+  provider: string;
+  modelId: string;
+  connectionId: string;
+  signal: AbortSignal;
+  assertFresh: () => void;
+  expectedExecutor: T;
+  expectedCredentials?: ExecuteInput["credentials"];
+}
+
+function assertChosenCredentials(
+  credentials: ExecuteInput["credentials"],
+  options: Pick<DispatchFenceOptions<ValidationExecutor>, "connectionId" | "expectedCredentials">,
+  reject: () => never
+) {
+  if (credentials?.connectionId !== options.connectionId) reject();
+  for (const key of ["apiKey", "accessToken", "refreshToken"] as const) {
+    if (
+      options.expectedCredentials &&
+      (credentials[key] ?? null) !== (options.expectedCredentials[key] ?? null)
+    )
+      reject();
+  }
+}
+
 function matchesModel(body: unknown, modelId: string): boolean {
   if (typeof body !== "string") return false;
   try {
@@ -34,30 +59,29 @@ function matchesBearer(headers: HeadersInit | undefined, credentials: ExecuteInp
   );
 }
 
-function auditedExecutor(executor: ValidationExecutor) {
+function assertAuditedExecutor(executor: ValidationExecutor): void {
   const providerSupported =
     executor.provider === "openai" ||
     (executor.provider.startsWith("openai-compatible-") &&
       isCompatibleProviderConnectionId(executor.provider));
-  return (
+  const audited =
     providerSupported &&
     ((executor.constructor === BaseExecutor &&
       executor.execute === BaseExecutor.prototype.execute) ||
       (executor.constructor === DefaultExecutor &&
-        executor.execute === DefaultExecutor.prototype.execute))
-  );
+        executor.execute === DefaultExecutor.prototype.execute));
+  if (!audited)
+    throw new ModelValidationError(
+      422,
+      "VALIDATION_EXECUTOR_UNSUPPORTED",
+      "This executor does not support strict model validation"
+    );
 }
 
 /** Trusted, in-process capability: never constructed from a body/header field. */
-export function createValidationDispatchFence<T extends ValidationExecutor>(options: {
-  provider: string;
-  modelId: string;
-  connectionId: string;
-  signal: AbortSignal;
-  assertFresh: () => void;
-  expectedExecutor: T;
-  expectedCredentials?: ExecuteInput["credentials"];
-}) {
+export function createValidationDispatchFence<T extends ValidationExecutor>(
+  options: DispatchFenceOptions<T>
+) {
   let dispatched = 0;
   let entered = false;
   let violated = false;
@@ -68,16 +92,6 @@ export function createValidationDispatchFence<T extends ValidationExecutor>(opti
       "VALIDATION_DISPATCH_MISMATCH",
       "Strict validation dispatch could not be verified"
     );
-  }
-  function checkCredentials(credentials: ExecuteInput["credentials"]) {
-    if (credentials?.connectionId !== options.connectionId) reject();
-    for (const key of ["apiKey", "accessToken", "refreshToken"] as const) {
-      if (
-        options.expectedCredentials &&
-        (credentials[key] ?? null) !== (options.expectedCredentials[key] ?? null)
-      )
-        reject();
-    }
   }
   const validationDispatch: StrictValidationDispatch = {
     reject,
@@ -91,7 +105,7 @@ export function createValidationDispatchFence<T extends ValidationExecutor>(opti
         reject();
       options.signal.throwIfAborted();
       options.assertFresh();
-      checkCredentials(details.credentials);
+      assertChosenCredentials(details.credentials, options, reject);
       if (
         !matchesBearer(details.headers, options.expectedCredentials) ||
         !matchesModel(details.body, options.modelId)
@@ -103,12 +117,7 @@ export function createValidationDispatchFence<T extends ValidationExecutor>(opti
   return {
     wrap(executor: T): T {
       if (executor !== options.expectedExecutor || executor.provider !== options.provider) reject();
-      if (!auditedExecutor(executor))
-        throw new ModelValidationError(
-          422,
-          "VALIDATION_EXECUTOR_UNSUPPORTED",
-          "This executor does not support strict model validation"
-        );
+      assertAuditedExecutor(executor);
       return new Proxy(executor, {
         get(target, property) {
           if (property === "refreshCredentials") return async () => reject();
@@ -123,7 +132,7 @@ export function createValidationDispatchFence<T extends ValidationExecutor>(opti
                 reject();
               options.signal.throwIfAborted();
               options.assertFresh();
-              checkCredentials(input.credentials);
+              assertChosenCredentials(input.credentials, options, reject);
               entered = true;
               return target.execute({
                 ...input,
