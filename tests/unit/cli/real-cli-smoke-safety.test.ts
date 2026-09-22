@@ -137,6 +137,8 @@ test("smoke environment excludes inherited credentials, proxies and runtime inje
     assert.equal(env.OMNIROUTE_SMOKE_KEY, SMOKE_TOKEN);
     assert.equal(env.PATH, `/fake/bin${path.delimiter}/usr/bin`);
     assert.equal(env.OPENCODE_DISABLE_MODELS_FETCH, "true");
+    assert.equal(env.LITELLM_LOCAL_MODEL_COST_MAP, "True");
+    assert.equal(env.PYTHONUNBUFFERED, "1");
     assert.equal(env.STORAGE_ENCRYPTION_KEY, "omniroute-smoke-storage-sentinel-not-a-real-key");
   } finally {
     rmSync(temporary, { recursive: true, force: true });

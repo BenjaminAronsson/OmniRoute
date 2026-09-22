@@ -62,6 +62,8 @@ export function buildSmokeEnvironment(temporary, token, binDir = "", inherited =
     OPENCODE_DISABLE_AUTOUPDATE: "true",
     OPENCODE_DISABLE_SHARE: "true",
     OPENCODE_DISABLE_MODELS_FETCH: "true",
+    LITELLM_LOCAL_MODEL_COST_MAP: "True",
+    PYTHONUNBUFFERED: "1",
     NO_COLOR: "1",
     DO_NOT_TRACK: "1",
   };

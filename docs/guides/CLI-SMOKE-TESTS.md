@@ -31,6 +31,8 @@ reach the third-party child. It is off by default and still rebuilds the outer
 environment from the same narrow allowlist: it never inherits the caller's secrets,
 `NODE_OPTIONS`, `NODE_PATH`, `LD_PRELOAD`, `PYTHONPATH`, or proxy settings. Storage
 encryption uses a non-secret sentinel only inside the disposable data directory.
+The harness also selects LiteLLM's packaged model metadata and unbuffered Python
+output; these are fixed test controls, not caller-supplied environment values.
 This option requires a CLI implementing `run --inherit-env`; unsupported launchers
 fail normally and must not be counted as a successful smoke.
 
