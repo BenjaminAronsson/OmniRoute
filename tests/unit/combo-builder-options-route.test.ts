@@ -255,6 +255,7 @@ test("combo builder options route exposes compatible provider nodes with node me
   assert.equal(provider.prefix, "gd");
   assert.equal(provider.source, "provider-node");
   assert.equal(provider.acceptsArbitraryModel, true);
-  assert.ok(provider.models.some((model) => model.id === "gpt-custom"));
-  assert.equal(provider.models[0].qualifiedModel, "openai-compatible-demo/gpt-custom");
+  const customModel = provider.models.find((model) => model.id === "gpt-custom");
+  assert.ok(customModel);
+  assert.equal(customModel.qualifiedModel, "gd/gpt-custom");
 });
