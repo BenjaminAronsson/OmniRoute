@@ -493,7 +493,8 @@
       "tests/unit/rate-limit-learned-cap-13594.test.ts",
       "tests/unit/native-codex-auto-resume.test.ts",
       "tests/unit/translator-openai-to-gemini-turn-pairing-13848.test.ts",
-      "tests/unit/obsidian-ssrf-guard.test.ts"
+      "tests/unit/obsidian-ssrf-guard.test.ts",
+      "tests/unit/14486-cli-connect-insecure-default-gate.test.ts"
     ],
     "nodeArgs": [
       "--import",
