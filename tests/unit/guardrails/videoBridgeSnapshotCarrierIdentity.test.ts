@@ -58,3 +58,29 @@ test("snapshot redaction keeps explicit malformed video cues protected", () => {
   assert.equal(result.input[0].content[0].transcript, "[redacted-video-transcript]");
   assert.equal(result.input[0].content[1].transcript, "unrelated-sentinel");
 });
+
+test("snapshot redaction protects an implicit video-source MIME carrier", () => {
+  const body = {
+    messages: [
+      {
+        role: "user",
+        content: [
+          {
+            source: {
+              media_type: "video/mp4",
+              data: "video-payload",
+              transcript: "source-video-sentinel",
+            },
+            transcript: "outer-video-sentinel",
+          },
+        ],
+      },
+    ],
+  };
+
+  const result = redactVideoTranscriptFieldsForLog(body) as typeof body;
+  const part = result.messages[0].content[0];
+  assert.equal(part.transcript, "[redacted-video-transcript]");
+  assert.equal(part.source.transcript, "[redacted-video-transcript]");
+  assert.equal(part.source.media_type, "video/mp4");
+});
