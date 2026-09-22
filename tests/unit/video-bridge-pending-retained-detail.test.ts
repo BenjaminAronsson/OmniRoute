@@ -2,7 +2,10 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { createPreparedRequestLogger } from "../../open-sse/utils/providerRequestLogging.ts";
-import { clearCompletedDetails, getCompletedDetails } from "../../src/lib/usage/completedRequestDetails.ts";
+import {
+  clearCompletedDetails,
+  getCompletedDetails,
+} from "../../src/lib/usage/completedRequestDetails.ts";
 import {
   finalizePendingScope,
   initialPendingBody,
