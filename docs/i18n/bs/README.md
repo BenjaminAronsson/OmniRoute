@@ -1300,7 +1300,7 @@ Kanonske metrike od 24.08.2026.: **1.029 jedinstvenih videa** · **11.132.922 po
 <tr><td nowrap><b>Izvršno vrijeme</b></td><td>Node.js 22.x / 24.x LTS — <code>&gt;=22.22.2 &lt;23 || &gt;=24.0.0 &lt;27</code></td></tr>
 <tr><td nowrap><b>Jezik</b></td><td>TypeScript 6.0 — <b>100% TypeScript</b> u <code>src/</code> i <code>open-sse/</code> (nula <code>any</code> u jezgru od v2.0)</td></tr>
 <tr><td nowrap><b>Okvir</b></td><td>Next.js 16 + React 19 + Tailwind CSS 4</td></tr>
-<tr><td nowrap><b>Baza podataka</b></td><td>better-sqlite3 (SQLite, WAL dnevnik) + LowDB (JSON naslijeđe) — 122 domenska modula, 176 migracija</td></tr>
+<tr><td nowrap><b>Baza podataka</b></td><td>better-sqlite3 (SQLite, WAL dnevnik) + LowDB (JSON naslijeđe) — 122 domenska modula, 179 migracija</td></tr>
 <tr><td nowrap><b>Memorija</b></td><td>SQLite FTS5 puni tekst + int8-kvantizirani vektorski embeddingi, tipizirano raspadanje</td></tr>
 <tr><td nowrap><b>Sheme</b></td><td>Zod 4 — Validacija ulazno/izlaznih operacija MCP alata + API ugovori</td></tr>
 <tr><td nowrap><b>Protokoli</b></td><td>MCP (stdio / HTTP / SSE) + A2A v0.3 (JSON-RPC 2.0 + SSE)</td></tr>
