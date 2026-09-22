@@ -67,7 +67,8 @@ async function invokeFailure(observed: boolean) {
       videoBridgeLog: observed ? { observed: true, redaction: [] } : undefined,
       skipResourcePressureGuard: true,
     });
-    const clientBody = await response.text();
+    assert.ok(response.response instanceof Response, "chatCore returns a client Response");
+    const clientBody = await response.response.text();
     const stored = await providersDb.getProviderConnectionById(connection.id);
     return {
       status: response.status,
