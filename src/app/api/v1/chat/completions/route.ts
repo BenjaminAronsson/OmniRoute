@@ -29,6 +29,7 @@ import {
   withCompressionHeaderEcho,
 } from "@/shared/utils/compressionHeaderEcho";
 import { resolveModelAliasWithSeedFallbackOnBody } from "@/lib/modelAliasResolver";
+import { enforceApiKeyPolicy } from "@/shared/utils/apiKeyPolicy";
 import {
   assertRuntimeModelProviderAvailable,
   isRuntimeProviderRetirementError,
@@ -166,6 +167,20 @@ export async function POST(request) {
           // self-hosted model ids (`local/llama3`, `ollama/qwen2`, ...) never trip
           // cloud-peer 410s or alias rewrites. Config-absent requests proceed to the
           // normal cloud pipeline unchanged.
+          //
+          // #14485: the divert must still run the same key-policy enforcement as
+          // the normal cloud pipeline (enforceApiKeyPolicy, called deep inside
+          // handleChat() on that path) — otherwise a disabled/rate-limited/
+          // schedule-restricted OmniRoute API key reaches the self-hosted upstream
+          // unchecked. Run it before the divert so both paths share one gate.
+          const keyPolicy = await enforceApiKeyPolicy(
+            request,
+            typeof parsedBody.model === "string" ? parsedBody.model : null
+          );
+          if (keyPolicy.rejection) {
+            return finishAdmission(keyPolicy.rejection);
+          }
+
           const selfHostedResponse = await handleSelfHostedCompletions(request, parsedBody);
           if (selfHostedResponse) {
             return finishAdmission(selfHostedResponse);

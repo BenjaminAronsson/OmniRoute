@@ -1,0 +1,1 @@
+- security(self-hosted): enforce enforceApiKeyPolicy (schedule/rate-limit/allowedModels/quota) on the self-hosted unified-entry divert, and compare the optional shared self-hosted API key with a constant-time comparison instead of `!==` (#14485)

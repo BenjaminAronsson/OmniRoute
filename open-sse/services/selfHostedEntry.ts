@@ -14,15 +14,22 @@
  *  - Auto-route = header override -> model-prefix match -> deterministic strategy
  *    (`routingStrategies.ts`, M2/RIC-740). Every decision is explainable via the
  *    `x-omniroute-route-decision` response header — no predictive model.
- *  - The API-key check is a scaffold reserved for the D5 quota-key system: when
- *    `OMNIROUTE_SELF_HOSTED_API_KEY` is unset the route is open (loopback /
- *    trusted-network deployment), exactly like the existing self-hosted local
- *    providers.
+ *  - The optional `OMNIROUTE_SELF_HOSTED_API_KEY` shared-secret check here is a
+ *    scaffold reserved for the D5 quota-key system: when unset the route is open
+ *    (loopback / trusted-network deployment), exactly like the existing
+ *    self-hosted local providers; when set, it is compared with a constant-time
+ *    comparison (`timingSafeCompare`), never `===` (#14485, CWE-208).
+ *  - Every request through the unified `/v1/chat/completions` entry — including
+ *    this self-hosted divert — is gated by `enforceApiKeyPolicy()` (schedule,
+ *    rate limit, quota, allowedModels) before it ever reaches this module
+ *    (#14485). This module's own optional shared-key check is a *separate*,
+ *    additive gate for the self-hosted config itself, not a substitute for it.
  */
 
 import * as yaml from "js-yaml";
 import { readFile } from "node:fs/promises";
 import { errorResponse, buildErrorBody, parseUpstreamError } from "../utils/error.ts";
+import { timingSafeCompare } from "@/shared/utils/timingSafeCompare";
 import { stripSensitiveResponseHeaders } from "../utils/upstreamResponseHeaders.ts";
 import type { ChatRequest, ProviderConfig } from "./providerAdapters.ts";
 import { ProviderRouter } from "./providerAdapters.ts";
@@ -423,7 +430,7 @@ export async function handleSelfHostedCompletions(
   if (apiKey) {
     const authHeader = request.headers.get("authorization") ?? "";
     const expected = `Bearer ${apiKey}`;
-    if (authHeader !== expected) {
+    if (!timingSafeCompare(authHeader, expected)) {
       return errorResponse(401, "Invalid API key", { type: "authentication_error" });
     }
   }
