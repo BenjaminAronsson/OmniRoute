@@ -6,7 +6,7 @@ import os from "node:os";
 import path from "node:path";
 
 const mod = await import("../../scripts/check/check-ai-attribution.mjs");
-const { findAiAttribution, scanRange, main } = mod;
+const { findAiAttribution, scanRange, main, inputsFromGithubEvent } = mod;
 
 test("findAiAttribution: rejects AI/bot Co-Authored-By trailers (both spellings, vendor e-mails)", () => {
   const cases = [
@@ -107,6 +107,34 @@ test("scanRange + main: flags only the commits in the range that carry AI attrib
     assert.ok(errors.some((e) => e.includes("Hard Rule #16")));
   } finally {
     process.chdir(cwd);
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("inputsFromGithubEvent: pull_request payload → range + title + body; other events → null", () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "ai-attr-ev-"));
+  try {
+    const ev = path.join(dir, "event.json");
+    fs.writeFileSync(
+      ev,
+      JSON.stringify({
+        pull_request: {
+          base: { sha: "a".repeat(40) },
+          head: { sha: "b".repeat(40) },
+          title: "t",
+          body: "b",
+        },
+      })
+    );
+    assert.deepEqual(inputsFromGithubEvent(ev), {
+      range: `${"a".repeat(40)}..${"b".repeat(40)}`,
+      prTitle: "t",
+      prBody: "b",
+    });
+    fs.writeFileSync(ev, JSON.stringify({ workflow_dispatch: {} }));
+    assert.equal(inputsFromGithubEvent(ev), null);
+    assert.equal(inputsFromGithubEvent(path.join(dir, "missing.json")), undefined);
+  } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }
 });

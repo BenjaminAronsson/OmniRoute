@@ -12,12 +12,14 @@
 //
 // Incident record: 8 contributor commits reached release/v3.8.51 with such trailers through squash
 // merges that copied the PR commit bodies (#14436). This gate runs:
-//   • in CI on every PR commit of the range base..head plus the PR title/body (quality.yml →
-//     fast-gates for PR→release/**, ci.yml → lint for PR→main);
+//   • in CI on every PR commit of the range base..head plus the PR title/body — inside the
+//     quality.yml fast-gates loop for PR→release/** (reads the event payload) and as a lint step
+//     in ci.yml for PR→main;
 //   • locally as the husky `commit-msg` hook on the message being committed.
 //
 // Usage:
-//   node scripts/check/check-ai-attribution.mjs --range <base>..<head>      # CI
+//   node scripts/check/check-ai-attribution.mjs                                  # CI: reads GITHUB_EVENT_PATH
+//   node scripts/check/check-ai-attribution.mjs --range <base>..<head>          # explicit range
 //   node scripts/check/check-ai-attribution.mjs --message-file .git/COMMIT_EDITMSG   # hook
 //   node scripts/check/check-ai-attribution.mjs --pr-title "…" --pr-body-file body.md
 // Exit 1 on any hit; prints every offending line with its commit.
@@ -81,7 +83,7 @@ export function scanRange(range) {
 }
 
 function parseArgs(argv) {
-  const a = { range: null, messageFile: null, prTitle: null, prBodyFile: null };
+  const a = { range: null, messageFile: null, prTitle: null, prBodyFile: null, prBodyText: null };
   for (let i = 0; i < argv.length; i++) {
     const k = argv[i];
     const v = argv[i + 1];
@@ -93,8 +95,38 @@ function parseArgs(argv) {
   return a;
 }
 
+/** In GitHub Actions with no CLI args: scan the pull_request of the event payload (null = not a PR). */
+export function inputsFromGithubEvent(eventPath = process.env.GITHUB_EVENT_PATH) {
+  if (!eventPath || !fs.existsSync(eventPath)) return undefined;
+  let ev;
+  try {
+    ev = JSON.parse(fs.readFileSync(eventPath, "utf8"));
+  } catch {
+    return undefined;
+  }
+  const pr = ev?.pull_request;
+  if (!pr?.base?.sha || !pr?.head?.sha) return null;
+  return {
+    range: `${pr.base.sha}..${pr.head.sha}`,
+    prTitle: typeof pr.title === "string" ? pr.title : "",
+    prBody: typeof pr.body === "string" ? pr.body : "",
+  };
+}
+
 export function main(argv = process.argv.slice(2)) {
   const a = parseArgs(argv);
+  if (!a.range && !a.messageFile && !a.prTitle && !a.prBodyFile) {
+    const ev = inputsFromGithubEvent();
+    if (ev === null) {
+      console.log("[ai-attribution] OK — not a pull_request event, nothing to scan.");
+      return 0;
+    }
+    if (ev) {
+      a.range = ev.range;
+      a.prTitle = ev.prTitle;
+      a.prBodyText = ev.prBody;
+    }
+  }
   let failed = false;
   const report = (label, hits) => {
     if (!hits.length) return;
@@ -110,6 +142,7 @@ export function main(argv = process.argv.slice(2)) {
   if (a.prTitle) report("PR title", findAiAttribution(a.prTitle));
   if (a.prBodyFile && fs.existsSync(a.prBodyFile))
     report("PR body", findAiAttribution(fs.readFileSync(a.prBodyFile, "utf8")));
+  if (a.prBodyText) report("PR body", findAiAttribution(a.prBodyText));
   if (!a.range && !a.messageFile && !a.prTitle && !a.prBodyFile) {
     console.error(
       "[ai-attribution] usage: --range <a>..<b> | --message-file <f> | --pr-title <t> --pr-body-file <f>"
