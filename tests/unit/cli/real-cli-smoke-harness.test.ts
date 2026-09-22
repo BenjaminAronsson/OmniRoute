@@ -14,6 +14,7 @@ import {
 } from "../../../scripts/cli/smoke-cli-integrations.mjs";
 
 test("real CLI smoke recipes are non-interactive and never put a credential on argv", () => {
+  assert.ok(targetToolArgs("aider").includes("--disable-playwright"));
   for (const target of ["aider", "goose", "opencode", "qwen", "codex"]) {
     const invocation = buildSmokeInvocation(target, "http://127.0.0.1:29999");
     assert.ok(invocation.includes("--api-key-env"));
@@ -27,12 +28,25 @@ test("mock provider bodies expose the exact marker in both supported OpenAI prot
   assert.equal(completedResponsesBody().output[0].content[0].text, SMOKE_MARKER);
 });
 
+test("isolated environment inheritance is explicit and precedes the CLI argument separator", () => {
+  const options = parseSmokeArgs(["--inherit-isolated-env", "--targets", "opencode"]);
+  assert.equal(options.inheritIsolatedEnv, true);
+  const invocation = buildSmokeInvocation("opencode", "http://127.0.0.1:29999", options);
+  assert.ok(invocation.includes("--inherit-env"));
+  assert.ok(invocation.indexOf("--inherit-env") < invocation.indexOf("--"));
+  assert.equal(
+    buildSmokeInvocation("opencode", "http://127.0.0.1:29999").includes("--inherit-env"),
+    false
+  );
+});
+
 test("smoke harness accepts --help without scheduling real targets", () => {
   assert.deepEqual(parseSmokeArgs(["--help"]), {
     targets: [],
     binDir: "",
     json: false,
     help: true,
+    inheritIsolatedEnv: false,
   });
 });
 

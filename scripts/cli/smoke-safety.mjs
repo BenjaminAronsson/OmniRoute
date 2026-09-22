@@ -58,8 +58,10 @@ export function buildSmokeEnvironment(temporary, token, binDir = "", inherited =
     OMNIROUTE_CLI_SKIP_DEFAULT_DATA_ENV: "1",
     OMNIROUTE_CLI_SKIP_REPO_ENV: "1",
     OMNIROUTE_NO_UPDATE_NOTIFIER: "1",
+    STORAGE_ENCRYPTION_KEY: "omniroute-smoke-storage-sentinel-not-a-real-key",
     OPENCODE_DISABLE_AUTOUPDATE: "true",
     OPENCODE_DISABLE_SHARE: "true",
+    OPENCODE_DISABLE_MODELS_FETCH: "true",
     NO_COLOR: "1",
     DO_NOT_TRACK: "1",
   };

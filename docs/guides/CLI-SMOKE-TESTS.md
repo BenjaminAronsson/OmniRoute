@@ -2,7 +2,7 @@
 title: Isolated CLI smoke tests
 description: Validate installed CLI protocol contracts with disposable local responses.
 version: "3.8.51"
-lastUpdated: "2026-09-21"
+lastUpdated: "2026-09-22"
 ---
 
 # Isolated CLI smoke tests
@@ -24,6 +24,15 @@ Each target runs through `omniroute run` against a disposable HTTP server bound 
 CLI configuration homes, and the OmniRoute data directory are temporary. Provider
 credentials, proxy variables, runtime-loader flags, and existing configurations
 are not inherited. No real upstream credentials are required or accepted.
+
+The explicit `--inherit-isolated-env` harness option forwards `--inherit-env` to
+`omniroute run`, allowing harness-controlled metadata/update suppression flags to
+reach the third-party child. It is off by default and still rebuilds the outer
+environment from the same narrow allowlist: it never inherits the caller's secrets,
+`NODE_OPTIONS`, `NODE_PATH`, `LD_PRELOAD`, `PYTHONPATH`, or proxy settings. Storage
+encryption uses a non-secret sentinel only inside the disposable data directory.
+This option requires a CLI implementing `run --inherit-env`; unsupported launchers
+fail normally and must not be counted as a successful smoke.
 
 A PASS requires a successful child exit, the expected protocol path and model,
 the sentinel authorization header, a completed HTTP response, and an unpredictable

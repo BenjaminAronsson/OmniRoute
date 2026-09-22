@@ -106,8 +106,20 @@ test("smoke environment excludes inherited credentials, proxies and runtime inje
       CODEX_HOME: "/real/codex",
       QWEN_HOME: "/real/qwen",
       AWS_SECRET_ACCESS_KEY: "secret",
+      NODE_PATH: "/private/node",
+      LD_PRELOAD: "/private/library.so",
+      PYTHONPATH: "/private/python",
+      STORAGE_ENCRYPTION_KEY: "real-user-storage-key",
     });
-    for (const key of ["OPENAI_API_KEY", "HTTP_PROXY", "NODE_OPTIONS", "AWS_SECRET_ACCESS_KEY"]) {
+    for (const key of [
+      "OPENAI_API_KEY",
+      "HTTP_PROXY",
+      "NODE_OPTIONS",
+      "AWS_SECRET_ACCESS_KEY",
+      "NODE_PATH",
+      "LD_PRELOAD",
+      "PYTHONPATH",
+    ]) {
       assert.equal(env[key], undefined);
     }
     for (const key of [
@@ -124,6 +136,8 @@ test("smoke environment excludes inherited credentials, proxies and runtime inje
     }
     assert.equal(env.OMNIROUTE_SMOKE_KEY, SMOKE_TOKEN);
     assert.equal(env.PATH, `/fake/bin${path.delimiter}/usr/bin`);
+    assert.equal(env.OPENCODE_DISABLE_MODELS_FETCH, "true");
+    assert.equal(env.STORAGE_ENCRYPTION_KEY, "omniroute-smoke-storage-sentinel-not-a-real-key");
   } finally {
     rmSync(temporary, { recursive: true, force: true });
   }

@@ -286,6 +286,7 @@ export function targetToolArgs(target) {
         "--no-check-update",
         "--no-show-release-notes",
         "--no-fancy-input",
+        "--disable-playwright",
         "--config",
         AIDER_EMPTY_CONFIG,
         "--env-file",
@@ -336,7 +337,7 @@ export function targetToolArgs(target) {
   }
 }
 
-export function buildSmokeInvocation(target, baseUrl) {
+export function buildSmokeInvocation(target, baseUrl, { inheritIsolatedEnv = false } = {}) {
   // Aider performs an expensive browser-backed warning path for unknown model
   // metadata before it ever calls the endpoint. A known OpenAI model still
   // exercises the same OmniRoute transport without that unrelated cold path.
@@ -351,13 +352,20 @@ export function buildSmokeInvocation(target, baseUrl) {
     model,
     "--api-key-env",
     "OMNIROUTE_SMOKE_KEY",
+    ...(inheritIsolatedEnv ? ["--inherit-env"] : []),
     "--",
     ...targetToolArgs(target),
   ];
 }
 
 export function parseSmokeArgs(argv) {
-  const options = { targets: [...DEFAULT_SMOKE_TARGETS], binDir: "", json: false, help: false };
+  const options = {
+    targets: [...DEFAULT_SMOKE_TARGETS],
+    binDir: "",
+    json: false,
+    help: false,
+    inheritIsolatedEnv: false,
+  };
   for (let index = 0; index < argv.length; index++) {
     if (argv[index] === "--help" || argv[index] === "-h") {
       return { ...options, targets: [], help: true };
@@ -374,6 +382,8 @@ export function parseSmokeArgs(argv) {
       options.binDir = path.resolve(String(argv[++index] || ""));
     } else if (argv[index] === "--json") {
       options.json = true;
+    } else if (argv[index] === "--inherit-isolated-env") {
+      options.inheritIsolatedEnv = true;
     } else {
       throw new Error(`Unknown option '${argv[index]}'`);
     }
@@ -409,7 +419,7 @@ async function runTarget(target, options) {
       return result;
     }
     server = await startSmokeServer();
-    const execution = await runProcess(buildSmokeInvocation(target, server.baseUrl), {
+    const execution = await runProcess(buildSmokeInvocation(target, server.baseUrl, options), {
       env,
       cwd: temporary,
       timeoutMs: options.timeoutMs,
@@ -458,6 +468,7 @@ async function main() {
 Options:
   --targets <ids>  Comma-separated targets (default: aider,goose,opencode,qwen,codex)
   --bin-dir <path> Prepend a directory containing CLI binaries to PATH
+  --inherit-isolated-env Pass only the harness's fresh allowlisted environment to the CLI
   --json            Print structured results
   -h, --help        Show this help`);
     return;
