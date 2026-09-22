@@ -75,9 +75,13 @@ test("image catalog GET uses the unified active-credential model list", async ()
 
   const ids = await listedIds(imageRoute, "/v1/images/generations");
 
+  // #14216 (4970f5f) gave the three Codex GPT-5.6 image models their own PUBLIC catalog
+  // ids (`catalogId: "gpt-5.6-<name>-image"`) because the callable upstream id collides
+  // with the chat surface of the same model; `parseImageModel` maps the catalog id back
+  // to the callable one on dispatch. Same three models, new public ids.
   assert.deepEqual(
     ids.filter((id) => id.startsWith("codex/")),
-    ["codex/gpt-5.6-sol", "codex/gpt-5.6-terra", "codex/gpt-5.6-luna"]
+    ["codex/gpt-5.6-sol-image", "codex/gpt-5.6-terra-image", "codex/gpt-5.6-luna-image"]
   );
   assert.ok(!ids.includes("openai/gpt-image-2"));
 });

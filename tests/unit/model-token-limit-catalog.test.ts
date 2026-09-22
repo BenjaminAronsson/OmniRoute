@@ -143,14 +143,25 @@ test("v1 model catalog projects a synced Codex context to both public aliases", 
     );
   }
 
-  const canonical = await getModel("codex/gpt-5.6-sol");
-  assert.equal(canonical?.type, "image");
-  assert.deepEqual(canonical?.output_modalities, ["image"]);
-  assert.ok(Array.isArray(canonical?.supported_sizes));
+  // #14216 (4970f5f) gave the Codex GPT-5.6 image models their own PUBLIC catalog id
+  // (`catalogId: "gpt-5.6-sol-image"`) because the callable upstream id collided with
+  // the chat surface of the same model — the specialty row this block inspects used to
+  // be published as `codex/gpt-5.6-sol` and is now `codex/gpt-5.6-sol-image`. The
+  // callable id behind it is unchanged (`parseImageModel` maps the catalog id back to
+  // `gpt-5.6-sol` for the hidden/supported checks), so what is asserted is the same row.
+  const IMAGE_ROW = "codex/gpt-5.6-sol-image";
+  const canonical = await getModel(IMAGE_ROW);
+  assert.ok(canonical, `expected ${IMAGE_ROW} in the public catalog`);
+  assert.equal(canonical.type, "image");
+  assert.deepEqual(canonical.output_modalities, ["image"]);
+  assert.ok(Array.isArray(canonical.supported_sizes));
+  // The separation is the whole point of #14216: a context override targeting the CHAT
+  // id must not bleed into the image row, which has no context window of its own.
+  assert.equal(canonical.context_length, undefined);
 
   assert.equal(contextOverrides.removeModelContextOverride("codex", "gpt-5.6-sol"), true);
   assert.equal(
-    (await getModel("codex/gpt-5.6-sol"))?.context_length,
+    (await getModel(IMAGE_ROW))?.context_length,
     undefined,
     "the specialty row must not inherit the synced chat context after override removal"
   );
