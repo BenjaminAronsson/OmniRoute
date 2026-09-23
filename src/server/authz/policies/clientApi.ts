@@ -2,6 +2,7 @@ import { isDashboardSessionAuthenticated } from "@/shared/utils/apiAuth.ts";
 import { isRequireApiKeyEnabled } from "@/shared/utils/featureFlags";
 import { extractApiKey } from "@/sse/services/auth.ts";
 import { extractGoogApiKeyHeader } from "@/sse/services/googApiKeyAuth.ts";
+import { evaluateSsoAuth, looksLikeEntraJwt } from "../entra/evaluate";
 import type { AuthOutcome, PolicyContext, RoutePolicy } from "../context";
 import { allow, reject } from "../context";
 
@@ -75,6 +76,21 @@ export const clientApiPolicy: RoutePolicy = {
       }
 
       return reject(401, "AUTH_002", "Authentication required");
+    }
+
+    // Runs before validateApiKey. Once a bearer claims to be an Entra token its
+    // outcome is FINAL — never fall through, or the degrade-to-anonymous branch
+    // below turns an Entra outage into open access.
+    if (looksLikeEntraJwt(bearer)) {
+      const verdict = await evaluateSsoAuth(bearer);
+      if (!verdict.ok) {
+        return reject(verdict.status, verdict.code, verdict.message);
+      }
+      return allow({
+        kind: "sso_user",
+        id: verdict.oid,
+        label: verdict.upn || undefined,
+      });
     }
 
     const { validateApiKey } = await import("../../../lib/db/apiKeys");
