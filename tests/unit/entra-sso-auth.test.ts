@@ -211,6 +211,40 @@ describe("looksLikeEntraJwt — the coexist pre-filter", () => {
   });
 });
 
+describe("Entra SSO — authority host", () => {
+  it("defaults to the commercial cloud when unset or unparseable", async () => {
+    const { resolveAuthorityHost, ENTRA_LOGIN_HOST } =
+      await import("../../src/server/authz/entra/config.ts");
+    for (const input of ["", "   ", undefined, null, 42, "not a url"]) {
+      assert.equal(resolveAuthorityHost(input), ENTRA_LOGIN_HOST);
+    }
+  });
+
+  it("accepts sovereign-cloud https authorities", async () => {
+    const { resolveAuthorityHost } = await import("../../src/server/authz/entra/config.ts");
+    assert.equal(
+      resolveAuthorityHost("https://login.microsoftonline.us"),
+      "https://login.microsoftonline.us"
+    );
+    assert.equal(
+      resolveAuthorityHost("https://login.partner.microsoftonline.cn/"),
+      "https://login.partner.microsoftonline.cn"
+    );
+  });
+
+  it("refuses a plaintext authority off-loopback but allows it on loopback", async () => {
+    const { resolveAuthorityHost, ENTRA_LOGIN_HOST } =
+      await import("../../src/server/authz/entra/config.ts");
+    // The authority decides which keys sign the tokens we trust, so an http
+    // authority reachable over the network would let anyone on the path mint
+    // identities this gateway accepts.
+    assert.equal(resolveAuthorityHost("http://evil.example"), ENTRA_LOGIN_HOST);
+    assert.equal(resolveAuthorityHost("http://10.0.0.5:8080"), ENTRA_LOGIN_HOST);
+    assert.equal(resolveAuthorityHost("http://127.0.0.1:8080"), "http://127.0.0.1:8080");
+    assert.equal(resolveAuthorityHost("http://localhost:3000"), "http://localhost:3000");
+  });
+});
+
 describe("Entra SSO — token verification", () => {
   it("accepts a valid token and reports an sso_user subject", async () => {
     await configureSso();

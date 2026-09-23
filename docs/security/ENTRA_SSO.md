@@ -111,16 +111,17 @@ curl -X PATCH https://omniroute.corp/api/settings \
   }'
 ```
 
-| Setting                     | Meaning                                                                       |
-| --------------------------- | ----------------------------------------------------------------------------- |
-| `entraSsoEnabled`           | Master switch. Default `false`.                                               |
-| `entraTenantId`             | Directory (tenant) ID. Asserted against the token's `tid`.                    |
-| `entraClientId`             | Application (client) ID the helper uses.                                      |
-| `entraApiAudience`          | Application ID URI. Asserted against the token's `aud`.                       |
-| `entraGroupMappings`        | Entra group objectId → `key_groups.id`. A user gets the union of every match. |
-| `entraDefaultKeyGroupId`    | Key group for users matching no mapping. `null` denies them.                  |
-| `entraGraphFallbackEnabled` | Resolve group-claim overage through Microsoft Graph.                          |
-| `entraGraphClientSecret`    | Client secret for the Graph fallback. Encrypted at rest.                      |
+| Setting                     | Meaning                                                                                          |
+| --------------------------- | ------------------------------------------------------------------------------------------------ |
+| `entraSsoEnabled`           | Master switch. Default `false`.                                                                  |
+| `entraAuthorityHost`        | Authority origin. Defaults to `https://login.microsoftonline.com`; set it for a sovereign cloud. |
+| `entraTenantId`             | Directory (tenant) ID. Asserted against the token's `tid`.                                       |
+| `entraClientId`             | Application (client) ID the helper uses.                                                         |
+| `entraApiAudience`          | Application ID URI. Asserted against the token's `aud`.                                          |
+| `entraGroupMappings`        | Entra group objectId → `key_groups.id`. A user gets the union of every match.                    |
+| `entraDefaultKeyGroupId`    | Key group for users matching no mapping. `null` denies them.                                     |
+| `entraGraphFallbackEnabled` | Resolve group-claim overage through Microsoft Graph.                                             |
+| `entraGraphClientSecret`    | Client secret for the Graph fallback. Encrypted at rest.                                         |
 
 The endpoint rejects a configuration that cannot authenticate anyone: tenant and
 audience are required, and so is at least one group mapping or a default key
@@ -128,6 +129,21 @@ group (otherwise every user would get a 403 that reads like a broken server).
 
 Changes take effect on each user's next token refresh — at most one
 `CLAUDE_CODE_API_KEY_HELPER_TTL_MS` window.
+
+### Sovereign clouds
+
+`entraAuthorityHost` selects the Entra instance. Leave it unset for the
+commercial cloud; set it to `https://login.microsoftonline.us` (US Gov) or
+`https://login.partner.microsoftonline.cn` (China). The value is published
+through `/api/auth/sso/config`, so the sign-in helper follows it with no
+per-machine configuration.
+
+Plaintext `http` is rejected and falls back to the commercial cloud unless the
+host is loopback. The authority determines which keys sign the tokens this
+gateway trusts, so accepting an http authority over the network would let anyone
+on the path mint identities it accepts. The loopback exception is what lets the
+end-to-end test stand up a stub authority — see
+`tests/integration/entra-sso-e2e.test.ts`.
 
 ---
 

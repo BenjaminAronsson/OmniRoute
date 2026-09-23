@@ -22,10 +22,11 @@ export async function GET() {
 
     return NextResponse.json({
       enabled: true,
+      authorityHost: config.authorityHost,
       tenantId: config.tenantId,
       clientId: config.clientId,
       audience: config.audience,
-      issuer: entraIssuer(config.tenantId),
+      issuer: entraIssuer(config.tenantId, config.authorityHost),
       scope: `${config.audience}/.default`,
     });
   } catch {

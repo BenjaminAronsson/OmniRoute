@@ -21,7 +21,14 @@ import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
 
-const ENTRA_LOGIN_HOST = "https://login.microsoftonline.com";
+const DEFAULT_AUTHORITY = "https://login.microsoftonline.com";
+
+/** The server publishes its authority so sovereign-cloud tenants work unchanged. */
+function authorityOf(config) {
+  return typeof config?.authorityHost === "string" && config.authorityHost
+    ? config.authorityHost.replace(/\/+$/, "")
+    : DEFAULT_AUTHORITY;
+}
 const CACHE_DIR = path.join(os.homedir(), ".omniroute-sso");
 const CLAUDE_SETTINGS = path.join(os.homedir(), ".claude", "settings.json");
 const DEFAULT_HELPER_TTL_MS = 900000;
@@ -48,7 +55,7 @@ export function createPkcePair() {
 }
 
 export function buildAuthUrl(config, { redirectUri, state, challenge }) {
-  const url = new URL(`${ENTRA_LOGIN_HOST}/${config.tenantId}/oauth2/v2.0/authorize`);
+  const url = new URL(`${authorityOf(config)}/${config.tenantId}/oauth2/v2.0/authorize`);
   url.searchParams.set("client_id", config.clientId);
   url.searchParams.set("response_type", "code");
   url.searchParams.set("redirect_uri", redirectUri);
@@ -137,6 +144,10 @@ function openBrowser(url) {
       detached: true,
       shell: process.platform === "win32",
     });
+    // spawn reports a missing binary through an async 'error' event, not a
+    // throw. Without this listener Node raises it as uncaught and kills the
+    // login — on exactly the headless boxes where there is no opener anyway.
+    child.on("error", () => {});
     child.unref();
   } catch {
     // The URL was already printed for manual use.
@@ -178,7 +189,7 @@ function startLoopbackServer() {
 }
 
 async function exchangeToken(config, body) {
-  const response = await fetch(`${ENTRA_LOGIN_HOST}/${config.tenantId}/oauth2/v2.0/token`, {
+  const response = await fetch(`${authorityOf(config)}/${config.tenantId}/oauth2/v2.0/token`, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams(body).toString(),
@@ -217,17 +228,23 @@ async function commandLogin(argv) {
   note("Waiting for the redirect back to this machine...");
 
   let params;
+  let timeout;
   try {
+    // The timer must be cleared on success: an uncleared setTimeout keeps the
+    // event loop alive, so the process would sit for the full five minutes
+    // after printing "Signed in" and look hung.
     params = await Promise.race([
       server.callback,
-      new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("Timed out after 5 minutes")), 300000)
-      ),
+      new Promise((_, reject) => {
+        timeout = setTimeout(() => reject(new Error("Timed out after 5 minutes")), 300000);
+      }),
     ]);
   } catch (error) {
+    clearTimeout(timeout);
     server.close();
     fail(`Sign-in failed: ${error.message}`);
   }
+  clearTimeout(timeout);
   server.close();
 
   if (params.error) {

@@ -3,7 +3,7 @@
  */
 
 import * as log from "@/sse/utils/logger";
-import { type EntraConfig, ENTRA_LOGIN_HOST, GRAPH_HOST } from "./config";
+import { type EntraConfig, GRAPH_HOST } from "./config";
 import type { EntraIdentity } from "./verifyToken";
 
 export interface GroupResolutionSuccess {
@@ -49,7 +49,7 @@ async function getGraphAppToken(config: EntraConfig): Promise<string | null> {
   });
 
   try {
-    const response = await fetch(`${ENTRA_LOGIN_HOST}/${config.tenantId}/oauth2/v2.0/token`, {
+    const response = await fetch(`${config.authorityHost}/${config.tenantId}/oauth2/v2.0/token`, {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: body.toString(),

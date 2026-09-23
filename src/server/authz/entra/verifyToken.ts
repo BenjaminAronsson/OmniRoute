@@ -162,9 +162,9 @@ export async function verifyEntraToken(
 
   let payload: JWTPayload;
   try {
-    const jwks = getJwksClient(entraJwksUri(config.tenantId));
+    const jwks = getJwksClient(entraJwksUri(config.tenantId, config.authorityHost));
     ({ payload } = await jwtVerify(token, jwks, {
-      issuer: entraIssuer(config.tenantId),
+      issuer: entraIssuer(config.tenantId, config.authorityHost),
       audience: config.audience,
       clockTolerance: 60,
     }));

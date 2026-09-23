@@ -10,8 +10,35 @@
 
 import { getCachedSettings } from "@/lib/db/readCache";
 
+/** Commercial cloud. Sovereign clouds override it via `entraAuthorityHost`. */
 export const ENTRA_LOGIN_HOST = "https://login.microsoftonline.com";
 export const GRAPH_HOST = "https://graph.microsoft.com";
+
+function isLoopbackAuthority(url: URL): boolean {
+  return url.hostname === "localhost" || url.hostname === "127.0.0.1" || url.hostname === "[::1]";
+}
+
+/**
+ * Normalize an operator-supplied authority, falling back to the commercial
+ * cloud. Plain http is refused except on loopback: the authority determines
+ * which keys sign the tokens we trust, so downgrading it over the network would
+ * let anyone on the path mint accepted identities.
+ */
+export function resolveAuthorityHost(raw: unknown): string {
+  const candidate = typeof raw === "string" ? raw.trim().replace(/\/+$/, "") : "";
+  if (!candidate) return ENTRA_LOGIN_HOST;
+
+  let url: URL;
+  try {
+    url = new URL(candidate);
+  } catch {
+    return ENTRA_LOGIN_HOST;
+  }
+
+  if (url.protocol === "https:") return candidate;
+  if (url.protocol === "http:" && isLoopbackAuthority(url)) return candidate;
+  return ENTRA_LOGIN_HOST;
+}
 
 export interface EntraGroupMapping {
   groupId: string;
@@ -20,6 +47,8 @@ export interface EntraGroupMapping {
 
 export interface EntraConfig {
   enabled: boolean;
+  /** Authority origin (commercial cloud by default; sovereign clouds differ). */
+  authorityHost: string;
   tenantId: string;
   clientId: string;
   audience: string;
@@ -29,12 +58,12 @@ export interface EntraConfig {
   graphClientSecret: string;
 }
 
-export function entraIssuer(tenantId: string): string {
-  return `${ENTRA_LOGIN_HOST}/${tenantId}/v2.0`;
+export function entraIssuer(tenantId: string, authorityHost = ENTRA_LOGIN_HOST): string {
+  return `${authorityHost}/${tenantId}/v2.0`;
 }
 
-export function entraJwksUri(tenantId: string): string {
-  return `${ENTRA_LOGIN_HOST}/${tenantId}/discovery/v2.0/keys`;
+export function entraJwksUri(tenantId: string, authorityHost = ENTRA_LOGIN_HOST): string {
+  return `${authorityHost}/${tenantId}/discovery/v2.0/keys`;
 }
 
 function asString(value: unknown): string {
@@ -85,6 +114,7 @@ export async function getEntraConfig(): Promise<EntraConfig> {
 
   return {
     enabled: settings.entraSsoEnabled === true && tenantId !== "" && audience !== "",
+    authorityHost: resolveAuthorityHost(settings.entraAuthorityHost),
     tenantId,
     clientId: asString(settings.entraClientId),
     audience,
