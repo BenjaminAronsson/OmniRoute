@@ -531,6 +531,30 @@ describe("Entra SSO — coexistence with static API keys", () => {
     assert.equal(outcome.subject.kind, "client_api_key");
   });
 
+  it("leaves an unrelated JWT bearer alone while SSO is disabled", async () => {
+    // A client may send its own RS256 JWT in Authorization — the extractBearer
+    // comment in clientApi.ts cites VS Code Copilot doing exactly that. With SSO
+    // off, claiming that bearer would replace the pre-SSO degrade-to-anonymous
+    // behavior with a hard 401 on a deployment that never configured Entra.
+    await updateSettings({ entraSsoEnabled: false });
+    invalidateDbCache("settings");
+
+    const previous = process.env.REQUIRE_API_KEY;
+    process.env.REQUIRE_API_KEY = "false";
+    try {
+      const token = await mintToken({ oid: "user-oid-sso-off" });
+      const outcome = await clientApiPolicy.evaluate(policyContext(ssoRequest(token)));
+
+      assert.equal(outcome.allow, true, "SSO must not claim a bearer while it is disabled");
+      if (!outcome.allow) return;
+      assert.equal(outcome.subject.kind, "anonymous");
+    } finally {
+      if (previous === undefined) delete process.env.REQUIRE_API_KEY;
+      else process.env.REQUIRE_API_KEY = previous;
+      await configureSso();
+    }
+  });
+
   it("does not degrade a failed SSO token to anonymous when REQUIRE_API_KEY is off", async () => {
     await configureSso();
     const previous = process.env.REQUIRE_API_KEY;
