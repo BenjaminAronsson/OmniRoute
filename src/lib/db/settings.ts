@@ -196,6 +196,7 @@ export async function getSettings() {
     // Entra ID SSO for /v1/* (see docs/security/ENTRA_SSO.md). Off by default:
     // enabling it only ADDS a way to authenticate — static API keys keep working.
     entraSsoEnabled: false,
+    entraAuthorityHost: "",
     entraTenantId: "",
     entraClientId: "",
     entraApiAudience: "",

@@ -120,6 +120,8 @@ export const updateSettingsSchema = z.object({
   // dashboard with an id_token audienced to the client_id, this gates the API
   // with an access token audienced to a custom scope. See docs/security/ENTRA_SSO.md.
   entraSsoEnabled: z.boolean().optional(),
+  /** Authority origin. Defaults to the commercial cloud; sovereign clouds differ. */
+  entraAuthorityHost: z.string().max(300).optional(),
   entraTenantId: z.string().max(100).optional(),
   entraClientId: z.string().max(200).optional(),
   entraApiAudience: z.string().max(300).optional(),
