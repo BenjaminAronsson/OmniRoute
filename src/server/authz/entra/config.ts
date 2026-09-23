@@ -54,6 +54,24 @@ function asGroupMappings(value: unknown): EntraGroupMapping[] {
 }
 
 /**
+ * Whether the SSO branch should claim a request at all.
+ *
+ * Checked before the auth policy treats a JWT-shaped bearer as SSO, so that
+ * with SSO off a client presenting its own unrelated JWT (VS Code Copilot sends
+ * one even when the OmniRoute key travels in the URL path) keeps the exact
+ * pre-SSO behavior instead of being hard-rejected.
+ */
+export async function isEntraSsoEnabled(): Promise<boolean> {
+  try {
+    return (await getEntraConfig()).enabled;
+  } catch {
+    // If we cannot tell whether SSO is on, do not claim the bearer: falling
+    // through leaves the pre-SSO behavior intact rather than 500-ing auth.
+    return false;
+  }
+}
+
+/**
  * `enabled` requires every field needed to verify a token, not just the master
  * switch: a half-configured tenant must fall through to the API-key path that
  * still works rather than reject tokens it cannot validate.
