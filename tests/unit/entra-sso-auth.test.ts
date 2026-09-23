@@ -471,6 +471,42 @@ describe("Entra SSO — shadow key secrets never leave the DB layer", () => {
     assert.ok((getSsoShadowSecret(oid) ?? "").length > 0);
   });
 
+  it("refuses the reveal endpoint for an SSO key while still revealing a normal one", async () => {
+    await configureSso();
+    const oid = "user-oid-reveal";
+    await clientApiPolicy.evaluate(
+      policyContext(ssoRequest(await mintToken({ oid, upn: "reveal@corp.example" })))
+    );
+    const identity = getSsoIdentity(oid);
+    assert.ok(identity);
+
+    const revealRoute = await import("../../src/app/api/keys/[id]/reveal/route.ts");
+    const reveal = (id: string) =>
+      revealRoute.GET(new Request(`http://localhost/api/keys/${id}/reveal`), {
+        params: Promise.resolve({ id }),
+      });
+
+    // Reveal is feature-gated and returns 403 when disabled, which would make
+    // the SSO assertion below pass for the wrong reason. Turn it on so the two
+    // cases genuinely differ.
+    const previous = process.env.ALLOW_API_KEY_REVEAL;
+    process.env.ALLOW_API_KEY_REVEAL = "true";
+    try {
+      const normal = await createApiKey("reveal-normal", "machine-entra-0003", []);
+      const normalResponse = await reveal(normal.id);
+      assert.equal(normalResponse.status, 200, "a normal key must still be revealable");
+      assert.equal((await normalResponse.json()).key, normal.key);
+
+      const ssoResponse = await reveal(identity.apiKeyId);
+      assert.equal(ssoResponse.status, 403);
+      const body = await ssoResponse.json();
+      assert.ok(!("key" in body), "the response must not carry a key field at all");
+    } finally {
+      if (previous === undefined) delete process.env.ALLOW_API_KEY_REVEAL;
+      else process.env.ALLOW_API_KEY_REVEAL = previous;
+    }
+  });
+
   it("leaves a normal operator-created key's secret readable", async () => {
     const created = await createApiKey("manual-not-redacted", "machine-entra-0002", []);
     const { getApiKeyById } = await import("../../src/lib/db/apiKeys.ts");
