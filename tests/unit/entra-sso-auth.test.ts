@@ -51,6 +51,12 @@ const { enforceApiKeyPolicy } = await import("../../src/shared/utils/apiKeyPolic
 
 let privateKey: CryptoKey;
 let publicJwk: Record<string, unknown>;
+// A PS256 key published in the SAME JWKS. Without an explicit algorithms pin
+// jose would resolve this kid and happily verify a PS256 token, so this is what
+// makes the pin test meaningful rather than a key-not-found rejection.
+let ps256PrivateKey: CryptoKey;
+const PS_KID = "test-ps256-key";
+let jwksKeys: Array<Record<string, unknown>> = [];
 let engineeringKeyGroupId: string;
 let contractorKeyGroupId: string;
 
@@ -65,7 +71,7 @@ function installFetchStub(): void {
     const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
 
     if (url === JWKS_URI) {
-      return new Response(JSON.stringify({ keys: [publicJwk] }), {
+      return new Response(JSON.stringify({ keys: jwksKeys }), {
         status: 200,
         headers: { "Content-Type": "application/json" },
       });
@@ -105,6 +111,8 @@ interface TokenOverrides {
   claimNamesOverage?: boolean;
   signWithWrongKey?: boolean;
   upn?: string;
+  scp?: string | null;
+  idtyp?: string;
 }
 
 async function mintToken(overrides: TokenOverrides = {}): Promise<string> {
@@ -114,6 +122,9 @@ async function mintToken(overrides: TokenOverrides = {}): Promise<string> {
     preferred_username: overrides.upn ?? "ada@corp.example",
     name: "Ada Lovelace",
   };
+  // A real delegated access token carries scp; app-only tokens carry idtyp=app.
+  if (overrides.scp !== null) payload.scp = overrides.scp ?? "access_as_user";
+  if (overrides.idtyp) payload.idtyp = overrides.idtyp;
   if (overrides.oid !== null) payload.oid = overrides.oid ?? "user-oid-0001";
   if (overrides.claimNamesOverage) {
     payload._claim_names = { groups: "src1" };
@@ -176,6 +187,13 @@ before(async () => {
   const pair = await generateKeyPair("RS256", { extractable: true });
   privateKey = pair.privateKey;
   publicJwk = { ...(await exportJWK(pair.publicKey)), kid: KID, alg: "RS256", use: "sig" };
+
+  const psPair = await generateKeyPair("PS256", { extractable: true });
+  ps256PrivateKey = psPair.privateKey;
+  jwksKeys = [
+    publicJwk,
+    { ...(await exportJWK(psPair.publicKey)), kid: PS_KID, alg: "PS256", use: "sig" },
+  ];
   installFetchStub();
 
   engineeringKeyGroupId = createKeyGroup("Engineering", "mapped from Entra").id;
@@ -312,6 +330,52 @@ describe("Entra SSO — token verification", () => {
   });
 });
 
+describe("Entra SSO — token type", () => {
+  it("rejects an application (client-credentials) token with a matching audience", async () => {
+    await configureSso();
+    // Same tenant, same audience, valid signature — only idtyp distinguishes a
+    // daemon credential from a user. It has no user and no groups, so it must
+    // never authenticate as one.
+    const token = await mintToken({ oid: "user-oid-app", idtyp: "app", scp: null });
+    const outcome = await clientApiPolicy.evaluate(policyContext(ssoRequest(token)));
+
+    assert.equal(outcome.allow, false);
+    if (outcome.allow) return;
+    assert.equal(outcome.status, 401);
+    assert.equal(outcome.code, "AUTH_SSO_APP_TOKEN");
+  });
+
+  it("rejects a token with no delegated scope (an id_token shape)", async () => {
+    await configureSso();
+    const token = await mintToken({ oid: "user-oid-idtoken", scp: null });
+    const outcome = await clientApiPolicy.evaluate(policyContext(ssoRequest(token)));
+
+    assert.equal(outcome.allow, false);
+    if (outcome.allow) return;
+    assert.equal(outcome.code, "AUTH_SSO_NOT_DELEGATED");
+  });
+
+  it("pins RS256 so a non-RS algorithm cannot be substituted", async () => {
+    const { getEntraConfig } = await import("../../src/server/authz/entra/config.ts");
+    const { verifyEntraToken } = await import("../../src/server/authz/entra/verifyToken.ts");
+    await configureSso();
+
+    // The PS256 key IS in the tenant JWKS, so the signature itself verifies and
+    // every other claim is valid — only the algorithms pin rejects this.
+    const now = Math.floor(Date.now() / 1000);
+    const ps256 = await new SignJWT({ tid: TENANT_ID, oid: "x", scp: "access_as_user" })
+      .setProtectedHeader({ alg: "PS256", kid: PS_KID })
+      .setIssuedAt(now)
+      .setIssuer(ISSUER)
+      .setAudience(AUDIENCE)
+      .setExpirationTime(now + 3600)
+      .sign(ps256PrivateKey);
+
+    const verdict = await verifyEntraToken(ps256, await getEntraConfig());
+    assert.equal(verdict.ok, false);
+  });
+});
+
 describe("Entra SSO — group mapping", () => {
   it("joins the shadow key to the key group mapped from the Entra group", async () => {
     await configureSso();
@@ -383,6 +447,63 @@ describe("Entra SSO — group mapping", () => {
       getKeyGroupsForApiKey(identity.apiKeyId).map((g) => g.id),
       [contractorKeyGroupId]
     );
+  });
+});
+
+describe("Entra SSO — group mapping fails closed", () => {
+  it("denies a mapping that points at a key group id that does not exist", async () => {
+    // A typo here used to leave the shadow key in zero groups, which
+    // checkKeyModelAccess reads as "no restrictions" — so the misconfiguration
+    // granted every model instead of denying access.
+    await configureSso({
+      entraGroupMappings: [
+        { groupId: ENTRA_GROUP_ENGINEERING, keyGroupId: "key-group-typo-does-not-exist" },
+      ],
+    });
+
+    const outcome = await clientApiPolicy.evaluate(
+      policyContext(ssoRequest(await mintToken({ oid: "user-oid-typo" })))
+    );
+
+    assert.equal(outcome.allow, false);
+    if (outcome.allow) return;
+    assert.equal(outcome.status, 403);
+    assert.equal(outcome.code, "AUTH_SSO_NO_GROUP");
+    assert.equal(getSsoIdentity("user-oid-typo"), null, "no shadow key should be provisioned");
+  });
+
+  it("denies a mapping whose key group has been deactivated", async () => {
+    const { createKeyGroup: makeGroup, updateKeyGroup } =
+      await import("../../src/lib/db/apiKeyGroups.ts");
+    const retired = makeGroup("Retired", "deactivated later").id;
+    updateKeyGroup(retired, { isActive: false });
+
+    await configureSso({
+      entraGroupMappings: [{ groupId: ENTRA_GROUP_ENGINEERING, keyGroupId: retired }],
+    });
+
+    const outcome = await clientApiPolicy.evaluate(
+      policyContext(ssoRequest(await mintToken({ oid: "user-oid-retired" })))
+    );
+
+    assert.equal(outcome.allow, false);
+    if (outcome.allow) return;
+    assert.equal(outcome.code, "AUTH_SSO_NO_GROUP");
+  });
+
+  it("denies when the default key group itself does not exist", async () => {
+    await configureSso({
+      entraGroupMappings: [],
+      entraDefaultKeyGroupId: "default-group-typo",
+    });
+
+    const outcome = await clientApiPolicy.evaluate(
+      policyContext(ssoRequest(await mintToken({ oid: "user-oid-bad-default", groups: ["x"] })))
+    );
+
+    assert.equal(outcome.allow, false);
+    if (outcome.allow) return;
+    assert.equal(outcome.code, "AUTH_SSO_NO_GROUP");
   });
 });
 

@@ -3,6 +3,7 @@
  */
 
 import * as log from "@/sse/utils/logger";
+import { filterExistingActiveKeyGroupIds } from "@/lib/db/apiKeyGroups";
 import { type EntraConfig, GRAPH_HOST } from "./config";
 import type { EntraIdentity } from "./verifyToken";
 
@@ -157,13 +158,21 @@ export async function resolveKeyGroups(
     groupIds = fromGraph;
   }
 
-  const keyGroupIds = mapToKeyGroups(groupIds, config);
-  if (keyGroupIds.length > 0) {
-    return { ok: true, keyGroupIds, usedDefault: false };
+  // Only groups that exist and are active may grant access. A mapping that
+  // points at a typo'd, deleted or disabled key group would otherwise leave the
+  // shadow key in zero groups, which checkKeyModelAccess reads as
+  // "no restrictions" — a misconfiguration would WIDEN access instead of
+  // denying it. Resolve to nothing rather than to everything.
+  const mapped = filterExistingActiveKeyGroupIds(mapToKeyGroups(groupIds, config));
+  if (mapped.length > 0) {
+    return { ok: true, keyGroupIds: mapped, usedDefault: false };
   }
 
-  if (config.defaultKeyGroupId) {
-    return { ok: true, keyGroupIds: [config.defaultKeyGroupId], usedDefault: true };
+  const fallback = config.defaultKeyGroupId
+    ? filterExistingActiveKeyGroupIds([config.defaultKeyGroupId])
+    : [];
+  if (fallback.length > 0) {
+    return { ok: true, keyGroupIds: fallback, usedDefault: true };
   }
 
   return {

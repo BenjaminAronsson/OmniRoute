@@ -166,6 +166,9 @@ export async function verifyEntraToken(
     ({ payload } = await jwtVerify(token, jwks, {
       issuer: entraIssuer(config.tenantId, config.authorityHost),
       audience: config.audience,
+      // Pinned: Entra signs with RS256, and accepting whatever the header asks
+      // for is how algorithm-substitution attacks get in.
+      algorithms: ["RS256"],
       clockTolerance: 60,
     }));
   } catch (error) {
@@ -179,6 +182,29 @@ export async function verifyEntraToken(
       status: 401,
       code: "AUTH_SSO_TENANT",
       message: "SSO token was issued by a different tenant",
+    };
+  }
+
+  // `aud` + signature alone do not prove this is a user's access token: an
+  // id_token and an app-only (client-credentials) token from the same tenant can
+  // both carry our audience. Entra marks app-only tokens `idtyp=app`, and only a
+  // delegated access token carries `scp`. Requiring both keeps a daemon
+  // credential — which has no user and no groups — from authenticating as one.
+  if (claimString(payload, "idtyp") === "app") {
+    return {
+      ok: false,
+      status: 401,
+      code: "AUTH_SSO_APP_TOKEN",
+      message: "SSO requires a user token; this is an application (client-credentials) token",
+    };
+  }
+
+  if (!claimString(payload, "scp")) {
+    return {
+      ok: false,
+      status: 401,
+      code: "AUTH_SSO_NOT_DELEGATED",
+      message: "SSO token carries no delegated scope — an access token for this API is required",
     };
   }
 

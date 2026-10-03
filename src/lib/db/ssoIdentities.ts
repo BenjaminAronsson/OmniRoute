@@ -15,7 +15,7 @@
 
 import { getDbInstance } from "./core";
 import { createApiKey, deleteApiKey } from "./apiKeys";
-import { addKeyToGroup, removeKeyFromGroup } from "./apiKeyGroups";
+import { addKeyToGroup, getKeyGroupsForApiKey, removeKeyFromGroup } from "./apiKeyGroups";
 import { getConsistentMachineId } from "@/shared/utils/machineId";
 import * as log from "@/sse/utils/logger";
 
@@ -139,6 +139,11 @@ export function reconcileKeyGroups(
   return true;
 }
 
+/** Zero groups means unrestricted downstream, so it is never an acceptable end state. */
+function hasLiveGroupMembership(apiKeyId: string): boolean {
+  return getKeyGroupsForApiKey(apiKeyId).length > 0;
+}
+
 export interface ProvisionInput {
   oid: string;
   tenantId: string;
@@ -157,6 +162,15 @@ export async function provisionSsoIdentity(input: ProvisionInput): Promise<strin
   if (existing) {
     reconcileKeyGroups(existing.apiKeyId, input.keyGroupIds, existing.lastGroups);
     touchLastSeen(input.oid, input.keyGroupIds);
+    if (!hasLiveGroupMembership(existing.apiKeyId)) {
+      setSsoKeyActive(existing.apiKeyId, false);
+      log.error("ENTRA_SSO", "Shadow key lost every key group — deactivated", {
+        oid: input.oid,
+        apiKeyId: existing.apiKeyId,
+        requested: input.keyGroupIds,
+      });
+      return null;
+    }
     return getSsoShadowSecret(input.oid);
   }
 
@@ -197,6 +211,19 @@ export async function provisionSsoIdentity(input: ProvisionInput): Promise<strin
   markKeyAsSso(created.id);
   reconcileKeyGroups(created.id, input.keyGroupIds, []);
   touchLastSeen(input.oid, input.keyGroupIds);
+
+  if (!hasLiveGroupMembership(created.id)) {
+    // addKeyToGroup swallows failures, and a key in zero groups is read as
+    // unrestricted by checkKeyModelAccess. Deactivate rather than hand out a
+    // key with more access than the operator configured.
+    setSsoKeyActive(created.id, false);
+    log.error("ENTRA_SSO", "Shadow key landed in no key group — deactivated", {
+      oid: input.oid,
+      apiKeyId: created.id,
+      requested: input.keyGroupIds,
+    });
+    return null;
+  }
 
   log.info("ENTRA_SSO", "Provisioned shadow API key for SSO user", {
     oid: input.oid,

@@ -34,6 +34,27 @@ const CLAUDE_SETTINGS = path.join(os.homedir(), ".claude", "settings.json");
 const DEFAULT_HELPER_TTL_MS = 900000;
 const EXPIRY_SKEW_SECONDS = 300;
 
+function isLoopbackHost(hostname) {
+  return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "[::1]";
+}
+
+/**
+ * Plain http is only acceptable on loopback. Off loopback it exposes both the
+ * bearer we send and the authority we would be redirected to, so refuse rather
+ * than silently downgrade.
+ */
+function requireSafeUrl(raw, what) {
+  let url;
+  try {
+    url = new URL(raw);
+  } catch {
+    fail(`${what} is not a valid URL: ${raw}`);
+  }
+  if (url.protocol === "https:") return raw.replace(/\/+$/, "");
+  if (url.protocol === "http:" && isLoopbackHost(url.hostname)) return raw.replace(/\/+$/, "");
+  fail(`${what} must use https (http is allowed only on loopback): ${raw}`);
+}
+
 /** stderr, never stdout: `token` output must contain the credential alone. */
 function note(message) {
   process.stderr.write(`${message}\n`);
@@ -114,7 +135,7 @@ function resolveBaseUrl(argv) {
   if (!raw) {
     fail("Set OMNIROUTE_URL (or pass --url <https://omniroute.example>) first.");
   }
-  return raw.replace(/\/+$/, "");
+  return requireSafeUrl(raw, "The OmniRoute base URL");
 }
 
 async function fetchSsoConfig(baseUrl) {
@@ -132,6 +153,7 @@ async function fetchSsoConfig(baseUrl) {
   if (!config?.enabled) {
     fail(`SSO is not enabled on ${baseUrl}. Ask your administrator to configure Entra ID.`);
   }
+  config.authorityHost = requireSafeUrl(authorityOf(config), "The SSO authority");
   return config;
 }
 
@@ -269,7 +291,18 @@ async function commandLogin(argv) {
     note("Ask your administrator to include `offline_access` in the app registration scopes.");
   }
 
-  writeCache(baseUrl, { baseUrl, ...exchanged.tokens });
+  // Pin the authority (and the client/scope it belongs to) at login. Refresh
+  // then never asks the server again, so a gateway that is later compromised or
+  // intercepted cannot point the refresh grant at an attacker's authority and
+  // harvest the refresh token.
+  writeCache(baseUrl, {
+    baseUrl,
+    authorityHost: config.authorityHost,
+    tenantId: config.tenantId,
+    clientId: config.clientId,
+    scope: config.scope,
+    ...exchanged.tokens,
+  });
   note(`\nSigned in. Tokens stored in ${cachePathFor(baseUrl)} (0600).`);
   note(`Next: ${process.argv[1]} install`);
 }
@@ -287,12 +320,25 @@ async function commandToken(argv) {
 
   if (!cache.refreshToken) fail(`Session expired. Run: ${process.argv[1]} login`);
 
-  const config = await fetchSsoConfig(baseUrl);
-  const refreshed = await exchangeToken(config, {
+  // Refresh deliberately does NOT re-read /api/auth/sso/config: the authority,
+  // client id and scope are the ones pinned at login. A cache written before
+  // pinning existed has none of them, so it must re-authenticate rather than
+  // fall back to trusting the server.
+  if (!cache.authorityHost || !cache.tenantId || !cache.clientId || !cache.scope) {
+    fail(`Stored session is missing its pinned authority. Run: ${process.argv[1]} login`);
+  }
+  const pinned = {
+    authorityHost: requireSafeUrl(cache.authorityHost, "The pinned SSO authority"),
+    clientId: cache.clientId,
+    scope: cache.scope,
+    tenantId: cache.tenantId,
+  };
+
+  const refreshed = await exchangeToken(pinned, {
     grant_type: "refresh_token",
-    client_id: config.clientId,
+    client_id: pinned.clientId,
     refresh_token: cache.refreshToken,
-    scope: `openid profile offline_access ${config.scope}`,
+    scope: `openid profile offline_access ${pinned.scope}`,
   });
 
   if (!refreshed.ok) {
@@ -300,7 +346,7 @@ async function commandToken(argv) {
   }
 
   writeCache(baseUrl, {
-    baseUrl,
+    ...cache,
     ...refreshed.tokens,
     refreshToken: refreshed.tokens.refreshToken ?? cache.refreshToken,
   });

@@ -13,9 +13,26 @@ lastUpdated: 2026-09-23
 
 Developers authenticate to `/v1/*` with a short-lived Microsoft Entra ID token
 instead of a static OmniRoute API key. Their Entra security groups map onto
-OmniRoute key groups, so the rate limits, model allowlists, budgets and combo
-permissions an operator already configures apply per person, and usage is
-attributed per person in the call log.
+OmniRoute key groups, and usage is attributed per person in the call log.
+
+### What group mapping does and does not carry
+
+Key groups carry **model allow/deny rules only** (`group_model_permissions`).
+Budgets, rate limits, usage caps, access schedules and combo permissions are
+**per-key** columns on `api_keys` — group membership does not confer them, so an
+SSO user's shadow key starts with the defaults for all of those.
+
+| Control                                                             | Reaches SSO users via group mapping?    |
+| ------------------------------------------------------------------- | --------------------------------------- |
+| Model allow/deny                                                    | **Yes** — this is what key groups store |
+| Per-key rate limits (`rateLimits`, `maxRequestsPerDay`/`PerMinute`) | No — per-key                            |
+| Budget / usage caps (`budget`, `dailyUsageLimitUsd`, …)             | No — per-key                            |
+| Access schedule, endpoint allowlist, combo allowlist                | No — per-key                            |
+| Call-log attribution (`usage_history.api_key_id`)                   | Yes — the shadow key is a real key row  |
+
+To give SSO users any per-key control, set it on the provisioned `sso:<upn>` key
+directly. Applying a group-level default to those columns at provisioning time
+is a sensible follow-up, but this change does not do it.
 
 Static API keys keep working. Enabling SSO only adds a way to authenticate.
 
@@ -41,8 +58,8 @@ Claude Code ──apiKeyHelper──► omniroute-sso.mjs token ──► Entra 
 A user's first authenticated request provisions a **shadow `api_keys` row**
 bound to their Entra `oid`. The row exists because `key_group_members` has a
 foreign key to `api_keys(id)` — routing SSO users through a real key row means
-group policy, budgets and call-log attribution work with no SSO-specific
-branches anywhere downstream.
+group model rules and call-log attribution work with no SSO-specific branches
+anywhere downstream.
 
 The shadow key's secret is never issued to anyone. `getApiKeys()` and
 `getApiKeyById()` blank it for `source='sso'` rows: exposing it would create a
@@ -213,6 +230,14 @@ Removing a user from every mapped Entra group has the same effect on their next
 token refresh.
 
 ---
+
+## Known limitation: routes that re-validate the raw key
+
+`/v1/models`, `/v1/embeddings` and a few other handlers re-validate the raw
+bearer inside the handler rather than relying on the central CLIENT_API
+decision, so they answer 401 to an SSO token. `/v1/chat/completions` and
+`/v1/messages` — the paths Claude Code uses — are unaffected. Folding those
+handlers onto the central decision is a follow-up.
 
 ## Failure reference
 

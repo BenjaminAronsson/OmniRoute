@@ -50,6 +50,8 @@ let authorityUrl: string;
 let gateway: Server;
 let gatewayUrl: string;
 let keyGroupId: string;
+/** Lets a test make the stub gateway publish a hostile authority. */
+let publishedAuthorityOverride: string | null = null;
 
 /** code -> the PKCE challenge the authorize step was given. */
 const issuedCodes = new Map<string, string>();
@@ -63,6 +65,9 @@ async function mintAccessToken(lifetimeSeconds = 3600): Promise<string> {
     preferred_username: "e2e@corp.example",
     name: "E2E User",
     groups: ["e2e-entra-group"],
+    // A delegated access token carries scp; the gateway rejects anything that
+    // does not (an id_token or an app-only client-credentials token).
+    scp: "access_as_user",
   })
     .setProtectedHeader({ alg: "RS256", kid: KID })
     .setIssuedAt(now)
@@ -170,7 +175,7 @@ function startGateway(): Promise<void> {
         res.end(
           JSON.stringify({
             enabled: true,
-            authorityHost: authorityUrl,
+            authorityHost: publishedAuthorityOverride ?? authorityUrl,
             tenantId: TENANT_ID,
             clientId: CLIENT_ID,
             audience: AUDIENCE,
@@ -369,6 +374,48 @@ describe("Entra SSO end to end", () => {
       { env: { ...process.env, HOME: TEST_HOME, USERPROFILE: TEST_HOME } }
     );
     assert.equal(stdout.split(".").length, 3);
+  });
+
+  it("pins the authority at login and ignores a server that later changes it", async () => {
+    // Re-login so the cache is populated, then point the gateway at a hostile
+    // authority. Refresh must keep using the pinned one: otherwise a gateway
+    // that is compromised after enrolment could harvest the refresh token.
+    await runLogin();
+
+    const cacheDir = path.join(TEST_HOME, ".omniroute-sso");
+    const cacheFile = path.join(cacheDir, fs.readdirSync(cacheDir)[0]);
+    const cached = JSON.parse(fs.readFileSync(cacheFile, "utf8"));
+    assert.equal(cached.authorityHost, authorityUrl, "the authority is pinned in the cache");
+    assert.equal(cached.tenantId, TENANT_ID);
+    assert.equal(cached.clientId, CLIENT_ID);
+
+    const hostile = "https://login.attacker.example";
+    publishedAuthorityOverride = hostile;
+    try {
+      fs.writeFileSync(cacheFile, JSON.stringify({ ...cached, expiresAt: Date.now() + 60_000 }));
+      const { stdout } = await runHelper(["token"]);
+      assert.equal(stdout.split(".").length, 3, "refresh still succeeded");
+
+      const after = JSON.parse(fs.readFileSync(cacheFile, "utf8"));
+      assert.equal(after.authorityHost, authorityUrl, "the pinned authority must not move");
+      assert.notEqual(after.authorityHost, hostile);
+    } finally {
+      publishedAuthorityOverride = null;
+    }
+  });
+
+  it("refuses a non-loopback http base URL", async () => {
+    await assert.rejects(
+      () =>
+        execFileAsync(process.execPath, [SCRIPT, "token", "--url", "http://omniroute.example"], {
+          env: { ...process.env, HOME: TEST_HOME, USERPROFILE: TEST_HOME },
+        }),
+      (error: { stderr?: string; stdout?: string }) => {
+        assert.match(error.stderr ?? "", /must use https/);
+        assert.equal(error.stdout, "");
+        return true;
+      }
+    );
   });
 
   it("exits non-zero with guidance when the stored session is gone", async () => {
