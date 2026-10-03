@@ -11,6 +11,16 @@
  * A stub authority stands in for a tenant. That does not replace a live-tenant
  * run (Hard Rule #18 still wants one for the OAuth upstream), but it does catch
  * everything that is our code rather than Microsoft's.
+ *
+ * OPT-IN. Self-skips unless `RUN_ENTRA_SSO_E2E=1` (same gating convention as the
+ * RUN_SERVICES_INT / RUN_CONTRACT_INT suites), so it never runs unopted in CI:
+ * it spawns the helper as a subprocess a dozen times, and the always-on
+ * `test:integration` gate is already at its CI ceiling (#15306). The server-side
+ * verification path — including the real `jose` JWKS flow and every negative
+ * case — is covered unconditionally by tests/unit/entra-sso-auth.test.ts.
+ *
+ *   RUN_ENTRA_SSO_E2E=1 node --import tsx/esm --test \
+ *     tests/integration/entra-sso-e2e.int.test.ts
  */
 import { describe, it, before, after } from "node:test";
 import assert from "node:assert";
@@ -23,6 +33,9 @@ import os from "node:os";
 import path from "node:path";
 
 const execFileAsync = promisify(execFile);
+
+const ENABLED = process.env.RUN_ENTRA_SSO_E2E === "1";
+const SKIP_REASON = "set RUN_ENTRA_SSO_E2E=1 to run the Entra SSO end-to-end suite";
 
 const TEST_HOME = fs.mkdtempSync(path.join(os.tmpdir(), "entra-e2e-home-"));
 const TEST_DATA_DIR = fs.mkdtempSync(path.join(os.tmpdir(), "entra-e2e-data-"));
@@ -244,7 +257,17 @@ function runLogin(): Promise<{ stderr: string }> {
   });
 }
 
+/** Returns true when the test should be skipped (caller must return immediately). */
+function maybeSkip(t: { skip: (reason?: string) => void }): boolean {
+  if (!ENABLED) {
+    t.skip(SKIP_REASON);
+    return true;
+  }
+  return false;
+}
+
 before(async () => {
+  if (!ENABLED) return;
   const pair = await generateKeyPair("RS256", { extractable: true });
   privateKey = pair.privateKey;
   publicJwk = { ...(await exportJWK(pair.publicKey)), kid: KID, alg: "RS256", use: "sig" };
@@ -267,6 +290,7 @@ before(async () => {
 });
 
 after(() => {
+  if (!ENABLED) return;
   authority?.close();
   gateway?.close();
   resetDbInstance();
@@ -275,7 +299,8 @@ after(() => {
 });
 
 describe("Entra SSO end to end", () => {
-  it("completes the PKCE login and stores tokens with 0600 permissions", async () => {
+  it("completes the PKCE login and stores tokens with 0600 permissions", async (t) => {
+    if (maybeSkip(t)) return;
     const { stderr } = await runLogin();
     assert.match(stderr, /Signed in/);
 
@@ -292,7 +317,8 @@ describe("Entra SSO end to end", () => {
     assert.ok(cached.refreshToken, "a refresh token was stored");
   });
 
-  it("prints the access token on stdout and nothing else", async () => {
+  it("prints the access token on stdout and nothing else", async (t) => {
+    if (maybeSkip(t)) return;
     const { stdout } = await runHelper(["token"]);
 
     // apiKeyHelper fails on v2.1.227+ if anything accompanies the credential.
@@ -301,7 +327,8 @@ describe("Entra SSO end to end", () => {
     assert.ok(!stdout.includes("\n"), "no log line alongside the credential");
   });
 
-  it("authenticates against the real auth policy and provisions the mapped key group", async () => {
+  it("authenticates against the real auth policy and provisions the mapped key group", async (t) => {
+    if (maybeSkip(t)) return;
     const { stdout: token } = await runHelper(["token"]);
 
     const outcome = await clientApiPolicy.evaluate({
@@ -332,7 +359,8 @@ describe("Entra SSO end to end", () => {
     );
   });
 
-  it("refreshes silently once the cached token goes stale", async () => {
+  it("refreshes silently once the cached token goes stale", async (t) => {
+    if (maybeSkip(t)) return;
     const cacheDir = path.join(TEST_HOME, ".omniroute-sso");
     const cacheFile = path.join(cacheDir, fs.readdirSync(cacheDir)[0]);
     const before = JSON.parse(fs.readFileSync(cacheFile, "utf8"));
@@ -349,7 +377,8 @@ describe("Entra SSO end to end", () => {
     assert.ok(after.expiresAt > Date.now() + 600_000, "a fresh lifetime was stored");
   });
 
-  it("writes a usable apiKeyHelper block into the Claude Code settings file", async () => {
+  it("writes a usable apiKeyHelper block into the Claude Code settings file", async (t) => {
+    if (maybeSkip(t)) return;
     fs.mkdirSync(path.join(TEST_HOME, ".claude"), { recursive: true });
     fs.writeFileSync(
       path.join(TEST_HOME, ".claude", "settings.json"),
@@ -376,7 +405,8 @@ describe("Entra SSO end to end", () => {
     assert.equal(stdout.split(".").length, 3);
   });
 
-  it("pins the authority at login and ignores a server that later changes it", async () => {
+  it("pins the authority at login and ignores a server that later changes it", async (t) => {
+    if (maybeSkip(t)) return;
     // Re-login so the cache is populated, then point the gateway at a hostile
     // authority. Refresh must keep using the pinned one: otherwise a gateway
     // that is compromised after enrolment could harvest the refresh token.
@@ -404,7 +434,8 @@ describe("Entra SSO end to end", () => {
     }
   });
 
-  it("refuses a non-loopback http base URL", async () => {
+  it("refuses a non-loopback http base URL", async (t) => {
+    if (maybeSkip(t)) return;
     await assert.rejects(
       () =>
         execFileAsync(process.execPath, [SCRIPT, "token", "--url", "http://omniroute.example"], {
@@ -418,7 +449,8 @@ describe("Entra SSO end to end", () => {
     );
   });
 
-  it("exits non-zero with guidance when the stored session is gone", async () => {
+  it("exits non-zero with guidance when the stored session is gone", async (t) => {
+    if (maybeSkip(t)) return;
     fs.rmSync(path.join(TEST_HOME, ".omniroute-sso"), { recursive: true, force: true });
 
     await assert.rejects(

@@ -8,7 +8,7 @@ lastUpdated: 2026-09-23
 
 > **Source of truth:** `src/server/authz/entra/`, `src/lib/db/ssoIdentities.ts`
 > **Client helper:** `scripts/cli/omniroute-sso.mjs`
-> **Tests:** `tests/unit/entra-sso-auth.test.ts`, `tests/unit/entra-sso-client-script.test.ts`
+> **Tests:** `tests/unit/entra-sso-auth.test.ts`, `tests/unit/entra-sso-client-script.test.ts`, `tests/integration/entra-sso-e2e.int.test.ts` (opt-in)
 > **Audience:** Administrators rolling OmniRoute out to a Microsoft Entra ID tenant, and the developers signing in to it.
 
 Developers authenticate to `/v1/*` with a short-lived Microsoft Entra ID token
@@ -160,7 +160,7 @@ host is loopback. The authority determines which keys sign the tokens this
 gateway trusts, so accepting an http authority over the network would let anyone
 on the path mint identities it accepts. The loopback exception is what lets the
 end-to-end test stand up a stub authority — see
-`tests/integration/entra-sso-e2e.test.ts`.
+`tests/integration/entra-sso-e2e.int.test.ts`.
 
 ---
 
@@ -228,6 +228,30 @@ WHERE id = (SELECT api_key_id FROM sso_identities WHERE oid = '<entra-oid>');
 
 Removing a user from every mapped Entra group has the same effect on their next
 token refresh.
+
+---
+
+## Validation status
+
+**Verified.** Token verification runs against a locally generated RSA key pair and a stubbed JWKS,
+so the real `jose` path — including `createRemoteJWKSet` — is exercised offline, along with every
+negative case (wrong audience, wrong tenant, expired, signature not in the JWKS, missing `oid`,
+app-only token, no delegated scope, algorithm substitution). The end-to-end suite runs the actual
+sign-in helper as a subprocess against a stub authority that verifies the PKCE challenge the way
+Entra does, covering the loopback callback, the code exchange, refresh rotation, authority pinning
+and the `0600` token cache.
+
+**Not verified.** No token in any of this was minted by Microsoft. Anything specific to the real
+authority is therefore unproven: consent behavior, the exact claim shapes a given tenant emits,
+Conditional Access interaction, and the group-overage path against real Graph responses.
+
+Hard Rule #18 names OAuth upstream flows as needing real-environment validation, so treat a
+live-tenant run as a merge condition if you want one — it is not covered by the suites above.
+
+```bash
+# the opt-in end-to-end suite (stub authority, no network)
+RUN_ENTRA_SSO_E2E=1 node --import tsx/esm --test tests/integration/entra-sso-e2e.int.test.ts
+```
 
 ---
 
