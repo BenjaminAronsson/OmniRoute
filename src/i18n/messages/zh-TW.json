@@ -4836,7 +4836,7 @@
     "queuesTitle": "並行閘控",
     "queuesScope": "僅限目前程序。組合閘控僅涵蓋輪詢策略的目標，並非所有組合請求。各閘控計數有所重疊，請勿相加。",
     "queuesCombo": "組合目標閘控（輪詢）",
-    "queuesAdmission": "全域 / 供應商 / 帳號閘控",
+    "queuesAdmission": "全域 / 提供者 / 帳號閘控",
     "queuesEmpty": "此快照中沒有追蹤中的閘控。",
     "queuesStale": "快照已過時",
     "queuesError": "佇列快照無法取得，正在自動重試。",
@@ -14812,7 +14812,7 @@
   "featureFlagOmnirouteDisableThinkingLevelVariantsDescription": "停用在 /v1/models 目錄中產生思考層級變體（例如 -low、-medium、-high）。",
   "connectionTest": {
     "title": "測試訊息",
-    "description": "透過此帳戶傳送一個實際請求。這會使用少量配額，且視供應商而定，可能會啟動用量週期。",
+    "description": "透過此帳戶傳送一個實際請求。這會使用少量配額，且視提供者而定，可能會啟動用量週期。",
     "loading": "正在載入帳戶模型…",
     "model": "此帳戶的測試模型",
     "chooseModel": "選擇模型",
@@ -14827,7 +14827,7 @@
     "answer": "模型回應",
     "failed": "請求失敗。請再試一次。",
     "settingsTitle": "手動帳戶測試訊息",
-    "settingsDescription": "此訊息供「連線」和「供應商配額」下方的測試按鈕使用。請為每個帳戶分別選擇模型。儲存不會傳送訊息，也不會啟用自動 Ping。",
+    "settingsDescription": "此訊息供「連線」和「提供者配額」下方的測試按鈕使用。請為每個帳戶分別選擇模型。儲存不會傳送訊息，也不會啟用自動 Ping。",
     "saveMessage": "儲存訊息",
     "defaultModel": "預設測試模型",
     "defaultModelHint": "此帳戶的「測試訊息」按鈕會自動使用此設定。設定會隨連線儲存；不會傳送任何訊息。"

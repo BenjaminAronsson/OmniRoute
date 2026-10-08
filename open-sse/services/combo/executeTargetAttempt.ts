@@ -441,8 +441,11 @@ export async function executeTargetAttempt(opts: {
         state.observeFailure(false, target.executionKey);
         if (handlePreContentStreamRetry(quality, retry, deps, modelStr)) continue;
         familyTried.add(modelStr);
+        // A request-scoped refusal (invalid request, context overflow) is a property of
+        // the request, not of the effort tier — replaying it on a sibling alias of the
+        // same model just repeats the refusal, so let the combo advance instead.
         const familyNext =
-          provider && provider !== "unknown"
+          provider && provider !== "unknown" && !quality.upstreamFailure?.requestScoped
             ? getNextFamilyFallback(modelStr, familyTried, provider)
             : null;
         if (familyNext && familyNext !== modelStr) {

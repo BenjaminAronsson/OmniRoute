@@ -14812,7 +14812,7 @@
   "featureFlagOmnirouteDisableThinkingLevelVariantsDescription": "禁用在 /v1/models 目录中生成思考级别变体（例如 -low、-medium、-high）。",
   "connectionTest": {
     "title": "测试消息",
-    "description": "通过此账号发送一次真实请求。这会使用少量配额，并且可能会启动一个用量窗口，具体取决于提供商。",
+    "description": "通过此账号发送一次真实请求。这会使用少量配额，并且可能会启动一个用量窗口，具体取决于提供者。",
     "loading": "正在加载账号模型…",
     "model": "此账号的测试模型",
     "chooseModel": "选择模型",
@@ -14827,7 +14827,7 @@
     "answer": "模型响应",
     "failed": "请求失败。请重试。",
     "settingsTitle": "手动账号测试消息",
-    "settingsDescription": "此消息用于“连接”和“提供商配额”下的测试按钮。请为每个账号分别选择模型。保存不会发送消息或启用自动 Ping。",
+    "settingsDescription": "此消息用于“连接”和“提供者配额”下的测试按钮。请为每个账号分别选择模型。保存不会发送消息或启用自动 Ping。",
     "saveMessage": "保存消息",
     "defaultModel": "默认测试模型",
     "defaultModelHint": "此账号的“测试消息”按钮会自动使用该设置。该设置将随连接一起保存；不会发送任何消息。"

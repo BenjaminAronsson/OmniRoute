@@ -599,7 +599,9 @@
       "tests/unit/version-manager-local-only.test.ts",
       "tests/unit/stream-failure-after-output-no-model-lockout.test.ts",
       "tests/unit/db-proxies-ventilated.test.ts",
-      "tests/unit/github-copilot-model-not-supported-learning-15634.test.ts"
+      "tests/unit/github-copilot-model-not-supported-learning-15634.test.ts",
+      "tests/unit/alibaba-free-quota-drain-preserves-model-catalog-cache.test.ts",
+      "tests/unit/upstreamErrorEnvelope.test.ts"
     ],
     "nodeArgs": [
       "--import",
