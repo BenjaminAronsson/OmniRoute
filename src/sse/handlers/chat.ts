@@ -2644,6 +2644,7 @@ async function handleSingleModelChat(
               ),
               isCombo,
               headers: result.response.headers,
+              structuredError: { code: result.errorCode, type: result.errorType },
             })
           );
 
