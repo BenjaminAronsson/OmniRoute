@@ -47,9 +47,8 @@ function bearerExample({ path, method }: Operation, baseUrl: string): string[] {
  * depth made that committed artifact a function of whoever last ran the generator:
  * anyone with `PORT`/`BASE_URL`/`OMNIROUTE_BASE_URL` set wrote their own host into the
  * files, and CI — which sets none of them — then reported drift. Callers that genuinely
- * want the configured host pass `resolveOmniRouteBaseUrl()` themselves (the generator
- * exposes this as `--base-url`); the default stays canonical so regeneration is
- * reproducible on any machine.
+ * want the configured host pass `resolveOmniRouteBaseUrl()` themselves; the default
+ * stays canonical so regeneration is reproducible on any machine.
  */
 export function buildApiOperationExample(
   operation: Operation,
