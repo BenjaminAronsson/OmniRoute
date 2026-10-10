@@ -38,6 +38,8 @@ curl -X POST http://localhost:20128/api/system/env/repair \
 
 GET system › version
 
+Running version, latest published version, auto-update status and npm release channel. `releaseChannel` and `channels` are additive (rail 3.8.54); `channel` keeps meaning the deployment mode used by the dashboard updater.
+
 ```bash
 curl http://localhost:20128/api/system/version \
   -H "Authorization: Bearer $OMNIROUTE_TOKEN"

@@ -53,6 +53,7 @@ omniroute restart
 - `--log`
 - `--no-recovery`
 - `--max-restarts <n>`
+- `--headless`
 - `--tray`
 - `--no-tray`
 - `--ready-timeout <ms>`
