@@ -28,6 +28,7 @@
 - [`DELETE /api/provider-nodes/{id}`](#delete-apiprovider-nodesid)
 - [`POST /api/provider-nodes/validate`](#post-apiprovider-nodesvalidate)
 - [`GET /api/provider-models`](#get-apiprovider-models)
+- [`PUT /api/provider-models`](#put-apiprovider-models)
 - [`POST /api/provider-models/validate-and-add`](#post-apiprovider-modelsvalidate-and-add)
 - [`GET /api/providers/{id}/cc-alias`](#get-apiprovidersidcc-alias)
 - [`PUT /api/providers/{id}/cc-alias`](#put-apiprovidersidcc-alias)
@@ -329,9 +330,24 @@ curl -X POST http://localhost:20128/api/provider-nodes/validate \
 
 List provider models
 
+With a provider query parameter, includes modelOutputOverrides for manual output-token caps, including synced models without a custom-model row.
+
 ```bash
 curl http://localhost:20128/api/provider-models \
   -H "Authorization: Bearer $OMNIROUTE_TOKEN"
+```
+
+### PUT /api/provider-models
+
+Update model metadata or per-model overrides
+
+Requires management authentication. maxOutputTokenOverride sets a manual max_output_tokens capability without creating a custom-model row when it is the only change. A null value clears that override. Existing metadata fields remain available on this operation.
+
+```bash
+curl -X PUT http://localhost:20128/api/provider-models \
+  -H "Authorization: Bearer $OMNIROUTE_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{}'
 ```
 
 ### POST /api/provider-models/validate-and-add
