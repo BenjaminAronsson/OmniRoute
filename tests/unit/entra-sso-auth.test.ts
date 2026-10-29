@@ -796,3 +796,74 @@ describe("Entra SSO — auth→policy bridge (GHSA-2phc-xp22-9f56 class)", () =>
     assert.equal(result.apiKeyInfo, null);
   });
 });
+
+describe("Entra SSO — settings are security-impacting", () => {
+  // The entra* keys decide which IdP's tokens open /v1 (authority host, tenant,
+  // client, audience) and which key-group policy SSO users land in. Changing any
+  // of them without password re-auth would let a stolen session point SSO at an
+  // attacker-controlled authority or widen the group mapping, and the JSON import
+  // (no re-auth) must not write them either.
+  it("every entra* key PATCH /api/settings accepts is re-auth gated and import-stripped", async () => {
+    const securitySettings =
+      await import("../../src/shared/constants/securityImpactingSettings.ts");
+    const { updateSettingsSchema } = await import("../../src/shared/validation/settingsSchemas.ts");
+    const guarded = new Set<string>(securitySettings.SECURITY_IMPACTING_SETTINGS_KEYS);
+    const stripped = new Set<string>(securitySettings.IMPORT_STRIPPED_SETTINGS_KEYS);
+    const entraKeys = Object.keys(updateSettingsSchema.shape).filter((k) => k.startsWith("entra"));
+    assert.ok(entraKeys.length >= 9, `expected the Entra keys in the schema, got ${entraKeys}`);
+    for (const key of entraKeys) {
+      assert.ok(guarded.has(key), `${key} must be in SECURITY_IMPACTING_SETTINGS_KEYS`);
+      assert.ok(stripped.has(key), `${key} must be in IMPORT_STRIPPED_SETTINGS_KEYS`);
+    }
+  });
+});
+
+describe("Entra SSO — PATCH /api/settings refuses an unusable config", () => {
+  const LOCAL_CLI_HEADERS = {
+    "content-type": "application/json",
+    "x-omniroute-auth-kind": "management_key",
+    "x-omniroute-auth-label": "local-cli-token",
+  };
+  const COMPLETE = {
+    entraSsoEnabled: true,
+    entraTenantId: TENANT_ID,
+    entraClientId: CLIENT_ID,
+    entraApiAudience: AUDIENCE,
+  };
+
+  async function patchSettings(body: Record<string, unknown>) {
+    const settingsRoute = await import("../../src/app/api/settings/route.ts");
+    const response = await settingsRoute.PATCH(
+      new Request("http://localhost:20128/api/settings", {
+        method: "PATCH",
+        headers: LOCAL_CLI_HEADERS,
+        body: JSON.stringify(body),
+      })
+    );
+    const payload = (await response.json()) as { error?: { code?: string } };
+    return { status: response.status, code: payload.error?.code };
+  }
+
+  it("rejects a group mapping that points at a key group that does not exist", async () => {
+    const result = await patchSettings({
+      ...COMPLETE,
+      entraGroupMappings: [{ groupId: ENTRA_GROUP_ENGINEERING, keyGroupId: "typo-key-group" }],
+      entraDefaultKeyGroupId: null,
+    });
+    assert.deepStrictEqual(result, { status: 400, code: "ENTRA_SSO_UNKNOWN_KEY_GROUP" });
+  });
+
+  it("rejects enabling SSO without a tenant and audience", async () => {
+    const result = await patchSettings({ ...COMPLETE, entraApiAudience: "" });
+    assert.deepStrictEqual(result, { status: 400, code: "ENTRA_SSO_INCOMPLETE" });
+  });
+
+  it("rejects enabling SSO with neither a group mapping nor a default key group", async () => {
+    const result = await patchSettings({
+      ...COMPLETE,
+      entraGroupMappings: [],
+      entraDefaultKeyGroupId: null,
+    });
+    assert.deepStrictEqual(result, { status: 400, code: "ENTRA_SSO_NO_GROUP_POLICY" });
+  });
+});

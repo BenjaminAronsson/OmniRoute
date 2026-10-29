@@ -107,8 +107,10 @@ somebody will hit this. Two options:
 ## 2. Configure OmniRoute
 
 Create the key groups you want to map to first (they carry the actual policy),
-then `PATCH /api/settings`. Enabling SSO is a security-impacting change, so the
-request must include `currentPassword`.
+then `PATCH /api/settings`. Every `entra*` setting is security-impacting, so the
+request must include `currentPassword`; it must come from a dashboard session or the
+local CLI (API keys and access tokens get `403`), and the legacy JSON settings import
+drops these keys.
 
 ```bash
 curl -X PATCH https://omniroute.corp/api/settings \
