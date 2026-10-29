@@ -1,4 +1,4 @@
--- Migration 217: Entra ID SSO identities + API key provenance.
+-- Migration 222: Entra ID SSO identities + API key provenance.
 --
 -- sso_identities binds an Entra user to the "shadow" api_keys row provisioned
 -- for them on first sight. key_group_members has a FOREIGN KEY to api_keys(id),
